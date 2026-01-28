@@ -1,0 +1,2940 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบวิเคราะห์ข้อมูลแปลงเกษตรตาม Grid</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .upload-area {
+            border: 3px dashed #3498db;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .upload-area:hover {
+            background-color: #f0f8ff;
+            border-color: #2c3e50;
+            transform: translateY(-5px);
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            color: #3498db;
+            margin-bottom: 1rem;
+        }
+        
+        /* สไตล์สำหรับการแสดง Grid เป็นแถบ */
+        .grid-list-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            background-color: white;
+        }
+        
+        .grid-list-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .grid-list-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .grid-list-item.active {
+            background-color: #e8f4fc;
+            border-left: 5px solid #3498db;
+        }
+        
+        .grid-grade-badge {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .grade-a-badge {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .grade-b-badge {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+        
+        .grade-c-badge {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .grid-list-info {
+            flex-grow: 1;
+            margin-left: 15px;
+        }
+        
+        .grid-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 3px;
+        }
+        
+        .grid-stats {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .grid-yield {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .yield-excellent { color: #27ae60; }
+        .yield-good { color: #f39c12; }
+        .yield-poor { color: #e74c3c; }
+        
+        /* สไตล์สำหรับแถบเลื่อน */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* สไตล์สำหรับพื้นที่แสดงรายละเอียด Grid */
+        .detail-container {
+            background-color: white;
+            border-radius: 10px;
+            border: 1px solid #dee2e6;
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .area-usage-chart {
+            height: 120px;
+            margin-top: 15px;
+            position: relative;
+        }
+        
+        .area-bar {
+            height: 30px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            font-weight: bold;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .plot-list-container {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        
+        .plot-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .plot-item:last-child {
+            border-bottom: none;
+        }
+        
+        .plot-urgent {
+            background-color: #ffebee;
+            border-left: 3px solid #e74c3c;
+        }
+        
+        .bad-grid {
+            border-left: 5px solid #e74c3c !important;
+        }
+        
+        .good-grid {
+            border-left: 5px solid #27ae60 !important;
+        }
+        
+        .grid-card {
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .grid-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .yield-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 20px;
+        }
+        
+        .highlight {
+            background-color: #fff3cd;
+            border-left: 4px solid #f39c12;
+        }
+        
+        .progress {
+            height: 20px;
+            border-radius: 10px;
+        }
+        
+        .progress-bar {
+            border-radius: 10px;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .nav-tabs .nav-link {
+            color: #2c3e50;
+            font-weight: 500;
+            border: none;
+            padding: 0.8rem 1.5rem;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background-color: white;
+            border-bottom: 3px solid #3498db;
+            color: #3498db;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            color: #3498db;
+        }
+        
+        .tab-content {
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            padding: 2rem;
+            background-color: white;
+        }
+        
+        .grade-a {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+        
+        .grade-b {
+            background-color: #fff3cd;
+            color: #856404;
+            border-color: #ffeaa7;
+        }
+        
+        .grade-c {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+        
+        .grade-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .grade-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .yield-indicator {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .excluded-card {
+            border: 2px solid #f39c12;
+            background-color: #fff9e6;
+        }
+        
+        .included-card {
+            border: 2px solid #3498db;
+            background-color: #e8f4fc;
+        }
+        
+        @media (max-width: 768px) {
+            .upload-area {
+                padding: 2rem 1rem;
+            }
+            
+            .upload-icon {
+                font-size: 3rem;
+            }
+            
+            .nav-tabs .nav-link {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="display-5 fw-bold"><i class="fas fa-seedling me-3"></i>ระบบวิเคราะห์ข้อมูลแปลงเกษตรตาม Grid</h1>
+                    <p class="lead mb-0">ระบบวิเคราะห์และจัดการข้อมูลแปลงเกษตร แบบแบ่งกลุ่ม Grid สำหรับการตัดสินใจเชิงบริหาร</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Upload Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card shadow-sm border-0 dashboard-card">
+                    <div class="card-body p-4">
+                        <h3 class="card-title mb-4"><i class="fas fa-cloud-upload-alt me-2"></i>อัปโหลดไฟล์ข้อมูล</h3>
+                        <p class="text-muted mb-4">อัปโหลดไฟล์ CSV ที่มีข้อมูลแปลงเกษตรเพื่อเริ่มการวิเคราะห์ตาม Grid</p>
+                        
+                        <div class="upload-area mb-4" id="uploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-file-csv"></i>
+                            </div>
+                            <h4>ลากและวางไฟล์ CSV หรือคลิกเพื่อเลือกไฟล์</h4>
+                            <p class="text-muted mt-2">รองรับไฟล์ CSV ที่มีคอลัมน์: Grid, landno, qouta, area, ตัน/ไร่</p>
+                            <input type="file" id="csvFile" accept=".csv" class="d-none">
+                        </div>
+                        
+                        <div id="uploadSuccess" class="alert alert-success d-none">
+                            <i class="fas fa-check-circle me-2"></i>อัปโหลดไฟล์สำเร็จ
+                        </div>
+                        
+                        <!-- Data Preview -->
+                        <div id="dataPreview" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Data Processing Summary -->
+        <div id="processingSummary" class="d-none">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm dashboard-card">
+                        <div class="card-body p-4">
+                            <h3 class="card-title mb-4"><i class="fas fa-cogs me-2"></i>สรุปการประมวลผลข้อมูล</h3>
+                            <div class="row">
+                                <!-- ข้อมูลที่ถูกตัดออก -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100 excluded-card">
+                                        <div class="card-header bg-warning text-white">
+                                            <h5 class="mb-0"><i class="fas fa-ban me-2"></i>ข้อมูลที่ไม่นำมาประมวลผล</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="text-center mb-3">
+                                                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                                                <h4 class="text-danger">ตัน/ไร่ = 0</h4>
+                                                <p class="text-muted">เนื่องจากไม่มีข้อมูลผลผลิต</p>
+                                            </div>
+                                            <div class="row text-center">
+                                                <div class="col-6">
+                                                    <div class="text-warning yield-indicator" id="excludedGridCount">0</div>
+                                                    <small class="text-muted">Grid</small>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-warning yield-indicator" id="excludedPlotCount">0</div>
+                                                    <small class="text-muted">แปลง</small>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3 text-center">
+                                                <button class="btn btn-sm btn-outline-warning" onclick="showExcludedDetails()">
+                                                    <i class="fas fa-eye me-1"></i>ดูรายละเอียด
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- ข้อมูลที่นำมาวิเคราะห์ -->
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100 included-card">
+                                        <div class="card-header bg-primary text-white">
+                                            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>ข้อมูลที่นำมาวิเคราะห์</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="text-center mb-3">
+                                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                                <h4 class="text-success">มีข้อมูลผลผลิต</h4>
+                                                <p class="text-muted">พร้อมสำหรับการวิเคราะห์</p>
+                                            </div>
+                                            <div class="row text-center">
+                                                <div class="col-6">
+                                                    <div class="text-primary yield-indicator" id="includedGridCount">0</div>
+                                                    <small class="text-muted">Grid</small>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-primary yield-indicator" id="includedPlotCount">0</div>
+                                                    <small class="text-muted">แปลง</small>
+                                                </div>
+                                            </div>
+                                            <div class="mt-3 text-center">
+                                                <button class="btn btn-sm btn-outline-primary" onclick="showIncludedDetails()">
+                                                    <i class="fas fa-chart-bar me-1"></i>เริ่มวิเคราะห์
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div id="resultsSection" class="d-none">
+            <!-- Dashboard Summary -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm dashboard-card">
+                        <div class="card-body p-4">
+                            <h3 class="card-title mb-4"><i class="fas fa-tachometer-alt me-2"></i>แดชบอร์ดสรุปภาพรวมข้อมูลที่วิเคราะห์</h3>
+                            <div class="row" id="dashboardCards">
+                                <!-- Dashboard cards will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs Navigation -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <ul class="nav nav-tabs" id="analysisTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="grid-tab" data-bs-toggle="tab" data-bs-target="#grid" type="button" role="tab">
+                                <i class="fas fa-th-large me-2"></i>วิเคราะห์ Grid (แบบใหม่)
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="grid-old-tab" data-bs-toggle="tab" data-bs-target="#grid-old" type="button" role="tab">
+                                <i class="fas fa-table me-2"></i>วิเคราะห์ Grid (แบบเดิม)
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="all-data-tab" data-bs-toggle="tab" data-bs-target="#all-data" type="button" role="tab">
+                                <i class="fas fa-table me-2"></i>ดูข้อมูลทั้งหมด
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">
+                                <i class="fas fa-chart-pie me-2"></i>สรุปและข้อเสนอแนะ
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="report-tab" data-bs-toggle="tab" data-bs-target="#report" type="button" role="tab">
+                                <i class="fas fa-file-export me-2"></i>ส่งออกรายงาน
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="analysisTabsContent">
+                        <!-- Tab 1: Grid Analysis (แบบใหม่) -->
+                        <div class="tab-pane fade show active" id="grid" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <div class="card shadow-sm mb-4">
+                                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>รายการ Grid ทั้งหมด</h5>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="sortGrids('name')">
+                                                    <i class="fas fa-sort-alpha-down"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="sortGrids('yield')">
+                                                    <i class="fas fa-sort-numeric-down"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="filterGrids('all')">
+                                                    ทั้งหมด
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div class="grid-list-container" id="gridListContainer">
+                                                <!-- Grid list will be inserted here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Grid Detail Section -->
+                                <div class="col-md-7">
+                                    <div class="card shadow-sm h-100">
+                                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>รายละเอียด Grid</h5>
+                                            <span id="selectedGridName" class="badge bg-light text-dark fs-6">ยังไม่ได้เลือก</span>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div class="detail-container" id="gridDetailContent">
+                                                <div class="text-center text-muted py-5">
+                                                    <i class="fas fa-mouse-pointer fa-3x mb-3"></i>
+                                                    <h5>กรุณาเลือก Grid จากรายการด้านซ้าย</h5>
+                                                    <p>เพื่อแสดงรายละเอียดข้อมูล</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- แปลงที่ควรดูแลเป็นพิเศษ -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="card shadow-sm">
+                                        <div class="card-header bg-danger text-white">
+                                            <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>แปลงที่ควรดูแลเป็นพิเศษ</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row" id="urgentPlotsContainer">
+                                                <!-- Urgent plots will be inserted here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab 2: Grid Analysis (แบบเดิม) -->
+                        <div class="tab-pane fade" id="grid-old" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="card shadow-sm mb-4">
+                                        <div class="card-header bg-white">
+                                            <h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>การจัดเกรด Grid</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row" id="gridGradesContainer">
+                                                <!-- Grid grades will be inserted here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Legacy Grid Cards -->
+                                    <div class="card shadow-sm">
+                                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">ตัวกรองข้อมูล Grid</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row g-3 align-items-center mb-4">
+                                                <div class="col-md-4">
+                                                    <input type="text" class="form-control" id="searchGrid" placeholder="ค้นหา Grid...">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <select class="form-select" id="sortBy">
+                                                        <option value="name">เรียงตามชื่อ Grid</option>
+                                                        <option value="yield">เรียงตามผลผลิต</option>
+                                                        <option value="plots">เรียงตามจำนวนแปลง</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <select class="form-select" id="filterYield">
+                                                        <option value="all">แสดงทั้งหมด</option>
+                                                        <option value="problem">แสดงเฉพาะปัญหา (≤8 ตัน/ไร่)</option>
+                                                        <option value="good">แสดงเฉพาะผลผลิตดี (>10 ตัน/ไร่)</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button class="btn btn-primary w-100" onclick="renderGridCards()">
+                                                        <i class="fas fa-filter me-1"></i>กรอง
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <div id="gridContainer" class="row">
+                                                <!-- Grid cards will be inserted here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Grid Detail Section (แบบเดิม) -->
+                                <div class="col-md-4">
+                                    <div id="gridDetailSection" class="d-none">
+                                        <div class="card shadow-sm h-100">
+                                            <div class="card-header bg-primary text-white">
+                                                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>รายละเอียด Grid</h5>
+                                            </div>
+                                            <div class="card-body" id="gridDetailContentOld">
+                                                <p class="text-muted">เลือก Grid เพื่อดูรายละเอียด</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab 3: All Data -->
+                        <div class="tab-pane fade" id="all-data" role="tabpanel">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>ข้อมูลทั้งหมดที่นำมาวิเคราะห์</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3 align-items-center mb-4">
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control" id="searchAllData" placeholder="ค้นหาข้อมูล...">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input type="text" class="form-control" id="filterGridAll" placeholder="Grid...">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <input type="text" class="form-control" id="filterQuotaAll" placeholder="โควต้า...">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <select class="form-select" id="filterYieldAll">
+                                                <option value="all">ผลผลิตทั้งหมด</option>
+                                                <option value="low">ต่ำ (≤8 ตัน/ไร่)</option>
+                                                <option value="medium">กลาง (8-10 ตัน/ไร่)</option>
+                                                <option value="high">สูง (>10 ตัน/ไร่)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button class="btn btn-primary w-100" onclick="renderAllDataTable()">
+                                                <i class="fas fa-search me-1"></i>ค้นหา
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="allDataTable" class="table-responsive">
+                                        <!-- All data table will be inserted here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab 4: Summary & Recommendations -->
+                        <div class="tab-pane fade" id="summary" role="tabpanel">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>สรุปและข้อเสนอแนะ</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="recommendations">
+                                        <!-- Recommendations will be inserted here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tab 5: Export Report -->
+                        <div class="tab-pane fade" id="report" role="tabpanel">
+                            <div class="card shadow-sm">
+                                <div class="card-header bg-white">
+                                    <h5 class="mb-0"><i class="fas fa-file-export me-2"></i>ส่งออกรายงาน</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100 dashboard-card">
+                                                <div class="card-body text-center">
+                                                    <div class="mb-3">
+                                                        <i class="fas fa-file-csv fa-3x text-primary"></i>
+                                                    </div>
+                                                    <h5 class="card-title">ส่งออกข้อมูล CSV</h5>
+                                                    <p class="card-text text-muted">ดาวน์โหลดข้อมูลในรูปแบบ CSV สำหรับการวิเคราะห์เพิ่มเติม</p>
+                                                    <div class="d-grid gap-2">
+                                                        <button class="btn btn-primary" onclick="exportGridAnalysis()">
+                                                            <i class="fas fa-download me-2"></i>ข้อมูล Grid
+                                                        </button>
+                                                        <button class="btn btn-secondary" onclick="exportAllData()">
+                                                            <i class="fas fa-download me-2"></i>ข้อมูลทั้งหมด
+                                                        </button>
+                                                        <button class="btn btn-warning" onclick="exportExcludedData()">
+                                                            <i class="fas fa-download me-2"></i>ข้อมูลที่ไม่ประมวลผล
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-4">
+                                            <div class="card h-100 dashboard-card">
+                                                <div class="card-body text-center">
+                                                    <div class="mb-3">
+                                                        <i class="fas fa-file-pdf fa-3x text-danger"></i>
+                                                    </div>
+                                                    <h5 class="card-title">รายงานสรุปสำหรับผู้บริหาร</h5>
+                                                    <p class="card-text text-muted">สร้างรายงานสรุปภาพรวมสำหรับการนำเสนอ</p>
+                                                    <div class="d-grid gap-2">
+                                                        <button class="btn btn-danger" onclick="generateExecutiveReport()">
+                                                            <i class="fas fa-file-pdf me-2"></i>สร้างรายงาน PDF
+                                                        </button>
+                                                        <button class="btn btn-success" onclick="exportRecommendations()">
+                                                            <i class="fas fa-chart-bar me-2"></i>สรุปและข้อเสนอแนะ
+                                                        </button>
+                                                        <button class="btn btn-info" onclick="printReport()">
+                                                            <i class="fas fa-print me-2"></i>พิมพ์รายงาน
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle me-2"></i>คำแนะนำ</h6>
+                                        <ul class="mb-0">
+                                            <li>ข้อมูล CSV สามารถเปิดได้ใน Excel, Google Sheets</li>
+                                            <li>รายงาน PDF เหมาะสำหรับการนำเสนอต่อผู้บริหาร</li>
+                                            <li>สามารถเลือกส่งออกเฉพาะส่วนที่ต้องการ</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 text-center">
+                    <p class="mb-0">
+                        <i class="fas fa-code me-1"></i>ระบบวิเคราะห์ข้อมูลแปลงเกษตรตาม Grid
+                        <br>
+                        <small>© 2023 - พัฒนาเพื่อการวิเคราะห์ข้อมูลเกษตร</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Main JavaScript -->
+    <script>
+        // app.js
+        let csvData = [];
+        let gridAnalysis = {};
+        let excludedData = {
+            grids: new Set(),
+            plots: [],
+            quotas: new Set(),
+            totalArea: 0,
+            count: 0
+        };
+        
+        // ค่าคงที่สำหรับพื้นที่ Grid
+        const GRID_AREA = 4; // 2x2 กม. = 4 ตร.กม.
+        const RAI_PER_SQ_KM = 625; // 1 ตร.กม. = 625 ไร่
+        const GRID_AREA_RAI = GRID_AREA * RAI_PER_SQ_KM; // พื้นที่ Grid ในหน่วยไร่
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // File upload handling
+            const fileInput = document.getElementById('csvFile');
+            const uploadArea = document.getElementById('uploadArea');
+            
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            fileInput.addEventListener('change', function(e) {
+                if (this.files.length > 0) {
+                    const fileName = this.files[0].name;
+                    document.getElementById('uploadSuccess').classList.remove('d-none');
+                    document.getElementById('uploadSuccess').innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>อัปโหลดไฟล์ "${fileName}" สำเร็จ
+                    `;
+                    
+                    // แสดงตัวอย่างข้อมูลก่อนวิเคราะห์
+                    showDataPreview(this.files[0]);
+                }
+            });
+
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#e7f3ff';
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = 'white';
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = 'white';
+                
+                if (e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+                    document.getElementById('uploadSuccess').classList.remove('d-none');
+                    document.getElementById('uploadSuccess').innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>อัปโหลดไฟล์ "${file.name}" สำเร็จ
+                    `;
+                    showDataPreview(file);
+                }
+            });
+            
+            // Add event listeners for filters
+            document.getElementById('searchGrid').addEventListener('input', renderGridCards);
+            document.getElementById('sortBy').addEventListener('change', renderGridCards);
+            document.getElementById('filterYield').addEventListener('change', renderGridCards);
+            
+            // Initialize with sample data
+            initializeSampleData();
+        });
+        
+        function initializeSampleData() {
+            // สร้างข้อมูลตัวอย่างสำหรับทดสอบ
+            const sampleData = [];
+            const grids = ['AD31', 'AE31', 'AF32', 'AG33', 'AH34', 'AI35', 'AJ36', 'AK37', 'AL38', 'AM39'];
+            const quotas = ['40007332', '40001683', '40004521', '40006789', '40001234'];
+            
+            for (let i = 0; i < 50; i++) {
+                const grid = grids[Math.floor(Math.random() * grids.length)];
+                const quota = quotas[Math.floor(Math.random() * quotas.length)];
+                const yieldValue = Math.random() * 15 + 3; // 3-18 ตัน/ไร่
+                
+                sampleData.push({
+                    Grid: grid,
+                    landno: `4000${Math.floor(1000 + Math.random() * 9000)}A${Math.floor(1 + Math.random() * 9)}`,
+                    qouta: quota,
+                    area: Math.random() * 20 + 5, // 5-25 ไร่
+                    'ตัน/ไร่': parseFloat(yieldValue.toFixed(2))
+                });
+            }
+            
+            // เพิ่มข้อมูลตัวอย่างสำหรับแปลงที่ควรดูแลเป็นพิเศษ
+            for (let i = 0; i < 5; i++) {
+                sampleData.push({
+                    Grid: 'AD31',
+                    landno: `40007332A${4+i}`,
+                    qouta: '40007332',
+                    area: Math.random() * 15 + 10,
+                    'ตัน/ไร่': parseFloat((Math.random() * 2 + 5).toFixed(2)) // 5-7 ตัน/ไร่ (ต่ำ)
+                });
+            }
+            
+            // แปลงข้อมูลตัวอย่างเป็น CSV format
+            const headers = ['Grid', 'landno', 'qouta', 'area', 'ตัน/ไร่'];
+            let csvContent = headers.join(',') + '\n';
+            sampleData.forEach(row => {
+                csvContent += `${row.Grid},${row.landno},${row.qouta},${row.area},${row['ตัน/ไร่']}\n`;
+            });
+            
+            // ประมวลผลข้อมูลตัวอย่าง
+            processCSVContent(csvContent);
+            
+            // แสดงตัวอย่างข้อมูล
+            document.getElementById('uploadSuccess').classList.remove('d-none');
+            document.getElementById('uploadSuccess').innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>โหลดข้อมูลตัวอย่างสำเร็จ (50 แปลง)
+            `;
+            
+            const previewHTML = `
+                <div class="alert alert-info mt-3">
+                    <h6><i class="fas fa-eye me-2"></i>ข้อมูลตัวอย่างที่โหลดอัตโนมัติ</h6>
+                    <p class="mb-2">ข้อมูลตัวอย่างมี ${sampleData.length} แปลงจาก ${grids.length} Grid</p>
+                    <div class="mt-3">
+                        <button class="btn btn-primary" onclick="analyzeIncludedData()">
+                            <i class="fas fa-play me-2"></i>เริ่มวิเคราะห์ข้อมูลตัวอย่าง
+                        </button>
+                        <button class="btn btn-outline-secondary ms-2" onclick="resetUpload()">
+                            <i class="fas fa-redo me-2"></i>อัปโหลดไฟล์ใหม่
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('dataPreview').innerHTML = previewHTML;
+            
+            // แสดงสรุปการประมวลผล
+            const includedGrids = new Set(sampleData.map(row => row.Grid).filter(Boolean));
+            document.getElementById('processingSummary').classList.remove('d-none');
+            document.getElementById('excludedGridCount').textContent = 0;
+            document.getElementById('excludedPlotCount').textContent = 0;
+            document.getElementById('includedGridCount').textContent = includedGrids.size;
+            document.getElementById('includedPlotCount').textContent = sampleData.length;
+        }
+
+        function showDataPreview(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n').slice(0, 6); // 5 แถวแรก + header
+                
+                let previewHTML = `
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-eye me-2"></i>ตัวอย่างข้อมูลก่อนวิเคราะห์</h6>
+                        <p class="mb-2">แสดง 5 แถวแรกของข้อมูล CSV:</p>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                `;
+                
+                // Add headers
+                const headers = lines[0].split(',').map(h => h.trim());
+                previewHTML += `<tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+                previewHTML += `</thead><tbody>`;
+                
+                // Add data rows
+                for (let i = 1; i < Math.min(lines.length, 6); i++) {
+                    if (lines[i].trim() === '') continue;
+                    const values = lines[i].split(',').map(v => v.trim());
+                    previewHTML += `<tr>${values.map(v => `<td>${v}</td>`).join('')}</tr>`;
+                }
+                
+                previewHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary" onclick="processCSVFromPreview('${btoa(unescape(encodeURIComponent(content)))}')">
+                                <i class="fas fa-play me-2"></i>เริ่มวิเคราะห์ข้อมูล
+                            </button>
+                            <button class="btn btn-outline-secondary ms-2" onclick="resetUpload()">
+                                <i class="fas fa-redo me-2"></i>เปลี่ยนไฟล์
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('dataPreview').innerHTML = previewHTML;
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function processCSVFromPreview(encodedContent) {
+            const content = decodeURIComponent(escape(atob(encodedContent)));
+            processCSVContent(content);
+        }
+
+        function processCSV(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const content = e.target.result;
+                processCSVContent(content);
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function processCSVContent(content) {
+            const lines = content.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            
+            csvData = [];
+            excludedData = {
+                grids: new Set(),
+                plots: [],
+                quotas: new Set(),
+                totalArea: 0,
+                count: 0
+            };
+            
+            let totalRows = 0;
+            let zeroYieldRows = 0;
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                totalRows++;
+                const values = lines[i].split(',').map(v => v.trim());
+                const row = {};
+                
+                headers.forEach((header, index) => {
+                    row[header] = values[index] || '';
+                });
+                
+                // Convert area and yield to numbers if possible
+                if (row.area) row.area = parseFloat(row.area);
+                if (row['ตัน/ไร่']) {
+                    row['ตัน/ไร่'] = parseFloat(row['ตัน/ไร่']);
+                } else {
+                    row['ตัน/ไร่'] = 0;
+                }
+                
+                // แยกข้อมูลที่ไม่นำมาประมวลผล (ตัน/ไร่ = 0)
+                if (row['ตัน/ไร่'] === 0 || isNaN(row['ตัน/ไร่'])) {
+                    excludedData.plots.push(row);
+                    excludedData.count++;
+                    zeroYieldRows++;
+                    if (row.Grid) excludedData.grids.add(row.Grid);
+                    if (row.qouta) excludedData.quotas.add(row.qouta);
+                    if (row.area) excludedData.totalArea += row.area;
+                } else {
+                    csvData.push(row);
+                }
+            }
+            
+            // แสดงสรุปการประมวลผล
+            showProcessingSummary(totalRows, zeroYieldRows);
+        }
+
+        function showProcessingSummary(totalRows, zeroYieldRows) {
+            const includedGrids = new Set(csvData.map(row => row.Grid).filter(Boolean));
+            
+            document.getElementById('processingSummary').classList.remove('d-none');
+            document.getElementById('excludedGridCount').textContent = excludedData.grids.size;
+            document.getElementById('excludedPlotCount').textContent = excludedData.count;
+            document.getElementById('includedGridCount').textContent = includedGrids.size;
+            document.getElementById('includedPlotCount').textContent = csvData.length;
+            
+            // แสดงสรุปใน Alert
+            const summaryHTML = `
+                <div class="alert alert-info mt-3">
+                    <h6><i class="fas fa-info-circle me-2"></i>สรุปการประมวลผลข้อมูล</h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">ข้อมูลทั้งหมด</small>
+                            <strong>${totalRows} แถว</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">พบข้อมูลตัน/ไร่ = 0</small>
+                            <strong class="text-danger">${zeroYieldRows} แถว</strong>
+                        </div>
+                        <div class="col-md-4">
+                            <small class="text-muted d-block">ข้อมูลที่นำมาวิเคราะห์</small>
+                            <strong class="text-success">${csvData.length} แถว</strong>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-primary btn-sm" onclick="analyzeIncludedData()">
+                            <i class="fas fa-chart-bar me-1"></i>ดำเนินการวิเคราะห์ข้อมูลที่เลือก
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            if (!document.querySelector('#dataPreview .alert.alert-info .processing-summary')) {
+                document.querySelector('#dataPreview .alert.alert-info').insertAdjacentHTML('beforeend', summaryHTML);
+            }
+        }
+
+        function showIncludedDetails() {
+            // Create modal for included data details
+            const includedGrids = new Set(csvData.map(row => row.Grid).filter(Boolean));
+            const totalArea = csvData.reduce((sum, row) => sum + (row.area || 0), 0);
+            const quotas = new Set(csvData.map(row => row.qouta).filter(Boolean));
+            
+            const modalHTML = `
+                <div class="modal fade" id="includedDataModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-chart-line me-2"></i>รายละเอียดข้อมูลที่นำมาวิเคราะห์
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <h6>สรุปข้อมูล</h6>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="text-primary">${includedGrids.size}</h3>
+                                                    <small class="text-muted">จำนวน Grid</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="text-primary">${quotas.size}</h3>
+                                                    <small class="text-muted">จำนวนโควต้า</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="text-primary">${csvData.length}</h3>
+                                                    <small class="text-muted">จำนวนแปลง</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="text-primary">${totalArea.toFixed(2)}</h3>
+                                                    <small class="text-muted">พื้นที่รวม (ไร่)</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h6>รายชื่อ Grid ที่นำมาวิเคราะห์</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        ${Array.from(includedGrids).map(grid => 
+                                            `<span class="badge bg-primary">${grid}</span>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h6>ตัวอย่างข้อมูลที่นำมาวิเคราะห์ (10 แถวแรก)</h6>
+                                    <div class="table-responsive" style="max-height: 300px;">
+                                        <table class="table table-sm table-bordered">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Grid</th>
+                                                    <th>แปลง</th>
+                                                    <th>โควต้า</th>
+                                                    <th>พื้นที่</th>
+                                                    <th>ตัน/ไร่</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${csvData.slice(0, 10).map(plot => `
+                                                    <tr>
+                                                        <td>${plot.Grid || '-'}</td>
+                                                        <td>${plot.landno || '-'}</td>
+                                                        <td>${plot.qouta || '-'}</td>
+                                                        <td>${plot.area ? plot.area.toFixed(2) : '-'}</td>
+                                                        <td class="text-success">${plot['ตัน/ไร่']}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    ${csvData.length > 10 ? 
+                                        `<small class="text-muted">แสดง 10 จาก ${csvData.length} แปลง</small>` : 
+                                        ''
+                                    }
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                                <button type="button" class="btn btn-primary" onclick="analyzeIncludedData()">
+                                    <i class="fas fa-play me-1"></i>เริ่มวิเคราะห์ข้อมูล
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('includedDataModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('includedDataModal'));
+            modal.show();
+        }
+
+        function analyzeIncludedData() {
+            // เริ่มวิเคราะห์ข้อมูลที่นำมาประมวลผล
+            analyzeData();
+            
+            // ซ่อนการ์ดสรุปการประมวลผล
+            document.getElementById('processingSummary').classList.add('d-none');
+            
+            // แสดงแท็บวิเคราะห์
+            document.getElementById('resultsSection').classList.remove('d-none');
+        }
+
+        function analyzeData() {
+            gridAnalysis = {};
+            
+            // Group data by Grid (เฉพาะข้อมูลที่นำมาวิเคราะห์)
+            csvData.forEach(plot => {
+                const grid = plot.Grid;
+                if (!grid) return;
+                
+                if (!gridAnalysis[grid]) {
+                    gridAnalysis[grid] = {
+                        plots: [],
+                        quotas: new Set(),
+                        totalArea: 0,
+                        yields: [],
+                        urgentPlots: []
+                    };
+                }
+                
+                gridAnalysis[grid].plots.push(plot);
+                gridAnalysis[grid].quotas.add(plot.qouta);
+                if (plot.area) gridAnalysis[grid].totalArea += plot.area;
+                if (plot['ตัน/ไร่']) {
+                    gridAnalysis[grid].yields.push(plot['ตัน/ไร่']);
+                    
+                    // ตรวจสอบว่าเป็นแปลงที่ควรดูแลเป็นพิเศษหรือไม่ (ผลผลิต ≤ 8 ตัน/ไร่)
+                    if (plot['ตัน/ไร่'] <= 8) {
+                        gridAnalysis[grid].urgentPlots.push(plot);
+                    }
+                }
+            });
+            
+            displayResults();
+        }
+
+        function displayResults() {
+            // Show results section
+            document.getElementById('resultsSection').classList.remove('d-none');
+            
+            // Calculate and display summary metrics
+            const grids = Object.keys(gridAnalysis);
+            const totalPlots = csvData.length;
+            const totalYields = csvData.filter(p => p['ตัน/ไร่']).map(p => p['ตัน/ไร่']);
+            const avgYield = totalYields.length > 0 ? 
+                (totalYields.reduce((a, b) => a + b) / totalYields.length).toFixed(2) : 0;
+            
+            let problemGrids = 0;
+            grids.forEach(grid => {
+                const yields = gridAnalysis[grid].yields;
+                if (yields.length > 0) {
+                    const avg = yields.reduce((a, b) => a + b) / yields.length;
+                    if (avg <= 8) problemGrids++;
+                }
+            });
+            
+            // Update dashboard
+            updateDashboard(grids, totalPlots, avgYield, problemGrids);
+            
+            // Display grid list (แบบใหม่)
+            renderGridList();
+            
+            // Display grid cards (แบบเดิม)
+            renderGridCards();
+            renderGridGrades();
+            renderUrgentPlots();
+            generateRecommendations();
+        }
+
+        function updateDashboard(grids, totalPlots, avgYield, problemGrids) {
+            // Calculate additional metrics for dashboard
+            let highYieldGrids = 0;
+            let mediumYieldGrids = 0;
+            let lowYieldGrids = 0;
+            let totalArea = 0;
+            let totalQuotas = 0;
+            
+            grids.forEach(grid => {
+                const data = gridAnalysis[grid];
+                const yields = data.yields;
+                
+                totalArea += data.totalArea;
+                totalQuotas += data.quotas.size;
+                
+                if (yields.length > 0) {
+                    const avg = yields.reduce((a, b) => a + b) / yields.length;
+                    if (avg > 10) highYieldGrids++;
+                    else if (avg >= 8) mediumYieldGrids++;
+                    else lowYieldGrids++;
+                }
+            });
+            
+            // คำนวณเปอร์เซ็นต์
+            const highYieldPercent = grids.length > 0 ? ((highYieldGrids / grids.length) * 100).toFixed(1) : 0;
+            const problemGridPercent = grids.length > 0 ? ((problemGrids / grids.length) * 100).toFixed(1) : 0;
+            
+            const dashboardHTML = `
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-center h-100 dashboard-card">
+                            <div class="card-body">
+                                <div class="text-primary mb-2">
+                                    <i class="fas fa-th-large fa-2x"></i>
+                                </div>
+                                <h5 class="card-title text-primary">Grid ที่วิเคราะห์</h5>
+                                <h3 class="stat-number mb-0">${grids.length}</h3>
+                                <small class="text-muted">จาก ${totalQuotas} โควต้า</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-center h-100 dashboard-card">
+                            <div class="card-body">
+                                <div class="text-success mb-2">
+                                    <i class="fas fa-map-marked-alt fa-2x"></i>
+                                </div>
+                                <h5 class="card-title text-success">แปลงที่วิเคราะห์</h5>
+                                <h3 class="stat-number mb-0">${totalPlots}</h3>
+                                <small class="text-muted">${totalArea.toFixed(2)} ไร่</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-center h-100 dashboard-card">
+                            <div class="card-body">
+                                <div class="${avgYield > 10 ? 'text-success' : avgYield >= 8 ? 'text-warning' : 'text-danger'} mb-2">
+                                    <i class="fas fa-weight-hanging fa-2x"></i>
+                                </div>
+                                <h5 class="card-title">ผลผลิตเฉลี่ย</h5>
+                                <h3 class="stat-number mb-0 ${avgYield > 10 ? 'text-success' : avgYield >= 8 ? 'text-warning' : 'text-danger'}">${avgYield}</h3>
+                                <small class="text-muted">ตัน/ไร่</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card text-center h-100 dashboard-card">
+                            <div class="card-body">
+                                <div class="${problemGrids > 0 ? 'text-danger' : 'text-success'} mb-2">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                </div>
+                                <h5 class="card-title ${problemGrids > 0 ? 'text-danger' : 'text-success'}">Grid ที่มีปัญหา</h5>
+                                <h3 class="stat-number mb-0 ${problemGrids > 0 ? 'text-danger' : 'text-success'}">${problemGrids}</h3>
+                                <small class="text-muted">${problemGridPercent}% ของทั้งหมด</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="card dashboard-card">
+                            <div class="card-body">
+                                <h6><i class="fas fa-chart-pie me-2"></i>การกระจายผลผลิต Grid</h6>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <div class="text-center">
+                                        <div class="text-success fs-4">${highYieldGrids}</div>
+                                        <small>ผลผลิตดี</small>
+                                        <br>
+                                        <small>>10 ตัน/ไร่</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-warning fs-4">${mediumYieldGrids}</div>
+                                        <small>ปานกลาง</small>
+                                        <br>
+                                        <small>8-10 ตัน/ไร่</small>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-danger fs-4">${lowYieldGrids}</div>
+                                        <small>ต้องปรับปรุง</small>
+                                        <br>
+                                        <small>≤8 ตัน/ไร่</small>
+                                    </div>
+                                </div>
+                                <div class="progress mt-3" style="height: 20px;">
+                                    <div class="progress-bar bg-success" style="width: ${grids.length > 0 ? (highYieldGrids / grids.length) * 100 : 0}%"></div>
+                                    <div class="progress-bar bg-warning" style="width: ${grids.length > 0 ? (mediumYieldGrids / grids.length) * 100 : 0}%"></div>
+                                    <div class="progress-bar bg-danger" style="width: ${grids.length > 0 ? (lowYieldGrids / grids.length) * 100 : 0}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card dashboard-card">
+                            <div class="card-body">
+                                <h6><i class="fas fa-bullseye me-2"></i>เป้าหมายการผลิต</h6>
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <small>เป้าหมาย: ผลผลิต >10 ตัน/ไร่</small>
+                                        <small>${highYieldPercent}%</small>
+                                    </div>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-success" style="width: ${highYieldPercent}%"></div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-primary w-100" onclick="showHighYieldGrids()">
+                                        <i class="fas fa-eye me-1"></i>ดู Grid ผลผลิตดี (${highYieldGrids} Grid)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('dashboardCards').innerHTML = dashboardHTML;
+        }
+
+        // ฟังก์ชันสำหรับแสดงรายการ Grid แบบใหม่ (เป็นแถบ)
+        function renderGridList() {
+            const container = document.getElementById('gridListContainer');
+            const grids = Object.keys(gridAnalysis);
+            
+            if (grids.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-4">ไม่มีข้อมูล Grid</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            grids.forEach((grid, index) => {
+                const data = gridAnalysis[grid];
+                const yields = data.yields;
+                
+                // คำนวณเกรด
+                let avgYield = 0;
+                let grade = 'C';
+                let gradeClass = 'grade-c-badge';
+                let yieldClass = 'yield-poor';
+                
+                if (yields.length > 0) {
+                    avgYield = yields.reduce((a, b) => a + b) / yields.length;
+                    
+                    if (avgYield > 10) {
+                        grade = 'A';
+                        gradeClass = 'grade-a-badge';
+                        yieldClass = 'yield-excellent';
+                    } else if (avgYield >= 8) {
+                        grade = 'B';
+                        gradeClass = 'grade-b-badge';
+                        yieldClass = 'yield-good';
+                    }
+                }
+                
+                // คำนวณ % การใช้พื้นที่
+                const areaPercentage = (data.totalArea / GRID_AREA_RAI) * 100;
+                
+                html += `
+                    <div class="grid-list-item ${index === 0 ? 'active' : ''}" onclick="showGridDetailNew('${grid}')" data-grid="${grid}">
+                        <div class="grid-grade-badge ${gradeClass}">
+                            ${grade}
+                        </div>
+                        <div class="grid-list-info">
+                            <div class="grid-name">Grid ${grid}</div>
+                            <div class="grid-stats">
+                                <i class="fas fa-map-marker-alt me-1"></i>${data.plots.length} แปลง | 
+                                <i class="fas fa-tag ms-2 me-1"></i>${data.quotas.size} โควต้า | 
+                                <i class="fas fa-ruler-combined ms-2 me-1"></i>${data.totalArea.toFixed(1)} ไร่
+                            </div>
+                            <div class="progress mt-1" style="height: 5px;">
+                                <div class="progress-bar ${grade === 'A' ? 'bg-success' : grade === 'B' ? 'bg-warning' : 'bg-danger'}" style="width: ${areaPercentage > 100 ? 100 : areaPercentage}%"></div>
+                            </div>
+                            <small class="text-muted">ใช้พื้นที่ ${areaPercentage.toFixed(1)}% ของ Grid</small>
+                        </div>
+                        <div class="grid-yield ${yieldClass}">
+                            ${avgYield.toFixed(2)}<br><small>ตัน/ไร่</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // แสดงรายละเอียดของ Grid แรกโดยอัตโนมัติ
+            if (grids.length > 0) {
+                showGridDetailNew(grids[0]);
+            }
+        }
+
+        // ฟังก์ชันสำหรับแสดงรายละเอียด Grid แบบใหม่
+        function showGridDetailNew(grid) {
+            const data = gridAnalysis[grid];
+            const detailContent = document.getElementById('gridDetailContent');
+            const selectedGridName = document.getElementById('selectedGridName');
+            
+            // อัปเดตชื่อ Grid ที่เลือก
+            selectedGridName.textContent = `Grid ${grid}`;
+            
+            // กำหนดไฮไลต์ให้กับแถบ Grid ที่เลือก
+            document.querySelectorAll('.grid-list-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.grid-list-item[data-grid="${grid}"]`).classList.add('active');
+            
+            // คำนวณสถิติ
+            const yields = data.yields;
+            const avg = yields.length > 0 ? (yields.reduce((a, b) => a + b) / yields.length).toFixed(2) : 0;
+            const min = yields.length > 0 ? Math.min(...yields).toFixed(2) : 0;
+            const max = yields.length > 0 ? Math.max(...yields).toFixed(2) : 0;
+            
+            // คำนวณเกรด
+            let grade = 'C';
+            let gradeClass = 'badge bg-danger';
+            let gradeText = 'ต้องปรับปรุง';
+            if (avg > 10) {
+                grade = 'A';
+                gradeClass = 'badge bg-success';
+                gradeText = 'ดีเยี่ยม';
+            } else if (avg >= 8) {
+                grade = 'B';
+                gradeClass = 'badge bg-warning';
+                gradeText = 'ปานกลาง';
+            }
+            
+            // คำนวณการกระจายผลผลิต
+            const lowYield = yields.filter(y => y <= 8).length;
+            const mediumYield = yields.filter(y => y > 8 && y <= 10).length;
+            const highYield = yields.filter(y => y > 10).length;
+            const total = yields.length;
+            
+            // คำนวณ % การใช้พื้นที่
+            const areaPercentage = (data.totalArea / GRID_AREA_RAI) * 100;
+            const areaRemaining = GRID_AREA_RAI - data.totalArea;
+            
+            // ค้นหาแปลงที่ควรดูแลเป็นพิเศษ (ผลผลิตต่ำสุด)
+            let urgentPlot = null;
+            let urgentYield = Infinity;
+            data.plots.forEach(plot => {
+                if (plot['ตัน/ไร่'] && plot['ตัน/ไร่'] < urgentYield) {
+                    urgentYield = plot['ตัน/ไร่'];
+                    urgentPlot = plot;
+                }
+            });
+            
+            // สร้าง HTML สำหรับแสดงรายละเอียด
+            let detailHTML = `
+                <h4>Grid ${grid} <span class="${gradeClass} ms-2">เกรด ${grade} - ${gradeText}</span></h4>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-chart-line me-2"></i>ผลผลิต</h6>
+                                <div class="text-center mt-3">
+                                    <div class="display-4 ${avg > 10 ? 'text-success' : avg >= 8 ? 'text-warning' : 'text-danger'}">${avg}</div>
+                                    <div class="text-muted">ตัน/ไร่ (เฉลี่ย)</div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-6 text-center">
+                                        <div class="text-success">${max}</div>
+                                        <small class="text-muted">สูงสุด</small>
+                                    </div>
+                                    <div class="col-6 text-center">
+                                        <div class="text-danger">${min}</div>
+                                        <small class="text-muted">ต่ำสุด</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-map-marked-alt me-2"></i>พื้นที่</h6>
+                                <div class="text-center mt-3">
+                                    <div class="display-4 text-primary">${data.totalArea.toFixed(1)}</div>
+                                    <div class="text-muted">ไร่ (พื้นที่ใช้จริง)</div>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="d-flex justify-content-between">
+                                        <small>พื้นที่ Grid ทั้งหมด: ${GRID_AREA_RAI} ไร่</small>
+                                        <small>${areaPercentage.toFixed(1)}%</small>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-primary" style="width: ${areaPercentage > 100 ? 100 : areaPercentage}%"></div>
+                                    </div>
+                                    <small class="text-muted">พื้นที่คงเหลือ: ${areaRemaining > 0 ? areaRemaining.toFixed(1) : 0} ไร่</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-chart-pie me-2"></i>การกระจายผลผลิต</h6>
+                                <div class="row mt-3">
+                                    <div class="col-4 text-center">
+                                        <div class="text-success fs-3">${highYield}</div>
+                                        <small>ผลผลิตดี<br>(>10 ตัน/ไร่)</small>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <div class="text-warning fs-3">${mediumYield}</div>
+                                        <small>ผลผลิตปานกลาง<br>(8-10 ตัน/ไร่)</small>
+                                    </div>
+                                    <div class="col-4 text-center">
+                                        <div class="text-danger fs-3">${lowYield}</div>
+                                        <small>ต้องปรับปรุง<br>(≤8 ตัน/ไร่)</small>
+                                    </div>
+                                </div>
+                                <div class="progress mt-3" style="height: 15px;">
+                                    <div class="progress-bar bg-success" style="width: ${total > 0 ? (highYield / total) * 100 : 0}%"></div>
+                                    <div class="progress-bar bg-warning" style="width: ${total > 0 ? (mediumYield / total) * 100 : 0}%"></div>
+                                    <div class="progress-bar bg-danger" style="width: ${total > 0 ? (lowYield / total) * 100 : 0}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-list me-2"></i>ข้อมูลพื้นฐาน</h6>
+                                <ul class="list-unstyled mt-3">
+                                    <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i>จำนวนแปลง: <strong>${data.plots.length}</strong></li>
+                                    <li class="mb-2"><i class="fas fa-tag me-2"></i>จำนวนโควต้า: <strong>${data.quotas.size}</strong></li>
+                                    <li class="mb-2"><i class="fas fa-leaf me-2"></i>แปลงที่ควรดูแล: <strong>${data.urgentPlots.length}</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light">
+                            <div class="card-body">
+                                <h6><i class="fas fa-tags me-2"></i>โควต้าการผลิต</h6>
+                                <div class="plot-list-container">
+            `;
+            
+            // แสดงรายการโควต้า
+            Array.from(data.quotas).forEach(quota => {
+                const quotaPlots = data.plots.filter(p => p.qouta === quota);
+                const quotaYields = quotaPlots.filter(p => p['ตัน/ไร่']).map(p => p['ตัน/ไร่']);
+                const quotaAvg = quotaYields.length > 0 ? 
+                    (quotaYields.reduce((a, b) => a + b) / quotaYields.length).toFixed(2) : 0;
+                
+                detailHTML += `
+                    <div class="plot-item">
+                        <div>โควต้า ${quota}</div>
+                        <div>
+                            <span class="badge bg-secondary">${quotaPlots.length} แปลง</span>
+                            <span class="ms-2 ${quotaAvg > 10 ? 'text-success' : quotaAvg >= 8 ? 'text-warning' : 'text-danger'}">${quotaAvg} ตัน/ไร่</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            detailHTML += `
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // แสดงแปลงที่ควรดูแลเป็นพิเศษ (ถ้ามี)
+            if (urgentPlot) {
+                detailHTML += `
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card border-danger">
+                                <div class="card-header bg-danger text-white">
+                                    <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>แปลงที่ควรดูแลเป็นพิเศษ</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h5>${urgentPlot.landno || '-'}</h5>
+                                            <p class="mb-1">โควต้า: ${urgentPlot.qouta || '-'}</p>
+                                            <p class="mb-0">พื้นที่: ${urgentPlot.area ? urgentPlot.area.toFixed(2) : '-'} ไร่</p>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div class="display-3 text-danger">${urgentYield}</div>
+                                            <div class="text-muted">ตัน/ไร่</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            detailContent.innerHTML = detailHTML;
+        }
+
+        // ฟังก์ชันสำหรับเรียงลำดับ Grid
+        function sortGrids(criteria) {
+            const container = document.getElementById('gridListContainer');
+            const items = Array.from(container.querySelectorAll('.grid-list-item'));
+            
+            items.sort((a, b) => {
+                const gridA = a.getAttribute('data-grid');
+                const gridB = b.getAttribute('data-grid');
+                const dataA = gridAnalysis[gridA];
+                const dataB = gridAnalysis[gridB];
+                
+                if (criteria === 'name') {
+                    return gridA.localeCompare(gridB);
+                } else if (criteria === 'yield') {
+                    const yieldsA = dataA.yields;
+                    const yieldsB = dataB.yields;
+                    const avgA = yieldsA.length > 0 ? yieldsA.reduce((a, b) => a + b) / yieldsA.length : 0;
+                    const avgB = yieldsB.length > 0 ? yieldsB.reduce((a, b) => a + b) / yieldsB.length : 0;
+                    return avgB - avgA;
+                }
+                return 0;
+            });
+            
+            // ลบรายการทั้งหมดและเพิ่มกลับตามลำดับใหม่
+            container.innerHTML = '';
+            items.forEach(item => container.appendChild(item));
+            
+            // เลือก Grid แรกในรายการ
+            if (items.length > 0) {
+                const firstGrid = items[0].getAttribute('data-grid');
+                showGridDetailNew(firstGrid);
+            }
+        }
+
+        // ฟังก์ชันสำหรับกรอง Grid
+        function filterGrids(filter) {
+            const container = document.getElementById('gridListContainer');
+            const items = Array.from(container.querySelectorAll('.grid-list-item'));
+            
+            items.forEach(item => {
+                const grid = item.getAttribute('data-grid');
+                const data = gridAnalysis[grid];
+                const yields = data.yields;
+                const avg = yields.length > 0 ? yields.reduce((a, b) => a + b) / yields.length : 0;
+                
+                if (filter === 'all') {
+                    item.style.display = 'flex';
+                } else if (filter === 'problem' && avg <= 8) {
+                    item.style.display = 'flex';
+                } else if (filter === 'good' && avg > 10) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // ฟังก์ชันสำหรับแสดงแปลงที่ควรดูแลเป็นพิเศษ
+        function renderUrgentPlots() {
+            const container = document.getElementById('urgentPlotsContainer');
+            
+            // รวบรวมแปลงที่ควรดูแลเป็นพิเศษจากทุก Grid
+            let urgentPlotsAll = [];
+            Object.keys(gridAnalysis).forEach(grid => {
+                const data = gridAnalysis[grid];
+                data.urgentPlots.forEach(plot => {
+                    urgentPlotsAll.push({
+                        grid: grid,
+                        plot: plot
+                    });
+                });
+            });
+            
+            // เรียงลำดับตามผลผลิต (น้อยไปมาก)
+            urgentPlotsAll.sort((a, b) => a.plot['ตัน/ไร่'] - b.plot['ตัน/ไร่']);
+            
+            if (urgentPlotsAll.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>ไม่มีแปลงที่ควรดูแลเป็นพิเศษ
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            
+            urgentPlotsAll.forEach((item, index) => {
+                if (index >= 6) return; // แสดงสูงสุด 6 แปลง
+                
+                const plot = item.plot;
+                const yieldValue = plot['ตัน/ไร่'];
+                const area = plot.area ? plot.area.toFixed(2) : '0';
+                
+                html += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-danger">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Grid ${item.grid}</h6>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">${plot.landno || 'ไม่มีชื่อแปลง'}</h5>
+                                <p class="card-text">
+                                    <small class="text-muted">โควต้า: ${plot.qouta || '-'}</small><br>
+                                    <small class="text-muted">พื้นที่: ${area} ไร่</small>
+                                </p>
+                                <div class="text-center">
+                                    <div class="display-4 text-danger">${yieldValue}</div>
+                                    <div class="text-muted">ตัน/ไร่</div>
+                                </div>
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-danger w-100" onclick="showGridDetailNew('${item.grid}')">
+                                        <i class="fas fa-eye me-1"></i>ดู Grid นี้
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // ฟังก์ชันอื่นๆ ที่มีอยู่เดิม (ไม่เปลี่ยนแปลง)
+        function showHighYieldGrids() {
+            const highYieldGrids = [];
+            Object.keys(gridAnalysis).forEach(grid => {
+                const yields = gridAnalysis[grid].yields;
+                if (yields.length > 0) {
+                    const avg = yields.reduce((a, b) => a + b) / yields.length;
+                    if (avg > 10) {
+                        highYieldGrids.push({ grid, avg: avg.toFixed(2) });
+                    }
+                }
+            });
+            
+            if (highYieldGrids.length > 0) {
+                const gridList = highYieldGrids.map(g => `${g.grid} (${g.avg} ตัน/ไร่)`).join(', ');
+                alert(`Grid ผลผลิตดี (>10 ตัน/ไร่): \n${gridList}`);
+            } else {
+                alert('ไม่พบ Grid ที่มีผลผลิตดี (>10 ตัน/ไร่)');
+            }
+        }
+
+        function showExcludedDetails() {
+            // Create modal for excluded data details
+            const modalHTML = `
+                <div class="modal fade" id="excludedDataModal" tabindex="-1">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-warning text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>รายละเอียดข้อมูลที่ไม่นำมาประมวลผล
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <h6>สรุปข้อมูล</h6>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="text-warning">${excludedData.grids.size}</h3>
+                                                    <small class="text-muted">จำนวน Grid</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="text-warning">${excludedData.quotas.size}</h3>
+                                                    <small class="text-muted">จำนวนโควต้า</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="text-warning">${excludedData.count}</h3>
+                                                    <small class="text-muted">จำนวนแปลง</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center">
+                                                <div class="card-body">
+                                                    <h3 class="text-warning">${excludedData.totalArea.toFixed(2)}</h3>
+                                                    <small class="text-muted">พื้นที่รวม (ไร่)</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h6>รายชื่อ Grid ที่ไม่นำมาประมวลผล</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        ${Array.from(excludedData.grids).map(grid => 
+                                            `<span class="badge bg-warning text-dark">${grid}</span>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h6>ข้อมูลแปลงที่ไม่นำมาประมวลผล (10 แถวแรก)</h6>
+                                    <div class="table-responsive" style="max-height: 300px;">
+                                        <table class="table table-sm table-bordered">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Grid</th>
+                                                    <th>แปลง</th>
+                                                    <th>โควต้า</th>
+                                                    <th>พื้นที่</th>
+                                                    <th>ตัน/ไร่</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${excludedData.plots.slice(0, 10).map(plot => `
+                                                    <tr>
+                                                        <td>${plot.Grid || '-'}</td>
+                                                        <td>${plot.landno || '-'}</td>
+                                                        <td>${plot.qouta || '-'}</td>
+                                                        <td>${plot.area ? plot.area.toFixed(2) : '-'}</td>
+                                                        <td class="text-danger">${plot['ตัน/ไร่'] === 0 ? '0' : 'ไม่มีข้อมูล'}</td>
+                                                    </tr>
+                                                `).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    ${excludedData.plots.length > 10 ? 
+                                        `<small class="text-muted">แสดง 10 จาก ${excludedData.plots.length} แปลง</small>` : 
+                                        ''
+                                    }
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                                <button type="button" class="btn btn-warning" onclick="exportExcludedData()">
+                                    <i class="fas fa-download me-1"></i>ดาวน์โหลดข้อมูล
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove existing modal if any
+            const existingModal = document.getElementById('excludedDataModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('excludedDataModal'));
+            modal.show();
+        }
+
+        function renderGridGrades() {
+            const container = document.getElementById('gridGradesContainer');
+            
+            // Classify grids by grade
+            const gradeA = []; // >10 ตัน/ไร่
+            const gradeB = []; // 8-10 ตัน/ไร่
+            const gradeC = []; // ≤8 ตัน/ไร่
+            
+            Object.keys(gridAnalysis).forEach(grid => {
+                const data = gridAnalysis[grid];
+                const yields = data.yields;
+                
+                if (yields.length === 0) return;
+                
+                const avg = yields.reduce((a, b) => a + b) / yields.length;
+                const gridInfo = { grid, avg, data };
+                
+                if (avg > 10) gradeA.push(gridInfo);
+                else if (avg >= 8) gradeB.push(gridInfo);
+                else gradeC.push(gridInfo);
+            });
+            
+            let html = '';
+            
+            // Grade A
+            if (gradeA.length > 0) {
+                html += `
+                    <div class="col-md-12 mb-4">
+                        <div class="card grade-a border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>เกรด A - ผลผลิตดี (>10 ตัน/ไร่) - ${gradeA.length} Grid</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                `;
+                
+                gradeA.forEach(({ grid, avg, data }) => {
+                    html += `
+                        <div class="col-md-4 mb-3">
+                            <div class="card grade-card" onclick="showGridDetailOld('${grid}')">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold">${grid}</h6>
+                                        <span class="badge bg-success">${avg.toFixed(2)}</span>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i>${data.plots.length} แปลง
+                                        <span class="ms-3"><i class="fas fa-tag me-1"></i>${data.quotas.size} โควต้า</span>
+                                    </small>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-success" style="width: ${Math.min(avg * 10, 100)}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Grade B
+            if (gradeB.length > 0) {
+                html += `
+                    <div class="col-md-12 mb-4">
+                        <div class="card grade-b border-warning">
+                            <div class="card-header bg-warning text-white">
+                                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>เกรด B - ผลผลิตปานกลาง (8-10 ตัน/ไร่) - ${gradeB.length} Grid</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                `;
+                
+                gradeB.forEach(({ grid, avg, data }) => {
+                    html += `
+                        <div class="col-md-4 mb-3">
+                            <div class="card grade-card" onclick="showGridDetailOld('${grid}')">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold">${grid}</h6>
+                                        <span class="badge bg-warning">${avg.toFixed(2)}</span>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i>${data.plots.length} แปลง
+                                        <span class="ms-3"><i class="fas fa-tag me-1"></i>${data.quotas.size} โควต้า</span>
+                                    </small>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" style="width: ${Math.min(avg * 10, 100)}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Grade C
+            if (gradeC.length > 0) {
+                html += `
+                    <div class="col-md-12 mb-4">
+                        <div class="card grade-c border-danger">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>เกรด C - ต้องปรับปรุง (≤8 ตัน/ไร่) - ${gradeC.length} Grid</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                `;
+                
+                gradeC.forEach(({ grid, avg, data }) => {
+                    html += `
+                        <div class="col-md-4 mb-3">
+                            <div class="card grade-card" onclick="showGridDetailOld('${grid}')">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0 fw-bold">${grid}</h6>
+                                        <span class="badge bg-danger">${avg.toFixed(2)}</span>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i>${data.plots.length} แปลง
+                                        <span class="ms-3"><i class="fas fa-tag me-1"></i>${data.quotas.size} โควต้า</span>
+                                    </small>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-danger" style="width: ${Math.min(avg * 10, 100)}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html || '<div class="col-12"><div class="alert alert-info">ไม่พบข้อมูล Grid</div></div>';
+        }
+
+        function showGridDetailOld(grid) {
+            const data = gridAnalysis[grid];
+            const detailSection = document.getElementById('gridDetailSection');
+            const detailContent = document.getElementById('gridDetailContentOld');
+            
+            // Show detail section
+            detailSection.classList.remove('d-none');
+            
+            // Calculate statistics
+            const yields = data.yields;
+            const avg = yields.length > 0 ? (yields.reduce((a, b) => a + b) / yields.length).toFixed(2) : 0;
+            const min = yields.length > 0 ? Math.min(...yields).toFixed(2) : 0;
+            const max = yields.length > 0 ? Math.max(...yields).toFixed(2) : 0;
+            
+            // Find worst plot
+            let worstPlot = null;
+            let worstYield = Infinity;
+            data.plots.forEach(plot => {
+                if (plot['ตัน/ไร่'] && plot['ตัน/ไร่'] < worstYield) {
+                    worstYield = plot['ตัน/ไร่'];
+                    worstPlot = plot;
+                }
+            });
+            
+            // Calculate yield distribution
+            const lowYield = yields.filter(y => y <= 8).length;
+            const mediumYield = yields.filter(y => y > 8 && y <= 10).length;
+            const highYield = yields.filter(y => y > 10).length;
+            const total = yields.length;
+            
+            detailContent.innerHTML = `
+                <h5>Grid ${grid}</h5>
+                <div class="mb-3">
+                    <span class="badge ${avg > 10 ? 'bg-success' : avg >= 8 ? 'bg-warning' : 'bg-danger'} fs-6">
+                        ${avg} ตัน/ไร่
+                    </span>
+                </div>
+                
+                <h6>ข้อมูลพื้นฐาน</h6>
+                <ul class="list-unstyled">
+                    <li><small><i class="fas fa-map-marker-alt me-2"></i>จำนวนแปลง: ${data.plots.length}</small></li>
+                    <li><small><i class="fas fa-tag me-2"></i>จำนวนโควต้า: ${data.quotas.size}</small></li>
+                    <li><small><i class="fas fa-ruler-combined me-2"></i>พื้นที่รวม: ${data.totalArea.toFixed(2)} ไร่</small></li>
+                </ul>
+                
+                <h6 class="mt-3">สถิติผลผลิต</h6>
+                <ul class="list-unstyled">
+                    <li><small>ผลผลิตสูงสุด: ${max} ตัน/ไร่</small></li>
+                    <li><small>ผลผลิตต่ำสุด: ${min} ตัน/ไร่</small></li>
+                </ul>
+                
+                <h6 class="mt-3">การกระจายผลผลิต</h6>
+                <div class="mb-2">
+                    <small>ผลผลิตดี (>10): ${highYield} แปลง</small>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: ${total > 0 ? (highYield / total) * 100 : 0}%"></div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <small>ผลผลิตปานกลาง (8-10): ${mediumYield} แปลง</small>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: ${total > 0 ? (mediumYield / total) * 100 : 0}%"></div>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <small>ต้องปรับปรุง (≤8): ${lowYield} แปลง</small>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-danger" style="width: ${total > 0 ? (lowYield / total) * 100 : 0}%"></div>
+                    </div>
+                </div>
+                
+                <h6 class="mt-3">โควต้าการผลิต</h6>
+                <div class="mb-2">
+                    ${Array.from(data.quotas).map(quota => {
+                        const quotaPlots = data.plots.filter(p => p.qouta === quota);
+                        const quotaYields = quotaPlots.filter(p => p['ตัน/ไร่']).map(p => p['ตัน/ไร่']);
+                        const quotaAvg = quotaYields.length > 0 ? 
+                            (quotaYields.reduce((a, b) => a + b) / quotaYields.length).toFixed(2) : 0;
+                        return `
+                            <div class="d-flex justify-content-between mb-1">
+                                <small>โควต้า ${quota}: ${quotaPlots.length} แปลง</small>
+                                <small>${quotaAvg} ตัน/ไร่</small>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                
+                ${worstPlot ? `
+                    <div class="alert alert-danger mt-3">
+                        <h6><i class="fas fa-exclamation-circle me-2"></i>แปลงที่ต้องดูแลเร่งด่วน</h6>
+                        <p class="mb-1">แปลง: ${worstPlot.landno || '-'}</p>
+                        <p class="mb-0">ผลผลิต: ${worstYield} ตัน/ไร่</p>
+                    </div>
+                ` : ''}
+                
+                <button class="btn btn-outline-primary btn-sm w-100 mt-3" onclick="exportSingleGrid('${grid}')">
+                    <i class="fas fa-download me-2"></i>ดาวน์โหลดรายงาน Grid
+                </button>
+            `;
+        }
+
+        function renderGridCards() {
+            const container = document.getElementById('gridContainer');
+            container.innerHTML = '';
+            
+            const searchTerm = document.getElementById('searchGrid').value.toLowerCase();
+            const sortBy = document.getElementById('sortBy').value;
+            const filterYield = document.getElementById('filterYield').value;
+            
+            let grids = Object.keys(gridAnalysis);
+            
+            // Apply filter
+            if (searchTerm) {
+                grids = grids.filter(grid => grid.toLowerCase().includes(searchTerm));
+            }
+            
+            if (filterYield !== 'all') {
+                grids = grids.filter(grid => {
+                    const yields = gridAnalysis[grid].yields;
+                    if (yields.length === 0) return false;
+                    
+                    const avg = yields.reduce((a, b) => a + b) / yields.length;
+                    
+                    if (filterYield === 'problem') return avg <= 8;
+                    if (filterYield === 'good') return avg > 10;
+                    return true;
+                });
+            }
+            
+            // Apply sorting
+            grids.sort((a, b) => {
+                const dataA = gridAnalysis[a];
+                const dataB = gridAnalysis[b];
+                
+                switch(sortBy) {
+                    case 'name':
+                        return a.localeCompare(b);
+                    case 'yield':
+                        const avgA = dataA.yields.length > 0 ? 
+                            dataA.yields.reduce((sum, y) => sum + y) / dataA.yields.length : 0;
+                        const avgB = dataB.yields.length > 0 ? 
+                            dataB.yields.reduce((sum, y) => sum + y) / dataB.yields.length : 0;
+                        return avgB - avgA;
+                    case 'plots':
+                        return dataB.plots.length - dataA.plots.length;
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Render grid cards
+            grids.forEach(grid => {
+                const data = gridAnalysis[grid];
+                const template = document.querySelector('#gridCardTemplate');
+                if (!template) return;
+                
+                const clone = template.content.cloneNode(true);
+                
+                const card = clone.querySelector('.card');
+                const gridName = clone.querySelector('.grid-name');
+                const plotCount = clone.querySelector('.plot-count');
+                const qoutaCount = clone.querySelector('.qouta-count');
+                const yieldBadge = clone.querySelector('.yield-badge');
+                const quotaList = clone.querySelector('.quota-list');
+                const worstPlot = clone.querySelector('.worst-plot-name');
+                const worstYield = clone.querySelector('.worst-yield');
+                const progressBars = clone.querySelectorAll('.progress-bar');
+                
+                // Basic info
+                gridName.textContent = grid;
+                plotCount.textContent = data.plots.length;
+                qoutaCount.textContent = data.quotas.size;
+                
+                // Calculate yield statistics
+                const yields = data.yields;
+                let avgYield = 0;
+                let minYield = Infinity;
+                let minPlot = null;
+                
+                if (yields.length > 0) {
+                    avgYield = (yields.reduce((a, b) => a + b) / yields.length).toFixed(2);
+                    
+                    // Find worst plot
+                    data.plots.forEach(plot => {
+                        if (plot['ตัน/ไร่'] && plot['ตัน/ไร่'] < minYield) {
+                            minYield = plot['ตัน/ไร่'];
+                            minPlot = plot;
+                        }
+                    });
+                }
+                
+                // Set yield badge color
+                yieldBadge.textContent = `${avgYield} ตัน/ไร่`;
+                if (avgYield <= 8) {
+                    yieldBadge.className = 'badge yield-badge bg-danger';
+                    card.classList.add('bad-grid');
+                } else if (avgYield > 10) {
+                    yieldBadge.className = 'badge yield-badge bg-success';
+                    card.classList.add('good-grid');
+                } else {
+                    yieldBadge.className = 'badge yield-badge bg-warning';
+                }
+                
+                // Display quotas
+                quotaList.innerHTML = '';
+                data.quotas.forEach(qouta => {
+                    const quotaPlots = data.plots.filter(p => p.qouta === qouta);
+                    const div = document.createElement('div');
+                    div.className = 'd-flex justify-content-between align-items-center mb-1';
+                    div.innerHTML = `
+                        <small><i class="fas fa-tag me-1"></i>โควต้า ${qouta}</small>
+                        <small class="text-muted">${quotaPlots.length} แปลง</small>
+                    `;
+                    quotaList.appendChild(div);
+                });
+                
+                // Display worst plot
+                if (minPlot) {
+                    worstPlot.textContent = `${minPlot.landno} (${minPlot['ตัน/ไร่']} ตัน/ไร่)`;
+                    worstYield.textContent = minYield;
+                } else {
+                    worstPlot.textContent = 'ไม่พบข้อมูลผลผลิต';
+                    worstYield.textContent = '0';
+                }
+                
+                // Yield distribution progress bar
+                const lowYield = yields.filter(y => y <= 8).length;
+                const mediumYield = yields.filter(y => y > 8 && y <= 10).length;
+                const highYield = yields.filter(y => y > 10).length;
+                const total = yields.length;
+                
+                if (total > 0) {
+                    progressBars[0].style.width = `${(lowYield / total) * 100}%`;
+                    progressBars[1].style.width = `${(mediumYield / total) * 100}%`;
+                    progressBars[2].style.width = `${(highYield / total) * 100}%`;
+                }
+                
+                container.appendChild(clone);
+            });
+        }
+
+        function renderAllDataTable() {
+            const container = document.getElementById('allDataTable');
+            const searchTerm = document.getElementById('searchAllData').value.toLowerCase();
+            const gridFilter = document.getElementById('filterGridAll').value.toLowerCase();
+            const quotaFilter = document.getElementById('filterQuotaAll').value.toLowerCase();
+            const yieldFilter = document.getElementById('filterYieldAll').value;
+            
+            let filteredData = [...csvData];
+            
+            // Apply filters
+            if (searchTerm) {
+                filteredData = filteredData.filter(row => 
+                    Object.values(row).some(value => 
+                        String(value).toLowerCase().includes(searchTerm)
+                    )
+                );
+            }
+            
+            if (gridFilter) {
+                filteredData = filteredData.filter(row => 
+                    row.Grid?.toLowerCase().includes(gridFilter)
+                );
+            }
+            
+            if (quotaFilter) {
+                filteredData = filteredData.filter(row => 
+                    row.qouta?.toLowerCase().includes(quotaFilter)
+                );
+            }
+            
+            if (yieldFilter !== 'all') {
+                filteredData = filteredData.filter(row => {
+                    const yield = row['ตัน/ไร่'] || 0;
+                    switch(yieldFilter) {
+                        case 'low': return yield <= 8;
+                        case 'medium': return yield > 8 && yield <= 10;
+                        case 'high': return yield > 10;
+                        default: return true;
+                    }
+                });
+            }
+            
+            if (filteredData.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>';
+                return;
+            }
+            
+            // Get headers from first row
+            const headers = Object.keys(filteredData[0]);
+            
+            let tableHTML = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                ${headers.map(header => `<th>${header}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            filteredData.forEach(row => {
+                const yieldValue = row['ตัน/ไร่'] || 0;
+                let yieldClass = '';
+                if (yieldValue > 10) yieldClass = 'table-success';
+                else if (yieldValue <= 8) yieldClass = 'table-danger';
+                
+                tableHTML += '<tr>';
+                headers.forEach(header => {
+                    if (header === 'ตัน/ไร่') {
+                        tableHTML += `<td class="${yieldClass}">${row[header] || '0'}</td>`;
+                    } else {
+                        tableHTML += `<td>${row[header] || ''}</td>`;
+                    }
+                });
+                tableHTML += '</tr>';
+            });
+            
+            tableHTML += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-muted mt-2">
+                    แสดงข้อมูล ${filteredData.length} จาก ${csvData.length} แปลง
+                </div>
+            `;
+            
+            container.innerHTML = tableHTML;
+        }
+
+        function generateRecommendations() {
+            const container = document.getElementById('recommendations');
+            
+            // Group grids by prefix (e.g., BC, AA) and number
+            const gridGroups = {};
+            Object.keys(gridAnalysis).forEach(grid => {
+                // Extract prefix (letters) and number
+                const match = grid.match(/^([A-Z]+)(\d+)/);
+                if (match) {
+                    const prefix = match[1];
+                    const number = match[2];
+                    const groupKey = `${prefix}${number}`;
+                    
+                    if (!gridGroups[groupKey]) {
+                        gridGroups[groupKey] = [];
+                    }
+                    gridGroups[groupKey].push(grid);
+                }
+            });
+            
+            // Find problem grids
+            const problemGrids = [];
+            Object.keys(gridAnalysis).forEach(grid => {
+                const yields = gridAnalysis[grid].yields;
+                if (yields.length > 0) {
+                    const avg = yields.reduce((a, b) => a + b) / yields.length;
+                    if (avg <= 8) {
+                        problemGrids.push({
+                            grid,
+                            avgYield: avg.toFixed(2),
+                            plots: gridAnalysis[grid].plots
+                        });
+                    }
+                }
+            });
+            
+            let html = '<div class="row">';
+            
+            // Grid Groups by Area
+            html += `
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="fas fa-object-group me-2"></i>สรุปตามพื้นที่ (กลุ่ม Grid)</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>พื้นที่</th>
+                                            <th>จำนวน Grid</th>
+                                            <th>จำนวนแปลง</th>
+                                            <th>ผลผลิตเฉลี่ย</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+            `;
+            
+            Object.keys(gridGroups).sort().forEach(groupKey => {
+                const gridsInGroup = gridGroups[groupKey];
+                let totalPlots = 0;
+                let totalYields = [];
+                
+                gridsInGroup.forEach(grid => {
+                    totalPlots += gridAnalysis[grid].plots.length;
+                    totalYields = totalYields.concat(gridAnalysis[grid].yields);
+                });
+                
+                const avgYield = totalYields.length > 0 ? 
+                    (totalYields.reduce((a, b) => a + b) / totalYields.length).toFixed(2) : 0;
+                
+                html += `
+                    <tr>
+                        <td><strong>${groupKey}</strong></td>
+                        <td>${gridsInGroup.length}</td>
+                        <td>${totalPlots}</td>
+                        <td>${avgYield} ตัน/ไร่</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Recommendations
+            html += `
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header bg-warning">
+                            <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Grid ที่ต้องตรวจสอบด่วน</h6>
+                        </div>
+                        <div class="card-body">
+            `;
+            
+            if (problemGrids.length > 0) {
+                html += '<ul class="list-unstyled mb-0">';
+                problemGrids.forEach(item => {
+                    const lowYieldPlots = item.plots.filter(p => p['ตัน/ไร่'] <= 8).length;
+                    html += `
+                        <li class="mb-2">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong class="text-danger">${item.grid}</strong>
+                                    <small class="d-block text-muted">${item.avgYield} ตัน/ไร่ | ${item.plots.length} แปลง</small>
+                                </div>
+                                <span class="badge bg-danger">${lowYieldPlots} แปลงต่ำ</span>
+                            </div>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+            } else {
+                html += '<p class="text-success mb-0"><i class="fas fa-check-circle me-2"></i>ไม่มี Grid ที่มีปัญหาผลผลิตต่ำ</p>';
+            }
+            
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Action Plan
+            html += `
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>แผนการดำเนินงาน</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+            `;
+            
+            // Immediate actions for problem grids
+            if (problemGrids.length > 0) {
+                html += `
+                    <div class="col-md-6">
+                        <div class="alert alert-danger">
+                            <h6><i class="fas fa-fire me-2"></i>ดำเนินการทันที</h6>
+                            <ul class="mb-0">
+                                <li>ตรวจสอบสภาพแปลงใน Grid ที่ผลผลิตต่ำ</li>
+                                <li>วิเคราะห์ปัจจัยจำกัด (ดิน, น้ำ, สารอาหาร)</li>
+                                <li>ปรับปรุงการจัดการให้ Grid: ${problemGrids.map(g => g.grid).join(', ')}</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Monitoring plan
+            html += `
+                    <div class="col-md-6">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-eye me-2"></i>การติดตามตรวจสอบ</h6>
+                            <ul class="mb-0">
+                                <li>ติดตามแปลงผลผลิตต่ำเป็นรายสัปดาห์</li>
+                                <li>เปรียบเทียบผลผลิตระหว่างโควต้าใน Grid เดียวกัน</li>
+                                <li>จัดทำรายงานความคืบหน้าทุกเดือน</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            html += `
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-3">
+                <button class="btn btn-success me-2" onclick="exportRecommendations()">
+                    <i class="fas fa-file-pdf me-2"></i>Export รายงานสรุป
+                </button>
+                <button class="btn btn-primary" onclick="printReport()">
+                    <i class="fas fa-print me-2"></i>พิมพ์รายงาน
+                </button>
+            </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Export functions
+        function exportGridAnalysis() {
+            let csvContent = "Grid,เกรด,ผลผลิตเฉลี่ย,จำนวนแปลง,จำนวนโควต้า,พื้นที่รวม,สถานะ\n";
+            
+            Object.keys(gridAnalysis).forEach(grid => {
+                const data = gridAnalysis[grid];
+                const yields = data.yields;
+                
+                if (yields.length === 0) return;
+                
+                const avg = yields.reduce((a, b) => a + b) / yields.length;
+                let grade = '';
+                let status = '';
+                
+                if (avg > 10) {
+                    grade = 'A';
+                    status = 'ดี';
+                } else if (avg >= 8) {
+                    grade = 'B';
+                    status = 'ปานกลาง';
+                } else {
+                    grade = 'C';
+                    status = 'ต้องปรับปรุง';
+                }
+                
+                csvContent += `"${grid}","${grade}",${avg.toFixed(2)},${data.plots.length},${data.quotas.size},${data.totalArea.toFixed(2)},"${status}"\n`;
+            });
+            
+            downloadCSV(csvContent, 'grid_analysis.csv');
+        }
+
+        function exportAllData() {
+            if (csvData.length === 0) return;
+            
+            const headers = Object.keys(csvData[0]);
+            let csvContent = headers.join(',') + '\n';
+            
+            csvData.forEach(row => {
+                const values = headers.map(header => {
+                    const value = row[header] || '';
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return `"${value}"`;
+                });
+                csvContent += values.join(',') + '\n';
+            });
+            
+            downloadCSV(csvContent, 'all_data_export.csv');
+        }
+
+        function exportSingleGrid(grid) {
+            const data = gridAnalysis[grid];
+            if (!data) return;
+            
+            let csvContent = `Grid: ${grid}\n`;
+            csvContent += `ผลผลิตเฉลี่ย: ${data.yields.length > 0 ? (data.yields.reduce((a, b) => a + b) / data.yields.length).toFixed(2) : 0} ตัน/ไร่\n`;
+            csvContent += `จำนวนแปลง: ${data.plots.length}\n`;
+            csvContent += `จำนวนโควต้า: ${data.quotas.size}\n`;
+            csvContent += `พื้นที่รวม: ${data.totalArea.toFixed(2)} ไร่\n\n`;
+            
+            // Add header
+            if (data.plots.length > 0) {
+                const headers = Object.keys(data.plots[0]);
+                csvContent += headers.join(',') + '\n';
+                
+                // Add data
+                data.plots.forEach(plot => {
+                    const values = headers.map(header => {
+                        const value = plot[header] || '';
+                        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                            return `"${value.replace(/"/g, '""')}"`;
+                        }
+                        return `"${value}"`;
+                    });
+                    csvContent += values.join(',') + '\n';
+                });
+            }
+            
+            downloadCSV(csvContent, `grid_${grid}_report.csv`);
+        }
+
+        function exportExcludedData() {
+            if (excludedData.plots.length === 0) return;
+            
+            // Get headers from first plot
+            const headers = Object.keys(excludedData.plots[0]);
+            let csvContent = headers.join(',') + '\n';
+            
+            excludedData.plots.forEach(row => {
+                const values = headers.map(header => {
+                    const value = row[header] || '';
+                    if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return `"${value}"`;
+                });
+                csvContent += values.join(',') + '\n';
+            });
+            
+            downloadCSV(csvContent, 'excluded_data.csv');
+        }
+
+        function exportRecommendations() {
+            let csvContent = "ประเภท,Grid,ผลผลิตเฉลี่ย,จำนวนแปลง,พื้นที่รวม,ข้อเสนอแนะ\n";
+            
+            // Problem grids
+            Object.keys(gridAnalysis).forEach(grid => {
+                const data = gridAnalysis[grid];
+                const yields = data.yields;
+                
+                if (yields.length === 0) return;
+                
+                const avg = yields.reduce((a, b) => a + b) / yields.length;
+                let type = '';
+                let recommendation = '';
+                
+                if (avg <= 8) {
+                    type = 'ต้องปรับปรุงด่วน';
+                    recommendation = 'ตรวจสอบแปลง,วิเคราะห์ปัจจัยจำกัด,ปรับปรุงการจัดการ';
+                } else if (avg <= 10) {
+                    type = 'ติดตามผล';
+                    recommendation = 'ติดตามผลผลิต,เปรียบเทียบกับ Grid อื่น';
+                } else {
+                    type = 'ผลผลิตดี';
+                    recommendation = 'รักษามาตรฐาน,ศึกษาเพื่อนำไปใช้กับ Grid อื่น';
+                }
+                
+                csvContent += `"${type}","${grid}",${avg.toFixed(2)},${data.plots.length},${data.totalArea.toFixed(2)},"${recommendation}"\n`;
+            });
+            
+            downloadCSV(csvContent, 'recommendations_report.csv');
+        }
+
+        function generateExecutiveReport() {
+            const grids = Object.keys(gridAnalysis);
+            const totalPlots = csvData.length;
+            const totalYields = csvData.filter(p => p['ตัน/ไร่']).map(p => p['ตัน/ไร่']);
+            const avgYield = totalYields.length > 0 ? 
+                (totalYields.reduce((a, b) => a + b) / totalYields.length).toFixed(2) : 0;
+            
+            let problemGrids = 0;
+            let highYieldGrids = 0;
+            grids.forEach(grid => {
+                const yields = gridAnalysis[grid].yields;
+                if (yields.length > 0) {
+                    const avg = yields.reduce((a, b) => a + b) / yields.length;
+                    if (avg <= 8) problemGrids++;
+                    if (avg > 10) highYieldGrids++;
+                }
+            });
+            
+            const reportContent = `
+สรุปรายงานการวิเคราะห์ข้อมูลแปลงเกษตร
+วันที่: ${new Date().toLocaleDateString('th-TH')}
+========================================
+
+1. ภาพรวมข้อมูล
+   - จำนวน Grid ที่วิเคราะห์: ${grids.length}
+   - จำนวนแปลงทั้งหมด: ${totalPlots}
+   - ผลผลิตเฉลี่ย: ${avgYield} ตัน/ไร่
+   - Grid ที่มีปัญหา (≤8 ตัน/ไร่): ${problemGrids}
+   - Grid ผลผลิตดี (>10 ตัน/ไร่): ${highYieldGrids}
+
+2. ข้อมูลที่ไม่นำมาประมวลผล
+   - จำนวน Grid: ${excludedData.grids.size}
+   - จำนวนแปลง: ${excludedData.count}
+   - สาเหตุ: ตัน/ไร่ = 0 หรือไม่มีข้อมูล
+
+3. ข้อเสนอแนะ
+   - ตรวจสอบ Grid ที่ผลผลิตต่ำเป็นพิเศษ
+   - วิเคราะห์ปัจจัยที่ส่งผลต่อผลผลิต
+   - ปรับปรุงการจัดการในพื้นที่ที่มีปัญหา
+
+4. แนวทางการพัฒนาต่อไป
+   - เพิ่มการติดตามผลผลิตอย่างต่อเนื่อง
+   - เปรียบเทียบผลผลิตระหว่างพื้นที่
+   - พัฒนามาตรการปรับปรุงผลผลิต
+            `;
+            
+            downloadCSV(reportContent, 'executive_report.txt');
+            alert('สร้างรายงานสำหรับผู้บริหารสำเร็จ! สามารถดาวน์โหลดไฟล์ executive_report.txt');
+        }
+
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function printReport() {
+            const originalContent = document.body.innerHTML;
+            const reportContent = document.getElementById('summary').innerHTML;
+            const dashboardContent = document.getElementById('dashboardCards').innerHTML;
+            
+            document.body.innerHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>รายงานการวิเคราะห์ Grid</title>
+                    <style>
+                        body { font-family: 'Sarabun', sans-serif; padding: 20px; }
+                        h1, h2, h3 { color: #333; }
+                        .badge { padding: 5px 10px; }
+                        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f8f9fa; }
+                        .alert { padding: 10px; margin: 10px 0; border-radius: 4px; }
+                        @media print {
+                            .no-print { display: none; }
+                            body { font-size: 12pt; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>รายงานการวิเคราะห์ข้อมูลแปลงเกษตรตาม Grid</h1>
+                        <p>วันที่พิมพ์: ${new Date().toLocaleDateString('th-TH')}</p>
+                        <div class="dashboard-section">
+                            ${dashboardContent}
+                        </div>
+                        <div class="summary-section">
+                            ${reportContent}
+                        </div>
+                        <div class="no-print" style="margin-top: 20px;">
+                            <button onclick="window.close()">ปิด</button>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            window.print();
+            document.body.innerHTML = originalContent;
+        }
+
+        function resetUpload() {
+            document.getElementById('uploadSuccess').classList.add('d-none');
+            document.getElementById('dataPreview').innerHTML = '';
+            document.getElementById('processingSummary').classList.add('d-none');
+            document.getElementById('resultsSection').classList.add('d-none');
+            document.getElementById('csvFile').value = '';
+            
+            // Reset data
+            csvData = [];
+            gridAnalysis = {};
+            excludedData = {
+                grids: new Set(),
+                plots: [],
+                quotas: new Set(),
+                totalArea: 0,
+                count: 0
+            };
+        }
+
+        // Initialize Bootstrap tabs
+        document.addEventListener('DOMContentLoaded', function() {
+            const triggerTabList = [].slice.call(document.querySelectorAll('#analysisTabs button'));
+            triggerTabList.forEach(function (triggerEl) {
+                const tabTrigger = new bootstrap.Tab(triggerEl);
+                triggerEl.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    tabTrigger.show();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
