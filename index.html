@@ -899,7 +899,7 @@
                 sampleData.push({
                     Grid: grid,
                     เลขแปลงintech: `4000${Math.floor(1000 + Math.random() * 9000)}A${Math.floor(1 + Math.random() * 9)}`,
-                    qouta: quota,
+                   เลขโควต้า: quota,
                     area: Math.random() * 20 + 5, // 5-25 ไร่
                     'ตัน/ไร่': parseFloat(yieldValue.toFixed(2))
                 });
@@ -910,7 +910,7 @@
                 sampleData.push({
                     Grid: 'AD31',
                     เลขแปลงintech: `40007332A${4+i}`,
-                    qouta: '40007332',
+                   เลขโควต้า: '40007332',
                     area: Math.random() * 15 + 10,
                     'ตัน/ไร่': parseFloat((Math.random() * 2 + 5).toFixed(2)) // 5-7 ตัน/ไร่ (ต่ำ)
                 });
@@ -2313,7 +2313,7 @@
                 const card = clone.querySelector('.card');
                 const gridName = clone.querySelector('.grid-name');
                 const plotCount = clone.querySelector('.plot-count');
-                const qoutaCount = clone.querySelector('.qouta-count');
+                constเลขโควต้าCount = clone.querySelector('.qouta-count');
                 const yieldBadge = clone.querySelector('.yield-badge');
                 const quotaList = clone.querySelector('.quota-list');
                 const worstPlot = clone.querySelector('.worst-plot-name');
@@ -2323,7 +2323,7 @@
                 // Basic info
                 gridName.textContent = grid;
                 plotCount.textContent = data.plots.length;
-                qoutaCount.textContent = data.quotas.size;
+               เลขโควต้าCount.textContent = data.quotas.size;
                 
                 // Calculate yield statistics
                 const yields = data.yields;
@@ -2358,7 +2358,7 @@
                 // Display quotas
                 quotaList.innerHTML = '';
                 data.quotas.forEach(qouta => {
-                    const quotaPlots = data.plots.filter(p => p.qouta === qouta);
+                    const quotaPlots = data.plots.filter(p => p.qouta ===เลขโควต้า);
                     const div = document.createElement('div');
                     div.className = 'd-flex justify-content-between align-items-center mb-1';
                     div.innerHTML = `
