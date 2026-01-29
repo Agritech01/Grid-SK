@@ -379,21 +379,26 @@
                 <div class="card shadow-sm border-0 dashboard-card">
                     <div class="card-body p-4">
                         <h3 class="card-title mb-4"><i class="fas fa-cloud-upload-alt me-2"></i>อัปโหลดไฟล์ข้อมูล</h3>
-                        <p class="text-muted mb-4">อัปโหลดไฟล์ CSV ที่มีข้อมูลแปลงเกษตรเพื่อเริ่มการวิเคราะห์ตาม Grid</p>
-                        
-                        <div class="upload-area mb-4" id="uploadArea">
-                            <div class="upload-icon">
-                                <i class="fas fa-file-csv"></i>
-                            <div id="dropZone" class="p-5 border border-2 text-center" style="border-style: dashed !important; cursor: pointer; border-color: #dee2e6 !important;">
+<p class="text-muted mb-4">อัปโหลดไฟล์ CSV ที่มีข้อมูลแปลงเกษตรเพื่อเริ่มการวิเคราะห์ตาม Grid</p>
+
+<div class="upload-area mb-4" id="dropZone"> <div class="upload-icon">
+        <i class="fas fa-file-csv"></i>
+    </div>
     <h4>ลากและวางไฟล์ CSV หรือคลิกเพื่อเลือกไฟล์</h4>
-    <p class="text-muted mt-2">
-        คอลัมน์ที่ต้องการ: เลขแปลงintech, เลขโควต้า, เขต, รหัส, นักเกษตร, ชื่อชาวไร่, พื้นที่(68/69), ประเภทอ้อย (68/69), ตัน/ไร่ (68/69)
+    <p class="text-muted mt-2 small">
+        <strong>คอลัมน์ที่บังคับ:</strong> เลขแปลงintech, เลขโควต้า, เขต, รหัส, นักเกษตร, ชื่อชาวไร่, พื้นที่(68/69), ประเภทอ้อย (68/69), ตัน/ไร่ (68/69)
     </p>
     <input type="file" id="csvFile" accept=".csv" class="d-none">
-    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('csvFile').click()">เลือกไฟล์จากเครื่อง</button>
+    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('csvFile').click()">
+        <i class="fas fa-search me-2"></i>เลือกไฟล์จากเครื่อง
+    </button>
 </div>
 
-<div id="result" class="mt-3"></div>
+<div id="uploadSuccess" class="alert alert-success d-none">
+    <i class="fas fa-check-circle me-2"></i>อัปโหลดและประมวลผลไฟล์สำเร็จ
+</div>
+
+<div id="dataPreview" class="mt-3"></div>
                         </div>
                         
                         <div id="uploadSuccess" class="alert alert-success d-none">
@@ -3033,6 +3038,59 @@ document.addEventListener('DOMContentLoaded', function() {
         dataPreview.innerHTML = tableHtml;
     }
 });
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+<script>
+// --- ส่วนที่ห้ามแตะ (Config เดิม) ---
+let csvData = [];
+let gridAnalysis = {};
+const GRID_AREA_RAI = 4 * 625; // 2500 ไร่
+
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('csvFile');
+    const dropZone = document.getElementById('dropZone');
+    const uploadSuccess = document.getElementById('uploadSuccess');
+    const dataPreview = document.getElementById('dataPreview');
+
+    // คลิกเพื่อเลือกไฟล์
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag & Drop Effects
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = '#f0f8ff';
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.backgroundColor = 'white';
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.backgroundColor = 'white';
+        if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            encoding: "UTF-8",
+            complete: function(results) {
+                // ตรวจสอบคอลัมน์ (ต้องตรงกับในไฟล์ Excel/CSV เป๊ะๆ)
+                const required = ['เลขแปลงintech', 'เลขโควต้า', 'ตัน/ไร่ (68/69)', 'พื้นที่(68/69)'];
+                const headers = results.meta.fields.map(h => h.trim());
+                const missing = required.filter(r => !headers.includes(r));
+
+                if (missing.length > 0) {
+                    alert("❌ ไฟล์ไม่ถูกต้อง! ไม่พบคอลัมน์: " + missing.join(", "));
+                    return;
+                }
+
+                // 1. แปลงข้อมูลให้เข้ากับโครงสร้างระบบวิเคราะห์เดิม
+                csvData = results.data.map(row => ({
+                    Grid: row['เขต'] || 'N/A',
 </body>
 </html>
