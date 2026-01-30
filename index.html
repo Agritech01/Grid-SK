@@ -14,6 +14,7 @@
             --light: #ecf0f1;
             --dark: #2c3e50;
             --gray: #95a5a6;
+            --purple: #9b59b6;
         }
         
         * {
@@ -70,6 +71,7 @@
             padding: 15px 25px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
+            min-width: 120px;
         }
         
         .stat-value {
@@ -232,6 +234,14 @@
             margin-top: 10px;
         }
         
+        .file-info ul {
+            margin: 10px 0 0 20px;
+        }
+        
+        .file-info li {
+            margin-bottom: 5px;
+        }
+        
         .file-status {
             display: flex;
             align-items: center;
@@ -292,6 +302,11 @@
             color: white;
         }
         
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #e67e22);
+            color: white;
+        }
+        
         /* Analysis Dashboard */
         .dashboard-grid {
             display: grid;
@@ -322,6 +337,7 @@
         .metric-card.blue::before { background: var(--secondary); }
         .metric-card.orange::before { background: var(--warning); }
         .metric-card.red::before { background: var(--danger); }
+        .metric-card.purple::before { background: var(--purple); }
         
         .metric-value {
             font-size: 36px;
@@ -340,6 +356,9 @@
             grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
             gap: 10px;
             margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 10px;
         }
         
         .heatmap-cell {
@@ -352,17 +371,20 @@
             cursor: pointer;
             transition: transform 0.3s;
             color: white;
+            font-size: 12px;
         }
         
         .heatmap-cell:hover {
             transform: scale(1.1);
             z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
         .heatmap-cell.green { background: var(--success); }
         .heatmap-cell.blue { background: var(--secondary); }
         .heatmap-cell.orange { background: var(--warning); }
         .heatmap-cell.red { background: var(--danger); }
+        .heatmap-cell.gray { background: var(--gray); }
         
         /* Grid Details */
         .grid-details-header {
@@ -455,6 +477,31 @@
         .season-6768 { background: #3498db; color: white; }
         .season-6869 { background: #9b59b6; color: white; }
         
+        /* Unmatched Plots */
+        .unmatched-plots-container {
+            margin: 30px 0;
+        }
+        
+        .unmatched-plot-card {
+            background: white;
+            border: 2px solid var(--warning);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Data Inconsistency */
+        .inconsistency-item {
+            background: rgba(243, 156, 18, 0.1);
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
         /* Alert Container */
         .alert-container {
             position: fixed;
@@ -519,6 +566,51 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background: #ddd;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            background: linear-gradient(90deg, var(--secondary), var(--purple));
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1500;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 30px;
+        }
+        
         /* Responsive */
         @media (max-width: 1024px) {
             .dashboard-content {
@@ -532,6 +624,10 @@
             .upload-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .header-stats {
+                flex-wrap: wrap;
+            }
         }
         
         @media (max-width: 768px) {
@@ -542,8 +638,13 @@
             }
             
             .header-stats {
-                flex-wrap: wrap;
+                width: 100%;
                 justify-content: center;
+            }
+            
+            .stat-box {
+                flex: 1;
+                min-width: 140px;
             }
             
             .upload-actions {
@@ -554,6 +655,40 @@
                 width: 100%;
                 justify-content: center;
             }
+            
+            .heatmap-grid {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+            
+            .grid-details-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .grid-selector {
+                width: 100%;
+            }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -567,8 +702,51 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
         <div style="color: white; margin-left: 20px;">
-            <h3>กำลังวิเคราะห์ข้อมูล...</h3>
+            <h3 id="loadingTitle">กำลังวิเคราะห์ข้อมูล...</h3>
             <p id="loadingMessage">กรุณารอสักครู่</p>
+            <div class="progress-container" style="width: 300px; margin-top: 20px;">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Data Inconsistency -->
+    <div class="modal-overlay" id="inconsistencyModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: var(--warning);">
+                    <i class="fas fa-exclamation-triangle"></i> ข้อมูลไม่สอดคล้องกัน
+                </h2>
+                <button onclick="closeModal('inconsistencyModal')" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--gray);">
+                    &times;
+                </button>
+            </div>
+            <div id="inconsistencyContent"></div>
+            <div style="margin-top: 30px; text-align: right;">
+                <button class="btn btn-secondary" onclick="closeModal('inconsistencyModal')">
+                    ปิด
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for Unmatched Plots -->
+    <div class="modal-overlay" id="unmatchedModal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: var(--warning);">
+                    <i class="fas fa-unlink"></i> แปลงที่จับคู่ไม่ได้
+                </h2>
+                <button onclick="closeModal('unmatchedModal')" style="background: none; border: none; font-size: 24px; cursor: pointer; color: var(--gray);">
+                    &times;
+                </button>
+            </div>
+            <div id="unmatchedContent"></div>
+            <div style="margin-top: 30px; text-align: right;">
+                <button class="btn btn-secondary" onclick="closeModal('unmatchedModal')">
+                    ปิด
+                </button>
+            </div>
         </div>
     </div>
     
@@ -669,7 +847,14 @@
                                     </div>
                                     <div>
                                         <div class="card-title">ไฟล์ข้อมูล GRID</div>
-                                        <div class="file-info">CSV ที่มีคอลัมน์ Grid, landno, เขต, รหัสเกษตรกร, ชื่อนักเกษตร, ชื่อชาวไร่, ประเภทอ้อย</div>
+                                        <div class="file-info">
+                                            <strong>โครงสร้าง:</strong> CSV ที่มีคอลัมน์ต่อไปนี้:
+                                            <ul>
+                                                <li><strong>Grid</strong> (รหัส Grid)</li>
+                                                <li><strong>landno</strong> (รหัสแปลงที่ดิน)</li>
+                                            </ul>
+                                            <em>หมายเหตุ: ไม่เก็บข้อมูลพื้นฐานอื่นๆ</em>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="file-status">
@@ -687,7 +872,18 @@
                                     </div>
                                     <div>
                                         <div class="card-title">ไฟล์ KAT 67/68</div>
-                                        <div class="file-info">CSV ที่มีคอลัมน์ Grid, เลขแปลงintech, เลขโควต้า, ตัน/ไร่, พื้นที่</div>
+                                        <div class="file-info">
+                                            <strong>โครงสร้าง:</strong> CSV ที่มีคอลัมน์ต่อไปนี้:
+                                            <ul>
+                                                <li><strong>เลขแปลงintech</strong> (สำหรับจับคู่)</li>
+                                                <li><strong>ตัน/ไร่</strong> (ผลผลิต)</li>
+                                                <li><strong>เขต</strong> (พื้นที่)</li>
+                                                <li><strong>รหัสเกษตรกร</strong></li>
+                                                <li><strong>ชื่อนักเกษตร</strong></li>
+                                                <li><strong>ชื่อชาวไร่</strong></li>
+                                                <li><strong>ประเภทอ้อย</strong></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="file-status">
@@ -705,7 +901,18 @@
                                     </div>
                                     <div>
                                         <div class="card-title">ไฟล์ KAT 68/69</div>
-                                        <div class="file-info">CSV ที่มีคอลัมน์ Grid, เลขแปลงintech, เลขโควต้า, ตัน/ไร่, พื้นที่</div>
+                                        <div class="file-info">
+                                            <strong>โครงสร้าง:</strong> CSV ที่มีคอลัมน์ต่อไปนี้:
+                                            <ul>
+                                                <li><strong>เลขแปลงintech</strong> (สำหรับจับคู่)</li>
+                                                <li><strong>ตัน/ไร่</strong> (ผลผลิต)</li>
+                                                <li><strong>เขต</strong> (พื้นที่)</li>
+                                                <li><strong>รหัสเกษตรกร</strong></li>
+                                                <li><strong>ชื่อนักเกษตร</strong></li>
+                                                <li><strong>ชื่อชาวไร่</strong></li>
+                                                <li><strong>ประเภทอ้อย</strong></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="file-status">
@@ -747,7 +954,7 @@
                             <div class="metric-value" id="kat6768Plots">0</div>
                             <div class="metric-label">แปลงใน KAT 67/68</div>
                             <div style="margin-top: 15px; font-size: 14px; color: var(--gray);">
-                                จากไฟล์ KAT 67/68
+                                <span id="kat6768Matched">0</span> แปลงจับคู่ได้
                             </div>
                         </div>
                         
@@ -755,7 +962,7 @@
                             <div class="metric-value" id="kat6869Plots">0</div>
                             <div class="metric-label">แปลงใน KAT 68/69</div>
                             <div style="margin-top: 15px; font-size: 14px; color: var(--gray);">
-                                จากไฟล์ KAT 68/69
+                                <span id="kat6869Matched">0</span> แปลงจับคู่ได้
                             </div>
                         </div>
                         
@@ -763,7 +970,7 @@
                             <div class="metric-value" id="matchedPlots">0</div>
                             <div class="metric-label">แปลงที่จับคู่ได้</div>
                             <div style="margin-top: 15px; font-size: 14px; color: var(--gray);">
-                                landno ตรงกันระหว่างไฟล์
+                                <span id="matchRate">0%</span> อัตราการจับคู่
                             </div>
                         </div>
                         
@@ -780,6 +987,14 @@
                             <div class="metric-label">ผลผลิตเฉลี่ย</div>
                             <div style="margin-top: 15px; font-size: 14px; color: var(--gray);">
                                 ตัน/ไร่
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card purple" onclick="showUnmatchedModal()" style="cursor: pointer;">
+                            <div class="metric-value" id="unmatchedPlots">0</div>
+                            <div class="metric-label">แปลงที่จับคู่ไม่ได้</div>
+                            <div style="margin-top: 15px; font-size: 14px; color: var(--gray);">
+                                คลิกเพื่อดูรายละเอียด
                             </div>
                         </div>
                     </div>
@@ -810,15 +1025,30 @@
                         <div style="margin-top: 30px; padding: 20px; background: #e8f4fc; border-radius: 10px;">
                             <h4 style="color: var(--primary); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
                                 <i class="fas fa-lightbulb" style="color: var(--warning);"></i>
-                                หลักการวิเคราะห์
+                                หลักการวิเคราะห์ (ใหม่)
                             </h4>
                             <p style="color: var(--gray); line-height: 1.6;">
-                                1. ใช้คอลัมน์ <strong>Grid</strong> ในไฟล์ GRID เป็นหลัก<br>
-                                2. ใช้ <strong>landno</strong> ในไฟล์ GRID เปรียบเทียบกับ <strong>เลขแปลงintech</strong> ในไฟล์ KAT<br>
-                                3. ดึงข้อมูลพื้นฐานจากไฟล์ GRID: เขต, รหัสเกษตรกร, ชื่อนักเกษตร, ชื่อชาวไร่, ประเภทอ้อย<br>
-                                4. ดึงข้อมูลผลผลิตจากไฟล์ KAT: เลขโควต้า, ตัน/ไร่, พื้นที่<br>
-                                5. วิเคราะห์ในระดับ Grid เพื่อหาปัญหา
+                                1. ใช้ไฟล์ <strong>GRID</strong> สำหรับ Mapping เท่านั้น: Grid → landno<br>
+                                2. ใช้ไฟล์ <strong>KAT</strong> สำหรับข้อมูลหลักทั้งหมด: ผลผลิต + ข้อมูลพื้นฐาน<br>
+                                3. การจับคู่: 'เลขแปลงintech' (KAT) กับ 'landno' (GRID)<br>
+                                4. เมื่อจับคู่ได้: ดึง Grid ID จาก GRID + ข้อมูลทั้งหมดจาก KAT<br>
+                                5. ข้อมูลพื้นฐาน (เขต, เกษตรกร, ฯลฯ) ดึงจากไฟล์ KAT เท่านั้น<br>
+                                6. วิเคราะห์ในระดับ Grid โดยใช้ข้อมูลที่จับคู่ได้สำเร็จ
                             </p>
+                        </div>
+                        
+                        <!-- Data Inconsistency Section -->
+                        <div id="inconsistencySection" style="display: none; margin-top: 30px;">
+                            <div style="background: rgba(243, 156, 18, 0.1); padding: 20px; border-radius: 10px; border-left: 5px solid var(--warning);">
+                                <h4 style="color: var(--warning); margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    ตรวจพบข้อมูลที่ไม่สอดคล้องกัน
+                                    <button class="btn btn-warning" style="padding: 5px 15px; font-size: 12px; margin-left: auto;" onclick="showInconsistencyModal()">
+                                        ดูรายละเอียด
+                                    </button>
+                                </h4>
+                                <div id="inconsistencySummary" style="color: var(--gray);"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -836,21 +1066,21 @@
                                 <p style="color: var(--gray); margin-top: 5px;">คลิกที่ Grid เพื่อดูรายละเอียด</p>
                             </div>
                             
-                            <div style="display: flex; gap: 10px;">
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <button class="btn" style="background: var(--success); color: white;" onclick="filterHeatmap('all')">
                                     ทั้งหมด
                                 </button>
                                 <button class="btn" style="background: var(--success); color: white;" onclick="filterHeatmap('high')">
-                                    🟢 สูง
+                                    🟢 สูง (>15)
                                 </button>
                                 <button class="btn" style="background: #f1c40f; color: white;" onclick="filterHeatmap('medium')">
-                                    🟡 ปานกลาง
+                                    🟡 ปานกลาง (10-15)
                                 </button>
                                 <button class="btn" style="background: var(--warning); color: white;" onclick="filterHeatmap('improve')">
-                                    🟠 ปรับปรุง
+                                    🟠 ปรับปรุง (7-10)
                                 </button>
                                 <button class="btn" style="background: var(--danger); color: white;" onclick="filterHeatmap('low')">
-                                    🔴 ต่ำ
+                                    🔴 ต่ำ (<7)
                                 </button>
                             </div>
                         </div>
@@ -949,46 +1179,47 @@
                             <div class="metric-value" id="reportCritical">0</div>
                             <div class="metric-label">แปลงวิกฤตทั้งหมด</div>
                         </div>
+                        
+                        <div class="metric-card purple">
+                            <div class="metric-value" id="reportUnmatched">0</div>
+                            <div class="metric-label">แปลงจับคู่ไม่ได้</div>
+                        </div>
                     </div>
                     
                     <div class="upload-container">
                         <h3 style="color: var(--primary); margin-bottom: 20px;">ข้อเสนอแนะสำหรับผู้บริหาร</h3>
                         
                         <div id="recommendations" style="line-height: 1.6;">
-                            <div style="background: rgba(231, 76, 60, 0.1); padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid var(--danger);">
-                                <h4 style="color: var(--danger); margin-bottom: 10px;">
-                                    <i class="fas fa-exclamation-triangle"></i> เรื่องด่วนที่ต้องแก้ไข
-                                </h4>
-                                <ul style="color: var(--gray); padding-left: 20px;">
-                                    <li>ยังไม่มีข้อมูลการวิเคราะห์</li>
-                                </ul>
-                            </div>
-                            
-                            <div style="background: rgba(243, 156, 18, 0.1); padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid var(--warning);">
-                                <h4 style="color: var(--warning); margin-bottom: 10px;">
-                                    <i class="fas fa-clipboard-check"></i> ควรดำเนินการ
-                                </h4>
-                                <ul style="color: var(--gray); padding-left: 20px;">
-                                    <li>อัพโหลดไฟล์เพื่อดูข้อเสนอแนะ</li>
-                                </ul>
-                            </div>
-                            
-                            <div style="background: rgba(39, 174, 96, 0.1); padding: 20px; border-radius: 10px; border-left: 5px solid var(--success);">
-                                <h4 style="color: var(--success); margin-bottom: 10px;">
-                                    <i class="fas fa-chart-line"></i> การพัฒนาต่อเนื่อง
-                                </h4>
-                                <ul style="color: var(--gray); padding-left: 20px;">
-                                    <li>รอข้อมูลการวิเคราะห์</li>
-                                </ul>
+                            <!-- Dynamic recommendations will be loaded here -->
+                            <div style="text-align: center; padding: 50px; color: var(--gray);">
+                                <i class="fas fa-chart-line" style="font-size: 64px; margin-bottom: 20px;"></i>
+                                <h3>ยังไม่มีข้อมูลการวิเคราะห์</h3>
+                                <p>กรุณาอัพโหลดไฟล์และวิเคราะห์ข้อมูลเพื่อดูข้อเสนอแนะ</p>
                             </div>
                         </div>
                         
-                        <div style="margin-top: 30px; display: flex; gap: 15px;">
+                        <!-- Trend Analysis -->
+                        <div id="trendAnalysisSection" style="margin-top: 30px; display: none;">
+                            <h4 style="color: var(--primary); margin-bottom: 15px;">
+                                <i class="fas fa-chart-line"></i> การวิเคราะห์แนวโน้ม
+                            </h4>
+                            <div id="trendAnalysisContent" style="background: var(--light); padding: 20px; border-radius: 10px;">
+                                <!-- Trend analysis will be loaded here -->
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px; display: flex; gap: 15px; flex-wrap: wrap;">
                             <button class="btn btn-success" onclick="exportPDFReport()">
                                 <i class="fas fa-file-pdf"></i> ส่งออกรายงาน PDF
                             </button>
                             <button class="btn btn-primary" onclick="exportExcelReport()">
                                 <i class="fas fa-file-excel"></i> ส่งออกรายงาน Excel
+                            </button>
+                            <button class="btn btn-secondary" onclick="saveSession()">
+                                <i class="fas fa-save"></i> บันทึก Session
+                            </button>
+                            <button class="btn btn-secondary" onclick="loadSession()">
+                                <i class="fas fa-folder-open"></i> โหลด Session
                             </button>
                         </div>
                     </div>
@@ -1008,8 +1239,23 @@
         
         let analysisData = null;
         let currentPanel = 'upload';
+        let currentHeatmapFilter = 'all';
+        let sessionId = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for saved session
+            const savedSession = localStorage.getItem('sugarcaneAnalysisSession');
+            if (savedSession) {
+                if (confirm('พบข้อมูลการวิเคราะห์ที่บันทึกไว้ ต้องการโหลดข้อมูลหรือไม่?')) {
+                    loadSavedSession(JSON.parse(savedSession));
+                }
+            }
+            
+            showPanel('upload');
+        });
         
-        // Show Alert Function
+        // Alert System
         function showAlert(message, type = 'info') {
             const alertContainer = document.getElementById('alertContainer');
             const alertId = 'alert-' + Date.now();
@@ -1033,12 +1279,10 @@
             
             alertContainer.appendChild(alertDiv);
             
-            // Show with animation
             setTimeout(() => {
                 alertDiv.classList.add('show');
             }, 10);
             
-            // Auto remove after 5 seconds
             setTimeout(() => {
                 closeAlert(alertId);
             }, 5000);
@@ -1058,20 +1302,16 @@
         
         // Panel Navigation
         function showPanel(panelId) {
-            // Hide all panels
             document.querySelectorAll('.panel').forEach(panel => {
                 panel.style.display = 'none';
             });
             
-            // Remove active from all nav items
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
             
-            // Show selected panel
             document.getElementById(panelId + 'Panel').style.display = 'block';
             
-            // Activate corresponding nav item
             document.querySelectorAll('.nav-item').forEach((item, index) => {
                 const panelOrder = ['upload', 'analysis', 'heatmap', 'gridDetails', 'reports'];
                 if (panelOrder[index] === panelId) {
@@ -1081,7 +1321,6 @@
             
             currentPanel = panelId;
             
-            // Update data if needed
             if (panelId === 'analysis' && analysisData) {
                 updateAnalysisDashboard();
             } else if (panelId === 'heatmap' && analysisData) {
@@ -1100,22 +1339,40 @@
             const file = input.files[0];
             if (!file) return;
             
+            // แก้ไขตรงนี้: เพิ่มขีดจำกัดเป็น 100MB
+            if (file.size > 100 * 1024 * 1024) { // เพิ่มเป็น 100MB limit
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                showAlert(`ไฟล์ใหญ่เกินไป (${fileSizeMB} MB) กรุณาเลือกไฟล์ที่ขนาดน้อยกว่า 100MB`, 'error');
+                input.value = '';
+                return;
+            }
+            
             uploadedFiles[fileType] = file;
             
-            // Update UI
             const fileNameElement = document.getElementById(fileType + 'FileName');
             const statusElement = document.getElementById(fileType + 'Status');
             
-            fileNameElement.textContent = file.name;
+            // แสดงขนาดไฟล์
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            
+            fileNameElement.textContent = `${file.name} (${fileSizeMB} MB)`;
             fileNameElement.style.color = 'var(--primary)';
             fileNameElement.style.fontWeight = '600';
             
             statusElement.classList.add('uploaded');
             
-            showAlert(`อัพโหลดไฟล์ ${fileType} สำเร็จ: ${file.name}`, 'info');
+            showAlert(`อัพโหลดไฟล์ ${getFileTypeName(fileType)} สำเร็จ: ${file.name} (${fileSizeMB} MB)`, 'info');
             
-            // Read file immediately to show data
             readFileData(file, fileType);
+        }
+        
+        function getFileTypeName(fileType) {
+            const names = {
+                'grid': 'GRID',
+                'kat6768': 'KAT 67/68',
+                'kat6869': 'KAT 68/69'
+            };
+            return names[fileType] || fileType;
         }
         
         function readFileData(file, fileType) {
@@ -1124,13 +1381,16 @@
             reader.onload = function(e) {
                 try {
                     const content = e.target.result;
-                    const lines = content.split('\n');
-                    const headers = lines[0].split(',').map(h => h.trim());
+                    const lines = content.split('\n').filter(line => line.trim() !== '');
                     
-                    // Count rows (excluding header)
+                    if (lines.length === 0) {
+                        showAlert(`ไฟล์ ${file.name} ว่างเปล่า`, 'warning');
+                        return;
+                    }
+                    
+                    const headers = lines[0].split(',').map(h => h.trim());
                     const rowCount = Math.max(0, lines.length - 1);
                     
-                    // Parse some sample data
                     const sampleData = {};
                     if (lines.length > 1) {
                         const firstRow = lines[1].split(',');
@@ -1141,12 +1401,16 @@
                         });
                     }
                     
-                    // Update summary based on file type
                     updateFileSummary(fileType, headers, rowCount, sampleData);
                     
                 } catch (error) {
                     console.error('Error reading file:', error);
+                    showAlert(`เกิดข้อผิดพลาดในการอ่านไฟล์ ${file.name}`, 'error');
                 }
+            };
+            
+            reader.onerror = function() {
+                showAlert(`ไม่สามารถอ่านไฟล์ ${file.name}`, 'error');
             };
             
             reader.readAsText(file, 'UTF-8');
@@ -1163,18 +1427,17 @@
                     <div style="margin-bottom: 10px;">
                         <strong>คอลัมน์ที่พบ:</strong> ${headers.join(', ')}
                     </div>
-                    <div style="margin-top: 15px; background: rgba(52, 152, 219, 0.1); padding: 10px; border-radius: 6px;">
-                        <strong>ตัวอย่างข้อมูลแถวแรก:</strong>
-                        <div style="margin-top: 5px; font-size: 13px;">
-                            ${Object.entries(sampleData).map(([key, value]) => 
-                                `<div><strong>${key}:</strong> ${value}</div>`
-                            ).join('')}
-                        </div>
+                    <div style="color: ${headers.includes('Grid') && headers.includes('landno') ? 'var(--success)' : 'var(--danger)'};">
+                        <i class="fas fa-${headers.includes('Grid') && headers.includes('landno') ? 'check' : 'times'}"></i>
+                        โครงสร้างไฟล์: ${headers.includes('Grid') && headers.includes('landno') ? 'ถูกต้อง' : 'ไม่ถูกต้อง'}
                     </div>
                 `;
                 document.getElementById('gridSummary').innerHTML = summary;
-            } else if (fileType === 'kat6768' || fileType === 'kat6869') {
+            } else {
                 const season = fileType === 'kat6768' ? '67/68' : '68/69';
+                const requiredColumns = ['เลขแปลงintech', 'ตัน/ไร่'];
+                const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+                
                 summary = `
                     <div style="margin-bottom: 10px;">
                         <strong>ฤดูกาล:</strong> ${season}
@@ -1185,17 +1448,36 @@
                     <div style="margin-bottom: 10px;">
                         <strong>คอลัมน์ที่พบ:</strong> ${headers.join(', ')}
                     </div>
-                    ${rowCount > 0 ? `
-                    <div style="margin-top: 15px; background: rgba(155, 89, 182, 0.1); padding: 10px; border-radius: 6px;">
-                        <strong>ตัวอย่างแปลงแรก:</strong>
-                        <div style="margin-top: 5px; font-size: 13px;">
-                            ${Object.entries(sampleData).map(([key, value]) => 
-                                `<div><strong>${key}:</strong> ${value}</div>`
-                            ).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
                 `;
+                
+                if (missingColumns.length > 0) {
+                    summary += `
+                        <div style="color: var(--warning); margin-top: 10px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>คอลัมน์ที่ขาด:</strong> ${missingColumns.join(', ')}
+                        </div>
+                    `;
+                } else {
+                    summary += `
+                        <div style="color: var(--success); margin-top: 10px;">
+                            <i class="fas fa-check"></i>
+                            โครงสร้างไฟล์ครบถ้วน
+                        </div>
+                    `;
+                }
+                
+                if (rowCount > 0) {
+                    summary += `
+                        <div style="margin-top: 15px; background: rgba(155, 89, 182, 0.1); padding: 10px; border-radius: 6px;">
+                            <strong>ตัวอย่างข้อมูลแปลง:</strong>
+                            <div style="margin-top: 5px; font-size: 13px;">
+                                ${Object.entries(sampleData).slice(0, 5).map(([key, value]) => 
+                                    `<div><strong>${key}:</strong> ${value || '-'}</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
                 
                 const katSummary = document.getElementById('katSummary');
                 if (katSummary.innerHTML.includes('ยังไม่ได้อ่านไฟล์')) {
@@ -1207,12 +1489,10 @@
         }
         
         function clearAllFiles() {
-            // Reset file inputs
             ['gridFile', 'kat6768File', 'kat6869File'].forEach(id => {
                 document.getElementById(id).value = '';
             });
             
-            // Reset file names and status
             ['grid', 'kat6768', 'kat6869'].forEach(type => {
                 document.getElementById(type + 'FileName').textContent = 'ยังไม่ได้เลือกไฟล์';
                 document.getElementById(type + 'FileName').style.color = '';
@@ -1220,14 +1500,11 @@
                 document.getElementById(type + 'Status').classList.remove('uploaded');
             });
             
-            // Reset uploaded files object
             uploadedFiles = { grid: null, kat6768: null, kat6869: null };
             
-            // Reset summaries
             document.getElementById('gridSummary').innerHTML = 'ยังไม่ได้อ่านไฟล์';
             document.getElementById('katSummary').innerHTML = 'ยังไม่ได้อ่านไฟล์';
             
-            // Reset analysis data
             analysisData = null;
             
             showAlert('ล้างข้อมูลไฟล์ทั้งหมดเรียบร้อยแล้ว', 'info');
@@ -1235,11 +1512,9 @@
         
         // Validation and Analysis
         async function validateAndAnalyze() {
-            // Show loading
-            showLoading('กำลังตรวจสอบไฟล์...');
+            showLoading('กำลังตรวจสอบไฟล์...', 10);
             
             try {
-                // Check for required files
                 if (!uploadedFiles.grid) {
                     throw new Error('กรุณาอัพโหลดไฟล์ข้อมูล GRID (บังคับ)');
                 }
@@ -1248,37 +1523,41 @@
                     throw new Error('กรุณาอัพโหลดไฟล์ KAT อย่างน้อย 1 ไฟล์ (67/68 หรือ 68/69)');
                 }
                 
-                // Read all files
-                showLoading('กำลังอ่านข้อมูลจากไฟล์...');
+                updateProgress(30, 'กำลังอ่านข้อมูลจากไฟล์...');
                 
                 const gridData = await readCSVFile(uploadedFiles.grid);
                 const kat6768Data = uploadedFiles.kat6768 ? await readCSVFile(uploadedFiles.kat6768) : null;
                 const kat6869Data = uploadedFiles.kat6869 ? await readCSVFile(uploadedFiles.kat6869) : null;
                 
-                // Validate file structures
-                showLoading('กำลังตรวจสอบโครงสร้างข้อมูล...');
+                updateProgress(50, 'กำลังตรวจสอบโครงสร้างข้อมูล...');
                 
                 validateFileStructures(gridData, kat6768Data, kat6869Data);
                 
-                // Analyze data
-                showLoading('กำลังวิเคราะห์ข้อมูล...');
+                updateProgress(70, 'กำลังวิเคราะห์ข้อมูล...');
                 
-                analysisData = analyzeData(gridData, kat6768Data, kat6869Data);
+                analysisData = await analyzeData(gridData, kat6768Data, kat6869Data);
                 
-                // Update UI
+                updateProgress(90, 'กำลังสรุปผล...');
+                
                 hideLoading();
                 showAlert('การวิเคราะห์ข้อมูลเสร็จสิ้น!', 'info');
                 
-                // Show analysis panel
                 showPanel('analysis');
                 updateAnalysisDashboard();
                 updateHeaderStats();
+                
+                saveSession();
                 
             } catch (error) {
                 hideLoading();
                 showAlert(error.message, 'error');
                 console.error('Analysis error:', error);
             }
+        }
+        
+        function updateProgress(percent, message) {
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('loadingMessage').textContent = message;
         }
         
         async function readCSVFile(file) {
@@ -1346,16 +1625,19 @@
             // Validate KAT files
             const validateKatFile = (katData, season) => {
                 if (katData) {
-                    if (!katData.headers.includes('Grid')) {
-                        throw new Error(`ไฟล์ KAT ${season} ต้องมีคอลัมน์ "Grid"`);
+                    const requiredColumns = ['เลขแปลงintech', 'ตัน/ไร่'];
+                    const missingColumns = requiredColumns.filter(col => !katData.headers.includes(col));
+                    
+                    if (missingColumns.length > 0) {
+                        throw new Error(`ไฟล์ KAT ${season} ขาดคอลัมน์: ${missingColumns.join(', ')}`);
                     }
                     
-                    if (!katData.headers.includes('เลขแปลงintech')) {
-                        throw new Error(`ไฟล์ KAT ${season} ต้องมีคอลัมน์ "เลขแปลงintech"`);
-                    }
+                    // Check for data inconsistencies in basic info columns
+                    const basicInfoColumns = ['เขต', 'รหัสเกษตรกร', 'ชื่อนักเกษตร', 'ชื่อชาวไร่', 'ประเภทอ้อย'];
+                    const missingBasicInfo = basicInfoColumns.filter(col => !katData.headers.includes(col));
                     
-                    if (!katData.headers.includes('ตัน/ไร่')) {
-                        throw new Error(`ไฟล์ KAT ${season} ต้องมีคอลัมน์ "ตัน/ไร่"`);
+                    if (missingBasicInfo.length > 0) {
+                        showAlert(`ไฟล์ KAT ${season} ขาดคอลัมน์ข้อมูลพื้นฐานบางส่วน: ${missingBasicInfo.join(', ')}`, 'warning');
                     }
                 }
             };
@@ -1364,83 +1646,96 @@
             validateKatFile(kat6869Data, '68/69');
         }
         
-        function analyzeData(gridData, kat6768Data, kat6869Data) {
-            // Extract unique Grids from GRID file
-            const gridIds = [...new Set(gridData.data.map(row => row.Grid))];
+        async function analyzeData(gridData, kat6768Data, kat6869Data) {
+            // 1. Create mapping from landno to Grid ID (from GRID file)
+            const landnoToGridMap = {};
+            const gridLandnoCount = {};
             
-            // Count landno (แปลง) in each Grid
-            const gridPlots = {};
             gridData.data.forEach(row => {
-                const grid = row.Grid;
-                if (!gridPlots[grid]) {
-                    gridPlots[grid] = {
-                        landnos: new Set(),
-                        basicInfo: {}
-                    };
-                }
-                gridPlots[grid].landnos.add(row.landno);
+                const gridId = row.Grid;
+                const landno = row.landno;
                 
-                // Store basic info from first occurrence
-                if (!gridPlots[grid].basicInfo.zone && row.เขต) {
-                    gridPlots[grid].basicInfo = {
-                        zone: row.เขต || 'ไม่ระบุ',
-                        farmerCode: row.รหัสเกษตรกร || 'ไม่ระบุ',
-                        agriculturist: row.ชื่อนักเกษตร || 'ไม่ระบุ',
-                        farmerName: row.ชื่อชาวไร่ || 'ไม่ระบุ',
-                        sugarcaneType: row.ประเภทอ้อย || 'ไม่ระบุ'
-                    };
+                if (gridId && landno) {
+                    landnoToGridMap[landno] = gridId;
+                    
+                    if (!gridLandnoCount[gridId]) {
+                        gridLandnoCount[gridId] = 0;
+                    }
+                    gridLandnoCount[gridId]++;
                 }
             });
             
-            // Analyze KAT 67/68 data
-            const kat6768Analysis = analyzeKatData(kat6768Data, '67/68', gridPlots);
+            // 2. Analyze KAT data (get all data from KAT files)
+            const kat6768Analysis = await analyzeKatData(kat6768Data, '67/68', landnoToGridMap);
+            const kat6869Analysis = await analyzeKatData(kat6869Data, '68/69', landnoToGridMap);
             
-            // Analyze KAT 68/69 data
-            const kat6869Analysis = analyzeKatData(kat6869Data, '68/69', gridPlots);
-            
-            // Combine analysis
+            // 3. Combine analyses and calculate statistics
             const analysis = {
-                gridCount: gridIds.length,
-                totalPlotsInGrid: Object.values(gridPlots).reduce((sum, grid) => sum + grid.landnos.size, 0),
-                gridDetails: {},
+                gridCountFromGrid: Object.keys(gridLandnoCount).length,
+                totalLandnos: Object.keys(landnoToGridMap).length,
+                landnoToGridMap: landnoToGridMap,
+                gridLandnoCount: gridLandnoCount,
                 kat6768: kat6768Analysis,
                 kat6869: kat6869Analysis,
+                dataInconsistencies: [],
                 summary: {
                     matchedPlots: 0,
                     criticalPlots: 0,
                     avgYield: 0,
+                    unmatchedPlots: 0,
+                    matchRate: 0,
                     gradeDistribution: {
                         high: 0,
                         medium: 0,
                         improve: 0,
                         low: 0
                     }
-                }
+                },
+                gridDetails: {},
+                unmatchedPlotsData: []
             };
             
-            // Process each Grid
-            gridIds.forEach(gridId => {
-                const gridInfo = gridPlots[gridId] || { landnos: new Set(), basicInfo: {} };
-                const kat6768Grid = kat6768Analysis.gridData[gridId] || { plots: [], critical: [] };
-                const kat6869Grid = kat6869Analysis.gridData[gridId] || { plots: [], critical: [] };
+            // Combine unmatched plots
+            analysis.unmatchedPlotsData = [
+                ...kat6768Analysis.unmatchedPlotsData,
+                ...kat6869Analysis.unmatchedPlotsData
+            ];
+            analysis.summary.unmatchedPlots = analysis.unmatchedPlotsData.length;
+            
+            // Calculate total matched plots
+            analysis.summary.matchedPlots = kat6768Analysis.matchedPlots + kat6869Analysis.matchedPlots;
+            
+            // Calculate match rate
+            const totalPlotsInKAT = (kat6768Data?.count || 0) + (kat6869Data?.count || 0);
+            analysis.summary.matchRate = totalPlotsInKAT > 0 ? 
+                (analysis.summary.matchedPlots / totalPlotsInKAT * 100) : 0;
+            
+            // Process each Grid from matched data
+            const allGrids = new Set([
+                ...Object.keys(kat6768Analysis.gridData),
+                ...Object.keys(kat6869Analysis.gridData)
+            ]);
+            
+            allGrids.forEach(gridId => {
+                const kat6768Grid = kat6768Analysis.gridData[gridId] || { plots: [], critical: [], basicInfo: null };
+                const kat6869Grid = kat6869Analysis.gridData[gridId] || { plots: [], critical: [], basicInfo: null };
                 
-                // Calculate matched plots
-                const matchedPlots6768 = kat6768Grid.plots.filter(plot => 
-                    gridInfo.landnos.has(plot.landno)
-                ).length;
+                // Check for data inconsistencies between seasons
+                if (kat6768Grid.basicInfo && kat6869Grid.basicInfo) {
+                    checkDataInconsistency(gridId, kat6768Grid.basicInfo, kat6869Grid.basicInfo, analysis);
+                }
                 
-                const matchedPlots6869 = kat6869Grid.plots.filter(plot => 
-                    gridInfo.landnos.has(plot.landno)
-                ).length;
+                // Determine which basic info to use (prefer 68/69 if available)
+                const basicInfo = kat6869Grid.basicInfo || kat6768Grid.basicInfo || {};
+                
+                // Combine all plots
+                const allPlots = [...kat6768Grid.plots, ...kat6869Grid.plots];
+                const allCritical = [...kat6768Grid.critical, ...kat6869Grid.critical];
                 
                 // Calculate average yield
-                const allYields = [
-                    ...kat6768Grid.plots.map(p => parseFloat(p.yield) || 0),
-                    ...kat6869Grid.plots.map(p => parseFloat(p.yield) || 0)
-                ].filter(y => y > 0);
-                
-                const avgYield = allYields.length > 0 ? 
-                    allYields.reduce((a, b) => a + b, 0) / allYields.length : 0;
+                const yields = allPlots.map(p => p.yield).filter(y => y > 0);
+                const avgYield = yields.length > 0 ? 
+                    yields.reduce((a, b) => a + b, 0) / yields.length : 0;
                 
                 // Determine grade
                 let grade = 'low';
@@ -1449,36 +1744,27 @@
                 else if (avgYield >= 7) grade = 'improve';
                 
                 analysis.summary.gradeDistribution[grade]++;
-                
-                // Count critical plots
-                const criticalPlots = [
-                    ...kat6768Grid.critical,
-                    ...kat6869Grid.critical
-                ];
-                
-                analysis.summary.criticalPlots += criticalPlots.length;
-                analysis.summary.matchedPlots += matchedPlots6768 + matchedPlots6869;
+                analysis.summary.criticalPlots += allCritical.length;
                 
                 // Store Grid details
                 analysis.gridDetails[gridId] = {
                     gridId: gridId,
-                    basicInfo: gridInfo.basicInfo,
-                    totalPlots: gridInfo.landnos.size,
+                    basicInfo: basicInfo,
+                    totalLandnos: gridLandnoCount[gridId] || 0,
                     kat6768: {
-                        totalPlots: kat6768Grid.plots.length,
-                        matchedPlots: matchedPlots6768,
+                        matchedPlots: kat6768Grid.plots.length,
                         plots: kat6768Grid.plots,
                         critical: kat6768Grid.critical
                     },
                     kat6869: {
-                        totalPlots: kat6869Grid.plots.length,
-                        matchedPlots: matchedPlots6869,
+                        matchedPlots: kat6869Grid.plots.length,
                         plots: kat6869Grid.plots,
                         critical: kat6869Grid.critical
                     },
                     avgYield: avgYield,
                     grade: grade,
-                    criticalPlots: criticalPlots
+                    criticalPlots: allCritical,
+                    allPlots: allPlots
                 };
             });
             
@@ -1493,55 +1779,112 @@
             return analysis;
         }
         
-        function analyzeKatData(katData, season, gridPlots) {
+        async function analyzeKatData(katData, season, landnoToGridMap) {
             if (!katData) {
                 return {
                     season: season,
                     totalPlots: 0,
+                    matchedPlots: 0,
+                    unmatchedPlots: 0,
                     gridData: {},
-                    criticalPlots: []
+                    unmatchedPlotsData: []
                 };
             }
             
             const gridData = {};
-            const criticalPlots = [];
+            const unmatchedPlotsData = [];
+            let matchedCount = 0;
             
-            // Group by Grid
-            katData.data.forEach(row => {
-                const grid = row.Grid;
-                if (!gridData[grid]) {
-                    gridData[grid] = {
-                        plots: [],
-                        critical: []
-                    };
-                }
+            for (const row of katData.data) {
+                const intechNo = row.เลขแปลงintech;
+                const gridId = landnoToGridMap[intechNo];
                 
-                const plot = {
-                    landno: row.เลขแปลงintech || '',
-                    quota: row.เลขโควต้า || '',
+                // Create plot data object with all data from KAT
+                const plotData = {
+                    landno: intechNo,
+                    gridId: gridId,
                     yield: parseFloat(row['ตัน/ไร่']) || 0,
                     area: parseFloat(row.พื้นที่) || 0,
-                    season: season
+                    season: season,
+                    zone: row.เขต || 'ไม่ระบุ',
+                    farmerCode: row.รหัสเกษตรกร || 'ไม่ระบุ',
+                    agriculturist: row.ชื่อนักเกษตร || 'ไม่ระบุ',
+                    farmerName: row.ชื่อชาวไร่ || 'ไม่ระบุ',
+                    sugarcaneType: row.ประเภทอ้อย || 'ไม่ระบุ',
+                    quota: row.เลขโควต้า || '',
+                    source: 'KAT'
                 };
                 
-                gridData[grid].plots.push(plot);
-                
-                // Check if critical (yield < 7)
-                if (plot.yield > 0 && plot.yield < 7) {
-                    gridData[grid].critical.push(plot);
-                    criticalPlots.push({
-                        grid: grid,
-                        ...plot
-                    });
+                if (gridId) {
+                    // Matched successfully
+                    matchedCount++;
+                    
+                    if (!gridData[gridId]) {
+                        gridData[gridId] = {
+                            plots: [],
+                            critical: [],
+                            basicInfo: null
+                        };
+                    }
+                    
+                    gridData[gridId].plots.push(plotData);
+                    
+                    // Store basic info from first matched plot
+                    if (!gridData[gridId].basicInfo) {
+                        gridData[gridId].basicInfo = {
+                            zone: plotData.zone,
+                            farmerCode: plotData.farmerCode,
+                            agriculturist: plotData.agriculturist,
+                            farmerName: plotData.farmerName,
+                            sugarcaneType: plotData.sugarcaneType,
+                            season: season
+                        };
+                    }
+                    
+                    // Check for critical plot
+                    if (plotData.yield > 0 && plotData.yield < 7) {
+                        gridData[gridId].critical.push(plotData);
+                    }
+                    
+                } else {
+                    // Unmatched plot
+                    unmatchedPlotsData.push(plotData);
                 }
-            });
+            }
             
             return {
                 season: season,
                 totalPlots: katData.count,
+                matchedPlots: matchedCount,
+                unmatchedPlots: unmatchedPlotsData.length,
                 gridData: gridData,
-                criticalPlots: criticalPlots
+                unmatchedPlotsData: unmatchedPlotsData
             };
+        }
+        
+        function checkDataInconsistency(gridId, info1, info2, analysis) {
+            const inconsistencies = [];
+            
+            const fields = ['zone', 'farmerCode', 'agriculturist', 'farmerName', 'sugarcaneType'];
+            
+            fields.forEach(field => {
+                if (info1[field] && info2[field] && info1[field] !== info2[field]) {
+                    inconsistencies.push({
+                        field: field,
+                        value1: info1[field],
+                        value2: info2[field],
+                        season1: info1.season,
+                        season2: info2.season
+                    });
+                }
+            });
+            
+            if (inconsistencies.length > 0) {
+                analysis.dataInconsistencies.push({
+                    gridId: gridId,
+                    inconsistencies: inconsistencies
+                });
+            }
         }
         
         // Update Dashboard
@@ -1549,40 +1892,32 @@
             if (!analysisData) return;
             
             // Update metric cards
-            document.getElementById('totalGridCount').textContent = analysisData.gridCount;
+            document.getElementById('totalGridCount').textContent = analysisData.gridCountFromGrid;
             document.getElementById('kat6768Plots').textContent = analysisData.kat6768.totalPlots;
             document.getElementById('kat6869Plots').textContent = analysisData.kat6869.totalPlots;
+            document.getElementById('kat6768Matched').textContent = analysisData.kat6768.matchedPlots;
+            document.getElementById('kat6869Matched').textContent = analysisData.kat6869.matchedPlots;
             document.getElementById('matchedPlots').textContent = analysisData.summary.matchedPlots;
             document.getElementById('criticalPlots').textContent = analysisData.summary.criticalPlots;
             document.getElementById('avgYield').textContent = analysisData.summary.avgYield.toFixed(1);
+            document.getElementById('unmatchedPlots').textContent = analysisData.summary.unmatchedPlots;
+            document.getElementById('matchRate').textContent = analysisData.summary.matchRate.toFixed(1) + '%';
             
             // Update detailed summary
             let gridSummary = `
                 <div style="margin-bottom: 15px;">
-                    <strong>Grid ทั้งหมด:</strong> ${analysisData.gridCount} Grid
+                    <strong>Grid ทั้งหมด:</strong> ${analysisData.gridCountFromGrid} Grid
                 </div>
                 <div style="margin-bottom: 15px;">
-                    <strong>แปลงทั้งหมดในไฟล์ GRID:</strong> ${analysisData.totalPlotsInGrid} แปลง
+                    <strong>landno ทั้งหมด:</strong> ${analysisData.totalLandnos} รายการ
                 </div>
                 <div style="margin-bottom: 15px;">
-                    <strong>ข้อมูลพื้นฐานที่อ่านได้:</strong>
+                    <strong>โครงสร้าง:</strong> landno → Grid ID mapping
+                </div>
+                <div style="color: var(--success);">
+                    <i class="fas fa-check"></i> โครงสร้างไฟล์ถูกต้อง
                 </div>
             `;
-            
-            // Show basic info from first few Grids
-            const sampleGrids = Object.keys(analysisData.gridDetails).slice(0, 3);
-            sampleGrids.forEach(gridId => {
-                const grid = analysisData.gridDetails[gridId];
-                gridSummary += `
-                    <div style="background: rgba(52, 152, 219, 0.1); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-                        <strong>${gridId}:</strong> เขต ${grid.basicInfo.zone}, ${grid.basicInfo.farmerName}
-                    </div>
-                `;
-            });
-            
-            if (sampleGrids.length < Object.keys(analysisData.gridDetails).length) {
-                gridSummary += `<div style="color: var(--gray); font-size: 13px;">และ Grid อื่นๆ อีก ${analysisData.gridCount - sampleGrids.length} Grid</div>`;
-            }
             
             document.getElementById('gridSummary').innerHTML = gridSummary;
             
@@ -1590,42 +1925,35 @@
             let katSummary = `
                 <div style="margin-bottom: 15px;">
                     <strong>KAT 67/68:</strong> ${analysisData.kat6768.totalPlots} แปลง
+                    (จับคู่ได้ ${analysisData.kat6768.matchedPlots} แปลง)
                 </div>
                 <div style="margin-bottom: 15px;">
                     <strong>KAT 68/69:</strong> ${analysisData.kat6869.totalPlots} แปลง
+                    (จับคู่ได้ ${analysisData.kat6869.matchedPlots} แปลง)
                 </div>
                 <div style="margin-bottom: 15px;">
-                    <strong>แปลงที่จับคู่ได้ (landno ตรงกัน):</strong> ${analysisData.summary.matchedPlots} แปลง
+                    <strong>แปลงที่จับคู่ได้:</strong> ${analysisData.summary.matchedPlots} แปลง
                 </div>
                 <div style="margin-bottom: 15px;">
-                    <strong>แปลงวิกฤต (ต่ำกว่า 7 ตัน/ไร่):</strong> ${analysisData.summary.criticalPlots} แปลง
+                    <strong>อัตราการจับคู่:</strong> ${analysisData.summary.matchRate.toFixed(1)}%
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>แปลงวิกฤต:</strong> ${analysisData.summary.criticalPlots} แปลง
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>แปลงที่จับคู่ไม่ได้:</strong> ${analysisData.summary.unmatchedPlots} แปลง
                 </div>
             `;
             
-            // Show critical plots if any
-            if (analysisData.summary.criticalPlots > 0) {
-                const criticalSamples = [];
-                Object.values(analysisData.gridDetails).forEach(grid => {
-                    if (grid.criticalPlots.length > 0) {
-                        criticalSamples.push({
-                            grid: grid.gridId,
-                            plot: grid.criticalPlots[0]
-                        });
-                    }
-                });
-                
-                if (criticalSamples.length > 0) {
-                    katSummary += `
-                        <div style="background: rgba(231, 76, 60, 0.1); padding: 10px; border-radius: 6px; margin-top: 15px;">
-                            <strong>ตัวอย่างแปลงวิกฤต:</strong>
-                            ${criticalSamples.slice(0, 3).map(sample => `
-                                <div style="margin-top: 5px; font-size: 13px;">
-                                    ${sample.grid}: แปลง ${sample.plot.landno} - ${sample.plot.yield} ตัน/ไร่ (${sample.plot.season})
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
-                }
+            // Show data inconsistencies if any
+            if (analysisData.dataInconsistencies.length > 0) {
+                document.getElementById('inconsistencySection').style.display = 'block';
+                document.getElementById('inconsistencySummary').innerHTML = `
+                    พบข้อมูลที่ไม่สอดคล้องกัน ${analysisData.dataInconsistencies.length} Grid
+                    <button class="btn btn-warning" style="padding: 2px 10px; font-size: 11px; margin-left: 10px;" onclick="showInconsistencyModal()">
+                        ดูรายละเอียด
+                    </button>
+                `;
             }
             
             document.getElementById('katSummary').innerHTML = katSummary;
@@ -1634,7 +1962,7 @@
         function updateHeaderStats() {
             if (!analysisData) return;
             
-            document.getElementById('headerGrids').textContent = analysisData.gridCount;
+            document.getElementById('headerGrids').textContent = Object.keys(analysisData.gridDetails).length;
             document.getElementById('headerPlots').textContent = analysisData.summary.matchedPlots;
             document.getElementById('headerProblems').textContent = analysisData.summary.criticalPlots;
             document.getElementById('headerYield').textContent = analysisData.summary.avgYield.toFixed(1);
@@ -1656,10 +1984,14 @@
             
             // Create heatmap cells
             Object.values(analysisData.gridDetails).forEach(grid => {
+                if (currentHeatmapFilter !== 'all' && grid.grade !== currentHeatmapFilter) {
+                    return;
+                }
+                
                 const cell = document.createElement('div');
                 cell.className = `heatmap-cell ${grid.grade}`;
                 cell.textContent = grid.gridId;
-                cell.title = `${grid.gridId}: ${grid.avgYield.toFixed(1)} ตัน/ไร่ (${grid.grade})`;
+                cell.title = `${grid.gridId}: ${grid.avgYield.toFixed(1)} ตัน/ไร่ (${getGradeThai(grid.grade)})`;
                 
                 cell.onclick = () => {
                     showPanel('gridDetails');
@@ -1671,6 +2003,17 @@
                 gradeCounts[grid.grade]++;
             });
             
+            // If no cells after filtering
+            if (container.children.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--gray);">
+                        <i class="fas fa-filter" style="font-size: 48px; margin-bottom: 15px;"></i>
+                        <h3>ไม่พบ Grid ที่ตรงกับตัวกรอง</h3>
+                        <p>เปลี่ยนตัวกรองหรือเลือก "ทั้งหมด" เพื่อดู Grid ทั้งหมด</p>
+                    </div>
+                `;
+            }
+            
             // Update grade counts
             document.getElementById('highCount').textContent = gradeCounts.high;
             document.getElementById('mediumCount').textContent = gradeCounts.medium;
@@ -1678,10 +2021,20 @@
             document.getElementById('lowCount').textContent = gradeCounts.low;
         }
         
+        function getGradeThai(grade) {
+            const grades = {
+                'high': 'สูง',
+                'medium': 'ปานกลาง',
+                'improve': 'ปรับปรุง',
+                'low': 'ต่ำ'
+            };
+            return grades[grade] || grade;
+        }
+        
         function filterHeatmap(grade) {
-            // In a real implementation, this would filter the heatmap display
-            showAlert(`แสดง Grid เกรด: ${grade === 'all' ? 'ทั้งหมด' : grade}`, 'info');
-            renderHeatmap(); // Re-render with current filter
+            currentHeatmapFilter = grade;
+            renderHeatmap();
+            showAlert(`แสดง Grid เกรด: ${grade === 'all' ? 'ทั้งหมด' : getGradeThai(grade)}`, 'info');
         }
         
         // Grid Details Functions
@@ -1693,13 +2046,6 @@
             
             const grid = analysisData.gridDetails[gridId];
             const content = document.getElementById('gridDetailsContent');
-            
-            // Calculate match rates
-            const matchRate6768 = grid.kat6768.totalPlots > 0 ? 
-                (grid.kat6768.matchedPlots / grid.kat6768.totalPlots * 100).toFixed(1) : 0;
-                
-            const matchRate6869 = grid.kat6869.totalPlots > 0 ? 
-                (grid.kat6869.matchedPlots / grid.kat6869.totalPlots * 100).toFixed(1) : 0;
             
             // Get grade color and icon
             const gradeConfig = {
@@ -1714,10 +2060,10 @@
             // Build HTML
             let html = `
                 <div style="margin-bottom: 30px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                         <div>
                             <h2 style="color: var(--primary);">Grid: ${grid.gridId}</h2>
-                            <p style="color: var(--gray);">เขต: ${grid.basicInfo.zone}</p>
+                            <p style="color: var(--gray);">ข้อมูลพื้นฐานจากไฟล์ KAT</p>
                         </div>
                         <div style="background: ${grade.color}; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 600;">
                             ${grade.icon} เกรด: ${grade.label} (${grid.avgYield.toFixed(1)} ตัน/ไร่)
@@ -1726,20 +2072,28 @@
                     
                     <div class="info-grid">
                         <div class="info-item">
+                            <div class="info-label">เขตพื้นที่</div>
+                            <div class="info-value">${grid.basicInfo.zone || 'ไม่ระบุ'}</div>
+                        </div>
+                        <div class="info-item">
                             <div class="info-label">รหัสเกษตรกร</div>
-                            <div class="info-value">${grid.basicInfo.farmerCode}</div>
+                            <div class="info-value">${grid.basicInfo.farmerCode || 'ไม่ระบุ'}</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">ชื่อนักเกษตร</div>
-                            <div class="info-value">${grid.basicInfo.agriculturist}</div>
+                            <div class="info-value">${grid.basicInfo.agriculturist || 'ไม่ระบุ'}</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">ชื่อชาวไร่</div>
-                            <div class="info-value">${grid.basicInfo.farmerName}</div>
+                            <div class="info-value">${grid.basicInfo.farmerName || 'ไม่ระบุ'}</div>
                         </div>
                         <div class="info-item">
                             <div class="info-label">ประเภทอ้อย</div>
-                            <div class="info-value">${grid.basicInfo.sugarcaneType}</div>
+                            <div class="info-value">${grid.basicInfo.sugarcaneType || 'ไม่ระบุ'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">แหล่งข้อมูล</div>
+                            <div class="info-value">KAT ${grid.basicInfo.season || 'ไม่ระบุ'}</div>
                         </div>
                     </div>
                 </div>
@@ -1748,32 +2102,35 @@
                     <h3 style="color: var(--primary); margin-bottom: 20px;">สรุปข้อมูลแปลง</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                         <div style="background: rgba(52, 152, 219, 0.1); padding: 20px; border-radius: 10px;">
-                            <div style="font-size: 14px; color: var(--gray);">แปลงในไฟล์ GRID</div>
-                            <div style="font-size: 28px; font-weight: 700; color: var(--primary);">${grid.totalPlots}</div>
+                            <div style="font-size: 14px; color: var(--gray);">landno ใน Grid</div>
+                            <div style="font-size: 28px; font-weight: 700; color: var(--primary);">${grid.totalLandnos || 0}</div>
+                            <div style="font-size: 12px; color: var(--gray); margin-top: 5px;">จากไฟล์ GRID</div>
                         </div>
-            `;
-            
-            if (grid.kat6768.totalPlots > 0) {
-                html += `
-                    <div style="background: rgba(52, 152, 219, 0.1); padding: 20px; border-radius: 10px;">
-                        <div style="font-size: 14px; color: var(--gray);">แปลงใน KAT 67/68</div>
-                        <div style="font-size: 28px; font-weight: 700; color: var(--primary);">${grid.kat6768.totalPlots}</div>
-                        <div style="font-size: 12px; color: var(--gray); margin-top: 5px;">จับคู่ได้ ${grid.kat6768.matchedPlots} แปลง (${matchRate6768}%)</div>
-                    </div>
-                `;
-            }
-            
-            if (grid.kat6869.totalPlots > 0) {
-                html += `
-                    <div style="background: rgba(155, 89, 182, 0.1); padding: 20px; border-radius: 10px;">
-                        <div style="font-size: 14px; color: var(--gray);">แปลงใน KAT 68/69</div>
-                        <div style="font-size: 28px; font-weight: 700; color: var(--primary);">${grid.kat6869.totalPlots}</div>
-                        <div style="font-size: 12px; color: var(--gray); margin-top: 5px;">จับคู่ได้ ${grid.kat6869.matchedPlots} แปลง (${matchRate6869}%)</div>
-                    </div>
-                `;
-            }
-            
-            html += `
+                        
+                        <div style="background: rgba(52, 152, 219, 0.1); padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 14px; color: var(--gray);">แปลงที่จับคู่ได้</div>
+                            <div style="font-size: 28px; font-weight: 700; color: var(--primary);">${grid.allPlots.length}</div>
+                            <div style="font-size: 12px; color: var(--gray); margin-top: 5px;">
+                                KAT 67/68: ${grid.kat6768.matchedPlots}<br>
+                                KAT 68/69: ${grid.kat6869.matchedPlots}
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(231, 76, 60, 0.1); padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 14px; color: var(--gray);">แปลงวิกฤต</div>
+                            <div style="font-size: 28px; font-weight: 700; color: var(--danger);">${grid.criticalPlots.length}</div>
+                            <div style="font-size: 12px; color: var(--gray); margin-top: 5px;">
+                                ต่ำกว่า 7 ตัน/ไร่
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(39, 174, 96, 0.1); padding: 20px; border-radius: 10px;">
+                            <div style="font-size: 14px; color: var(--gray);">ผลผลิตเฉลี่ย</div>
+                            <div style="font-size: 28px; font-weight: 700; color: var(--success);">${grid.avgYield.toFixed(1)}</div>
+                            <div style="font-size: 12px; color: var(--gray); margin-top: 5px;">
+                                ตัน/ไร่
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -1790,7 +2147,7 @@
                 
                 grid.criticalPlots.forEach((plot, index) => {
                     html += `
-                        <div class="plot-card" onclick="showPlotDetails('${grid.gridId}', ${index})">
+                        <div class="plot-card">
                             <div class="season-badge ${plot.season === '67/68' ? 'season-6768' : 'season-6869'}">
                                 ฤดูกาล ${plot.season}
                             </div>
@@ -1799,6 +2156,8 @@
                             <div style="color: var(--gray); font-size: 14px;">
                                 <div>พื้นที่: ${plot.area} ไร่</div>
                                 <div>โควต้า: ${plot.quota}</div>
+                                <div>เกษตรกร: ${plot.farmerName}</div>
+                                <div>เขต: ${plot.zone}</div>
                             </div>
                         </div>
                     `;
@@ -1812,39 +2171,155 @@
             
             content.innerHTML = html;
             
-            // Populate grid selector if not already
+            // Populate grid selector
             const selector = document.getElementById('gridSelector');
             if (selector.options.length <= 1) {
                 Object.keys(analysisData.gridDetails).forEach(gId => {
                     if (!Array.from(selector.options).some(opt => opt.value === gId)) {
                         const option = document.createElement('option');
                         option.value = gId;
-                        option.textContent = `${gId} (${analysisData.gridDetails[gId].basicInfo.zone})`;
+                        const gridInfo = analysisData.gridDetails[gId];
+                        option.textContent = `${gId} - ${gridInfo.basicInfo.zone || 'ไม่ระบุเขต'} (${gridInfo.avgYield.toFixed(1)} ตัน/ไร่)`;
                         selector.appendChild(option);
                     }
                 });
             }
         }
         
-        function showPlotDetails(gridId, plotIndex) {
-            const grid = analysisData.gridDetails[gridId];
-            if (!grid || !grid.criticalPlots[plotIndex]) return;
+        // Modal Functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+        
+        function showInconsistencyModal() {
+            if (!analysisData || analysisData.dataInconsistencies.length === 0) return;
             
-            const plot = grid.criticalPlots[plotIndex];
+            const content = document.getElementById('inconsistencyContent');
+            let html = '<p style="color: var(--gray); margin-bottom: 20px;">พบข้อมูลที่ไม่สอดคล้องกันระหว่างฤดูกาล:</p>';
             
-            showAlert(`แปลง ${plot.landno}: ${plot.yield.toFixed(1)} ตัน/ไร่ (${plot.season})`, 'warning');
+            analysisData.dataInconsistencies.forEach((item, index) => {
+                html += `
+                    <div class="inconsistency-item">
+                        <h4 style="color: var(--primary); margin-bottom: 10px;">Grid: ${item.gridId}</h4>
+                        <div style="font-size: 14px; color: var(--gray);">
+                            ${item.inconsistencies.map(inc => `
+                                <div style="margin-bottom: 5px;">
+                                    <strong>${getFieldThai(inc.field)}:</strong><br>
+                                    • KAT ${inc.season1}: ${inc.value1}<br>
+                                    • KAT ${inc.season2}: ${inc.value2}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = html;
+            showModal('inconsistencyModal');
+        }
+        
+        function getFieldThai(field) {
+            const fields = {
+                'zone': 'เขตพื้นที่',
+                'farmerCode': 'รหัสเกษตรกร',
+                'agriculturist': 'ชื่อนักเกษตร',
+                'farmerName': 'ชื่อชาวไร่',
+                'sugarcaneType': 'ประเภทอ้อย'
+            };
+            return fields[field] || field;
+        }
+        
+        function showUnmatchedModal() {
+            if (!analysisData || analysisData.unmatchedPlotsData.length === 0) {
+                showAlert('ไม่มีแปลงที่จับคู่ไม่ได้', 'info');
+                return;
+            }
+            
+            const content = document.getElementById('unmatchedContent');
+            let html = `
+                <p style="color: var(--gray); margin-bottom: 20px;">
+                    แปลงที่พบในไฟล์ KAT แต่ไม่พบ landno ที่ตรงกันในไฟล์ GRID:
+                    <span style="color: var(--warning); font-weight: bold;">${analysisData.unmatchedPlotsData.length} แปลง</span>
+                </p>
+                
+                <div style="max-height: 400px; overflow-y: auto; padding: 10px;">
+            `;
+            
+            // Group by season
+            const groupedBySeason = {};
+            analysisData.unmatchedPlotsData.forEach(plot => {
+                if (!groupedBySeason[plot.season]) {
+                    groupedBySeason[plot.season] = [];
+                }
+                groupedBySeason[plot.season].push(plot);
+            });
+            
+            Object.keys(groupedBySeason).forEach(season => {
+                const plots = groupedBySeason[season];
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: var(--primary); margin-bottom: 10px;">
+                            ฤดูกาล ${season} (${plots.length} แปลง)
+                        </h4>
+                `;
+                
+                plots.slice(0, 10).forEach((plot, index) => {
+                    html += `
+                        <div class="unmatched-plot-card">
+                            <div>
+                                <div style="font-weight: 600; color: var(--primary);">แปลง ${plot.landno}</div>
+                                <div style="color: var(--gray); font-size: 14px; margin-top: 5px;">
+                                    ผลผลิต: ${plot.yield.toFixed(1)} ตัน/ไร่ | 
+                                    เกษตรกร: ${plot.farmerName} | 
+                                    เขต: ${plot.zone}
+                                </div>
+                            </div>
+                            <div style="color: ${plot.yield < 7 ? 'var(--danger)' : plot.yield < 10 ? 'var(--warning)' : 'var(--success)'}; font-weight: 600;">
+                                ${plot.yield.toFixed(1)} ตัน
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                if (plots.length > 10) {
+                    html += `<p style="color: var(--gray); text-align: center; margin-top: 10px;">และอีก ${plots.length - 10} แปลง...</p>`;
+                }
+                
+                html += `</div>`;
+            });
+            
+            html += `</div>`;
+            
+            content.innerHTML = html;
+            showModal('unmatchedModal');
         }
         
         // Reports Functions
         function updateReports() {
             if (!analysisData) return;
             
-            document.getElementById('reportGrids').textContent = analysisData.gridCount;
-            document.getElementById('reportProblems').textContent = Object.values(analysisData.gridDetails)
-                .filter(grid => grid.criticalPlots.length > 0).length;
+            const analyzedGrids = Object.keys(analysisData.gridDetails).length;
+            const problemGrids = Object.values(analysisData.gridDetails).filter(grid => grid.criticalPlots.length > 0).length;
+            
+            document.getElementById('reportGrids').textContent = analyzedGrids;
+            document.getElementById('reportProblems').textContent = problemGrids;
             document.getElementById('reportCritical').textContent = analysisData.summary.criticalPlots;
+            document.getElementById('reportUnmatched').textContent = analysisData.summary.unmatchedPlots;
             
             // Update recommendations
+            generateRecommendations();
+            
+            // Update trend analysis if both seasons available
+            if (analysisData.kat6768.totalPlots > 0 && analysisData.kat6869.totalPlots > 0) {
+                generateTrendAnalysis();
+            }
+        }
+        
+        function generateRecommendations() {
             const recommendations = document.getElementById('recommendations');
             
             // Identify problematic grids
@@ -1858,22 +2333,42 @@
             const recommendationsList = [];
             const improvements = [];
             
+            // Urgent issues
             if (lowYieldGrids.length > 0) {
                 urgentIssues.push(`มี Grid ผลผลิตต่ำ ${lowYieldGrids.length} Grid (ต่ำกว่า 7 ตัน/ไร่)`);
-                urgentIssues.push(`Grid ที่ต้องตรวจสอบด่วน: ${lowYieldGrids.slice(0, 3).map(g => g.gridId).join(', ')}`);
+                const gridNames = lowYieldGrids.slice(0, 3).map(g => g.gridId).join(', ');
+                urgentIssues.push(`Grid ที่ต้องตรวจสอบด่วน: ${gridNames}${lowYieldGrids.length > 3 ? ' และอื่นๆ' : ''}`);
             }
             
             if (analysisData.summary.criticalPlots > 0) {
-                urgentIssues.push(`มีแปลงวิกฤต ${analysisData.summary.criticalPlots} แปลง`);
-                recommendationsList.push(`ตรวจสอบแปลงวิกฤตใน Grid ที่มีปัญหา`);
+                urgentIssues.push(`มีแปลงวิกฤต ${analysisData.summary.criticalPlots} แปลงที่ต้องแก้ไขด่วน`);
             }
             
-            recommendationsList.push(`เฝ้าระวังแปลงที่จับคู่ข้อมูลไม่ตรงกัน`);
-            recommendationsList.push(`จัดอบรมเกษตรกรในพื้นที่ที่มีผลผลิตต่ำ`);
+            if (analysisData.summary.unmatchedPlots > 0) {
+                urgentIssues.push(`มีแปลงที่จับคู่ไม่ได้ ${analysisData.summary.unmatchedPlots} แปลง (${analysisData.summary.matchRate.toFixed(1)}% จับคู่ได้)`);
+            }
             
+            if (analysisData.dataInconsistencies.length > 0) {
+                urgentIssues.push(`พบข้อมูลที่ไม่สอดคล้องกันใน ${analysisData.dataInconsistencies.length} Grid`);
+            }
+            
+            // Recommendations
+            if (analysisData.summary.unmatchedPlots > 0) {
+                recommendationsList.push(`ตรวจสอบและแก้ไขข้อมูลแปลงที่จับคู่ไม่ได้ (${analysisData.summary.unmatchedPlots} แปลง)`);
+            }
+            
+            recommendationsList.push(`จัดอบรมเกษตรกรในพื้นที่ที่มีผลผลิตต่ำ (${lowYieldGrids.length} Grid)`);
+            recommendationsList.push(`ตรวจสอบแปลงวิกฤตและหาแนวทางปรับปรุงผลผลิต`);
+            
+            if (analysisData.dataInconsistencies.length > 0) {
+                recommendationsList.push(`ปรับปรุงความสอดคล้องของข้อมูลพื้นฐานระหว่างฤดูกาล`);
+            }
+            
+            // Improvements
             improvements.push(`พัฒนาระบบการให้น้ำในพื้นที่แห้งแล้ง`);
             improvements.push(`ส่งเสริมการใช้ปุ๋ยตามค่าวิเคราะห์ดิน`);
-            improvements.push(`ติดตามแปลงตัวอย่างเพื่อประเมินผล`);
+            improvements.push(`ติดตามแปลงตัวอย่างเพื่อประเมินผลอย่างต่อเนื่อง`);
+            improvements.push(`ปรับปรุงระบบการบันทึกข้อมูลให้มีความสอดคล้อง`);
             
             recommendations.innerHTML = `
                 <div style="background: rgba(231, 76, 60, 0.1); padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid var(--danger);">
@@ -1905,21 +2400,94 @@
             `;
         }
         
+        function generateTrendAnalysis() {
+            const trendContent = document.getElementById('trendAnalysisContent');
+            
+            // Calculate yield changes for grids that appear in both seasons
+            const trendGrids = [];
+            
+            Object.keys(analysisData.gridDetails).forEach(gridId => {
+                const grid = analysisData.gridDetails[gridId];
+                const plots6768 = grid.kat6768.plots;
+                const plots6869 = grid.kat6869.plots;
+                
+                if (plots6768.length > 0 && plots6869.length > 0) {
+                    const avg6768 = plots6768.reduce((sum, p) => sum + p.yield, 0) / plots6768.length;
+                    const avg6869 = plots6869.reduce((sum, p) => sum + p.yield, 0) / plots6869.length;
+                    const change = ((avg6869 - avg6768) / avg6768 * 100);
+                    
+                    trendGrids.push({
+                        gridId: gridId,
+                        avg6768: avg6768,
+                        avg6869: avg6869,
+                        change: change,
+                        direction: change > 0 ? 'up' : change < 0 ? 'down' : 'stable'
+                    });
+                }
+            });
+            
+            // Sort by biggest improvement and decline
+            const improvedGrids = trendGrids.filter(g => g.change > 10).sort((a, b) => b.change - a.change);
+            const declinedGrids = trendGrids.filter(g => g.change < -10).sort((a, b) => a.change - b.change);
+            
+            let html = '';
+            
+            if (improvedGrids.length > 0) {
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="color: var(--success); margin-bottom: 10px;">
+                            <i class="fas fa-arrow-up"></i> Grid ที่ผลผลิตดีขึ้นอย่างมีนัยสำคัญ (>10%)
+                        </h5>
+                        <div style="font-size: 14px; color: var(--gray);">
+                            ${improvedGrids.slice(0, 5).map(g => `
+                                <div style="margin-bottom: 5px; padding: 8px; background: rgba(39, 174, 96, 0.1); border-radius: 5px;">
+                                    <strong>${g.gridId}</strong>: ${g.avg6768.toFixed(1)} → ${g.avg6869.toFixed(1)} ตัน/ไร่ 
+                                    <span style="color: var(--success);">(+${g.change.toFixed(1)}%)</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (declinedGrids.length > 0) {
+                html += `
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="color: var(--danger); margin-bottom: 10px;">
+                            <i class="fas fa-arrow-down"></i> Grid ที่ผลผลิตลดลงอย่างมีนัยสำคัญ (>10%)
+                        </h5>
+                        <div style="font-size: 14px; color: var(--gray);">
+                            ${declinedGrids.slice(0, 5).map(g => `
+                                <div style="margin-bottom: 5px; padding: 8px; background: rgba(231, 76, 60, 0.1); border-radius: 5px;">
+                                    <strong>${g.gridId}</strong>: ${g.avg6768.toFixed(1)} → ${g.avg6869.toFixed(1)} ตัน/ไร่ 
+                                    <span style="color: var(--danger);">(${g.change.toFixed(1)}%)</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (html) {
+                document.getElementById('trendAnalysisSection').style.display = 'block';
+                trendContent.innerHTML = html;
+            }
+        }
+        
+        // Export Functions
         function exportPDFReport() {
             if (!analysisData) {
                 showAlert('กรุณาวิเคราะห์ข้อมูลก่อนส่งออกรายงาน', 'warning');
                 return;
             }
             
-            showLoading('กำลังสร้างรายงาน PDF...');
+            showLoading('กำลังสร้างรายงาน PDF...', 0);
             
-            // Simulate PDF generation
             setTimeout(() => {
                 hideLoading();
                 showAlert('ส่งออกรายงาน PDF สำเร็จ', 'info');
                 
-                // Create a simple text report for download
-                const reportContent = createTextReport();
+                const reportContent = createPDFReport();
                 downloadFile(reportContent, 'อ้อยวิเคราะห์_รายงาน.pdf', 'application/pdf');
             }, 2000);
         }
@@ -1930,54 +2498,72 @@
                 return;
             }
             
-            showLoading('กำลังสร้างรายงาน Excel...');
+            showLoading('กำลังสร้างรายงาน Excel...', 0);
             
-            // Simulate Excel generation
             setTimeout(() => {
                 hideLoading();
                 showAlert('ส่งออกรายงาน Excel สำเร็จ', 'info');
                 
-                // Create a simple CSV report for download
                 const csvContent = createCSVReport();
                 downloadFile(csvContent, 'อ้อยวิเคราะห์_รายงาน.csv', 'text/csv');
             }, 2000);
         }
         
-        function createTextReport() {
+        function createPDFReport() {
             let report = `รายงานการวิเคราะห์ข้อมูลแปลงอ้อย\n`;
             report += `วันที่: ${new Date().toLocaleDateString('th-TH')}\n`;
-            report += `เวลา: ${new Date().toLocaleTimeString('th-TH')}\n\n`;
+            report += `เวลา: ${new Date().toLocaleTimeString('th-TH')}\n`;
+            report += `สร้างโดย: ระบบวิเคราะห์ข้อมูลแปลงอ้อย\n\n`;
             
             report += `สรุปผลการวิเคราะห์:\n`;
-            report += `- Grid ทั้งหมด: ${analysisData.gridCount}\n`;
-            report += `- แปลงในไฟล์ GRID: ${analysisData.totalPlotsInGrid}\n`;
-            report += `- แปลงใน KAT 67/68: ${analysisData.kat6768.totalPlots}\n`;
-            report += `- แปลงใน KAT 68/69: ${analysisData.kat6869.totalPlots}\n`;
-            report += `- แปลงที่จับคู่ได้: ${analysisData.summary.matchedPlots}\n`;
-            report += `- แปลงวิกฤต: ${analysisData.summary.criticalPlots}\n`;
-            report += `- ผลผลิตเฉลี่ย: ${analysisData.summary.avgYield.toFixed(1)} ตัน/ไร่\n\n`;
+            report += `----------------------------------------\n`;
+            report += `Grid ทั้งหมดจากไฟล์ GRID: ${analysisData.gridCountFromGrid}\n`;
+            report += `แปลงใน KAT 67/68: ${analysisData.kat6768.totalPlots} แปลง\n`;
+            report += `แปลงใน KAT 68/69: ${analysisData.kat6869.totalPlots} แปลง\n`;
+            report += `แปลงที่จับคู่ได้: ${analysisData.summary.matchedPlots} แปลง\n`;
+            report += `อัตราการจับคู่: ${analysisData.summary.matchRate.toFixed(1)}%\n`;
+            report += `แปลงวิกฤต (<7 ตัน/ไร่): ${analysisData.summary.criticalPlots} แปลง\n`;
+            report += `แปลงที่จับคู่ไม่ได้: ${analysisData.summary.unmatchedPlots} แปลง\n`;
+            report += `ผลผลิตเฉลี่ย: ${analysisData.summary.avgYield.toFixed(1)} ตัน/ไร่\n\n`;
             
             report += `เกรดผลผลิต:\n`;
-            report += `- สูง (>15 ตัน/ไร่): ${analysisData.summary.gradeDistribution.high} Grid\n`;
-            report += `- ปานกลาง (10-15): ${analysisData.summary.gradeDistribution.medium} Grid\n`;
-            report += `- ปรับปรุง (7-10): ${analysisData.summary.gradeDistribution.improve} Grid\n`;
-            report += `- ต่ำ (<7): ${analysisData.summary.gradeDistribution.low} Grid\n\n`;
+            report += `----------------------------------------\n`;
+            report += `สูง (>15 ตัน/ไร่): ${analysisData.summary.gradeDistribution.high} Grid\n`;
+            report += `ปานกลาง (10-15): ${analysisData.summary.gradeDistribution.medium} Grid\n`;
+            report += `ปรับปรุง (7-10): ${analysisData.summary.gradeDistribution.improve} Grid\n`;
+            report += `ต่ำ (<7): ${analysisData.summary.gradeDistribution.low} Grid\n\n`;
+            
+            report += `ข้อมูลไม่สอดคล้องกัน:\n`;
+            report += `----------------------------------------\n`;
+            if (analysisData.dataInconsistencies.length > 0) {
+                analysisData.dataInconsistencies.forEach(item => {
+                    report += `Grid ${item.gridId}:\n`;
+                    item.inconsistencies.forEach(inc => {
+                        report += `  - ${inc.field}: ${inc.value1} (${inc.season1}) vs ${inc.value2} (${inc.season2})\n`;
+                    });
+                });
+            } else {
+                report += `ไม่มีข้อมูลที่ไม่สอดคล้องกัน\n`;
+            }
+            report += `\n`;
             
             return report;
         }
         
         function createCSVReport() {
-            let csv = 'Grid,เขต,เกษตรกร,ประเภทอ้อย,แปลงทั้งหมด,แปลงวิกฤต,ผลผลิตเฉลี่ย,เกรด\n';
+            let csv = 'Grid ID,เขต,รหัสเกษตรกร,ชื่อชาวไร่,ประเภทอ้อย,แปลงที่จับคู่ได้,แปลงวิกฤต,ผลผลิตเฉลี่ย,เกรด,ข้อมูลจากฤดูกาล\n';
             
             Object.values(analysisData.gridDetails).forEach(grid => {
-                csv += `${grid.gridId},`;
-                csv += `${grid.basicInfo.zone},`;
-                csv += `${grid.basicInfo.farmerName},`;
-                csv += `${grid.basicInfo.sugarcaneType},`;
-                csv += `${grid.totalPlots},`;
-                csv += `${grid.criticalPlots.length},`;
-                csv += `${grid.avgYield.toFixed(1)},`;
-                csv += `${grid.grade}\n`;
+                csv += `"${grid.gridId}",`;
+                csv += `"${grid.basicInfo.zone || ''}",`;
+                csv += `"${grid.basicInfo.farmerCode || ''}",`;
+                csv += `"${grid.basicInfo.farmerName || ''}",`;
+                csv += `"${grid.basicInfo.sugarcaneType || ''}",`;
+                csv += `"${grid.allPlots.length}",`;
+                csv += `"${grid.criticalPlots.length}",`;
+                csv += `"${grid.avgYield.toFixed(1)}",`;
+                csv += `"${getGradeThai(grid.grade)}",`;
+                csv += `"KAT ${grid.basicInfo.season || ''}"\n`;
             });
             
             return csv;
@@ -1995,27 +2581,84 @@
             URL.revokeObjectURL(url);
         }
         
+        // Session Management
+        function saveSession() {
+            if (!analysisData) {
+                showAlert('ไม่มีข้อมูลที่จะบันทึก', 'warning');
+                return;
+            }
+            
+            const sessionData = {
+                timestamp: new Date().toISOString(),
+                analysisData: analysisData,
+                uploadedFiles: {
+                    grid: uploadedFiles.grid ? uploadedFiles.grid.name : null,
+                    kat6768: uploadedFiles.kat6768 ? uploadedFiles.kat6768.name : null,
+                    kat6869: uploadedFiles.kat6869 ? uploadedFiles.kat6869.name : null
+                }
+            };
+            
+            sessionId = 'session_' + Date.now();
+            localStorage.setItem('sugarcaneAnalysisSession', JSON.stringify(sessionData));
+            localStorage.setItem('sugarcaneAnalysisSessionId', sessionId);
+            
+            showAlert('บันทึก Session สำเร็จ', 'info');
+        }
+        
+        function loadSession() {
+            const savedSession = localStorage.getItem('sugarcaneAnalysisSession');
+            if (!savedSession) {
+                showAlert('ไม่พบข้อมูล Session ที่บันทึกไว้', 'warning');
+                return;
+            }
+            
+            if (confirm('การโหลด Session จะลบข้อมูลปัจจุบันทั้งหมด ต้องการดำเนินการต่อหรือไม่?')) {
+                loadSavedSession(JSON.parse(savedSession));
+            }
+        }
+        
+        function loadSavedSession(sessionData) {
+            try {
+                analysisData = sessionData.analysisData;
+                
+                // Update file names in UI
+                if (sessionData.uploadedFiles.grid) {
+                    document.getElementById('gridFileName').textContent = sessionData.uploadedFiles.grid;
+                    document.getElementById('gridStatus').classList.add('uploaded');
+                }
+                if (sessionData.uploadedFiles.kat6768) {
+                    document.getElementById('kat6768FileName').textContent = sessionData.uploadedFiles.kat6768;
+                    document.getElementById('kat6768Status').classList.add('uploaded');
+                }
+                if (sessionData.uploadedFiles.kat6869) {
+                    document.getElementById('kat6869FileName').textContent = sessionData.uploadedFiles.kat6869;
+                    document.getElementById('kat6869Status').classList.add('uploaded');
+                }
+                
+                // Update all displays
+                showPanel('analysis');
+                updateAnalysisDashboard();
+                updateHeaderStats();
+                
+                showAlert('โหลด Session สำเร็จ', 'info');
+            } catch (error) {
+                showAlert('เกิดข้อผิดพลาดในการโหลด Session', 'error');
+                console.error('Load session error:', error);
+            }
+        }
+        
         // Loading Functions
-        function showLoading(message) {
+        function showLoading(title, progress = 0) {
             document.getElementById('loadingOverlay').classList.add('active');
-            document.getElementById('loadingMessage').textContent = message || 'กรุณารอสักครู่';
+            document.getElementById('loadingTitle').textContent = title || 'กำลังวิเคราะห์ข้อมูล...';
+            document.getElementById('loadingMessage').textContent = 'กรุณารอสักครู่';
+            document.getElementById('progressBar').style.width = progress + '%';
         }
         
         function hideLoading() {
             document.getElementById('loadingOverlay').classList.remove('active');
+            document.getElementById('progressBar').style.width = '0%';
         }
-        
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set initial panel
-            showPanel('upload');
-            
-            // Add some sample data for demonstration
-            setTimeout(() => {
-                // This would be replaced with actual file upload in production
-                console.log('ระบบพร้อมใช้งาน');
-            }, 1000);
-        });
     </script>
 </body>
 </html>
