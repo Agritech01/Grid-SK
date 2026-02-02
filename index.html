@@ -752,6 +752,11 @@
             .chart-controls {
                 flex-direction: column;
             }
+            
+            /* สำหรับมือถือ: เอียงข้อความน้อยลง */
+            .chart-container canvas {
+                max-width: 100%;
+            }
         }
 
         /* Loading */
@@ -1931,17 +1936,9 @@
         function prepareChartData(processedData) {
             const dateRange = processedData.dateRange;
             
-            // กำหนดจำนวน tick ที่จะแสดงบนแกน X (ไม่เกิน 50 tick เพื่อไม่ให้แน่นเกินไป)
-            const maxTicks = 50;
-            const tickInterval = Math.max(1, Math.floor(dateRange.length / maxTicks));
-            
-            // สร้าง labels สำหรับแกน X ที่แสดงเฉพาะบางวัน
+            // แสดงทุกวัน - ไม่ข้าม
             const labels = dateRange.map((date, index) => {
-                // แสดงทุกรอบที่กำหนด หรือแสดงเฉพาะวันแรกของเดือน
-                if (index % tickInterval === 0 || date.endsWith('/01')) {
-                    return date;
-                }
-                return ''; // ไม่แสดง label สำหรับวันอื่นๆ
+                return date;
             });
             
             if (currentView === 'all') {
@@ -2138,17 +2135,17 @@
                             },
                             ticks: {
                                 font: {
-                                    size: 11
+                                    size: 10,
+                                    style: 'italic'
                                 },
-                                maxTicksLimit: 50, // จำกัดจำนวน tick ที่แสดง
-                                autoSkip: true,
-                                autoSkipPadding: 10,
-                                maxRotation: 0,
-                                minRotation: 0,
+                                maxTicksLimit: dateRange.length,
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                padding: 5,
                                 callback: function(value, index, values) {
-                                    // แสดงเฉพาะ label ที่มีค่า (ไม่ใช่ string ว่าง)
-                                    const label = this.chart.data.labels[index];
-                                    return label || '';
+                                    // แสดง label ทุกวัน
+                                    return dateRange[index] || '';
                                 }
                             },
                             grid: {
@@ -2279,17 +2276,17 @@
                             },
                             ticks: {
                                 font: {
-                                    size: 11
+                                    size: 10,
+                                    style: 'italic'
                                 },
-                                maxTicksLimit: 50, // จำกัดจำนวน tick ที่แสดง
-                                autoSkip: true,
-                                autoSkipPadding: 10,
-                                maxRotation: 0,
-                                minRotation: 0,
+                                maxTicksLimit: dateRange.length,
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                padding: 5,
                                 callback: function(value, index, values) {
-                                    // แสดงเฉพาะ label ที่มีค่า (ไม่ใช่ string ว่าง)
-                                    const label = this.chart.data.labels[index];
-                                    return label || '';
+                                    // แสดง label ทุกวัน
+                                    return dateRange[index] || '';
                                 }
                             },
                             grid: {
