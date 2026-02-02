@@ -35,7 +35,7 @@
 
         .container {
             max-width: 1400px;
-            margin: 0 auto;
+            margin:  auto;
             padding: 0 15px;
         }
 
@@ -1778,6 +1778,7 @@
                 dailyWeights[dateStr] += weight;
             });
             
+            // แก้ไข: ใช้ generateDateRange ที่อัพเดทแล้ว (แสดงถึงเมื่อวาน)
             const dateRange = generateDateRange(mode);
             
             const accumulatedWeights = {};
@@ -1795,8 +1796,12 @@
             const factoryConfig = factoryConfigs[mode];
             const startDate = startDates[mode];
             const startDateStr = `${startDate.day}/${startDate.month}/68`;
+            
+            // แก้ไข: ใช้เมื่อวานเป็นวันที่สิ้นสุด
             const now = new Date();
-            const currentDateStr = `${now.getDate()}/${now.getMonth() + 1}/${(now.getFullYear() + 543).toString().slice(-2)}`;
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const currentDateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${(yesterday.getFullYear() + 543).toString().slice(-2)}`;
             
             return {
                 dailyWeights: dailyWeights,
@@ -1846,14 +1851,19 @@
                 }
             });
             
+            // แก้ไข: ใช้ generateDateRange ที่อัพเดทแล้ว (แสดงถึงเมื่อวาน)
             const dateRange = generateDateRange(mode);
             
             const factoryName = mode === 'kranburi' ? 'ครบุรี' : 'สีคิ้ว';
             const zoneConfig = zoneConfigs[zone];
             const startDate = startDates[mode];
             const startDateStr = `${startDate.day}/${startDate.month}/68`;
+            
+            // แก้ไข: ใช้เมื่อวานเป็นวันที่สิ้นสุด
             const now = new Date();
-            const currentDateStr = `${now.getDate()}/${now.getMonth() + 1}/${(now.getFullYear() + 543).toString().slice(-2)}`;
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const currentDateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${(yesterday.getFullYear() + 543).toString().slice(-2)}`;
             
             return {
                 dailyWeights: dailyWeights,
@@ -1868,20 +1878,26 @@
             };
         }
 
-        // สร้างช่วงวันที่
+        // สร้างช่วงวันที่ (แก้ไขแล้ว: แสดงถึงเมื่อวาน)
         function generateDateRange(mode) {
             const dateRange = [];
             
             const startDate = startDates[mode];
+            
+            // ใช้เมื่อวาน (TODAY - 1) เป็นวันที่สิ้นสุด
             const now = new Date();
-            const currentDay = now.getDate();
-            const currentMonth = now.getMonth() + 1;
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const currentDay = yesterday.getDate();
+            const currentMonth = yesterday.getMonth() + 1;
+            const currentYear = 69; // ใช้ปี 69 เนื่องจากข้อมูลเป็นปี 68/69
             
             // เริ่มจากวันที่เริ่มหีบของโรงงาน
-            let currentProcessingMonth = startDate.month; // เดือนเริ่มต้น (12 = ธันวาคม)
-            let currentProcessingYear = 68; // ปี 68
+            let currentProcessingMonth = startDate.month;
+            let currentProcessingYear = 68;
             
-            // วนลูปสร้างวันที่จนถึงปัจจุบัน
+            // วนลูปสร้างวันที่จนถึงเมื่อวาน
             while (true) {
                 // กำหนดจำนวนวันในเดือนปัจจุบันที่กำลังประมวลผล
                 let daysInCurrentMonth;
@@ -1893,31 +1909,30 @@
                         daysInCurrentMonth = 30;
                         break;
                     case 2:
-                        daysInCurrentMonth = 28; // ไม่คิดปีอธิกสุรทิน
+                        daysInCurrentMonth = 28;
                         break;
                 }
                 
                 // กำหนดวันเริ่มต้นของเดือน
                 let startDay = 1;
                 if (currentProcessingMonth === startDate.month && currentProcessingYear === 68) {
-                    startDay = startDate.day; // วันที่เริ่มหีบของโรงงาน (7 สำหรับครบุรี, 9 สำหรับสีคิ้ว)
+                    startDay = startDate.day;
                 }
                 
-                // กำหนดวันสิ้นสุดของเดือน
+                // กำหนดวันสิ้นสุดของเดือน (ใช้เมื่อวานเป็นวันสิ้นสุด)
                 let endDay = daysInCurrentMonth;
-                if (currentProcessingMonth === currentMonth && currentProcessingYear === 69) {
-                    endDay = currentDay; // วันปัจจุบัน
+                if (currentProcessingMonth === currentMonth && currentProcessingYear === currentYear) {
+                    endDay = currentDay; // ใช้เมื่อวาน
                 }
                 
                 // เพิ่มวันในเดือนนี้เข้าไปใน dateRange
                 for (let day = startDay; day <= endDay; day++) {
-                    // Format: วัน/เดือน โดยไม่มีปี
                     dateRange.push(`${day}/${currentProcessingMonth.toString().padStart(2, '0')}`);
                 }
                 
-                // ตรวจสอบว่าถึงวันปัจจุบันแล้วหรือยัง
-                if (currentProcessingMonth === currentMonth && currentProcessingYear === 69) {
-                    break; // หยุดเมื่อถึงเดือนและปีปัจจุบัน
+                // ตรวจสอบว่าถึงเมื่อวานแล้วหรือยัง
+                if (currentProcessingMonth === currentMonth && currentProcessingYear === currentYear) {
+                    break;
                 }
                 
                 // เดือนถัดไป
@@ -2357,7 +2372,7 @@
             document.getElementById('totalWeightDashboard').textContent = Math.round(totalWeightInTons).toLocaleString();
         }
 
-        // อัพเดทหัวข้อกราฟ
+        // อัพเดทหัวข้อกราฟ (แก้ไขแล้ว: แสดงวันที่จนถึงเมื่อวาน)
         function updateChartTitle(processedData) {
             const chartTitleArea = document.getElementById('chartTitleArea');
             const chartSubtitle = document.getElementById('chartSubtitle');
@@ -2423,7 +2438,7 @@
             }
         }
 
-        // บันทึกรูปภาพกราฟ
+        // บันทึกรูปภาพกราฟ (แก้ไขแล้ว: ใช้เมื่อวานในภาพ)
         function saveChartAsImage() {
             if (!chartInstance) {
                 alert('กรุณาสร้างกราฟก่อนบันทึกรายงาน');
@@ -2466,14 +2481,17 @@
             }
             ctx.fillText(subtitleText, tempCanvas.width / 2, 70);
             
-            // วาดวันที่
+            // วาดวันที่ (ใช้เมื่อวาน)
             ctx.fillStyle = '#6c757d';
             ctx.font = '16px Sarabun';
             
             const now = new Date();
-            const day = now.getDate();
-            const month = now.getMonth() + 1;
-            const year = (now.getFullYear() + 543).toString().slice(-2);
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const day = yesterday.getDate();
+            const month = yesterday.getMonth() + 1;
+            const year = (yesterday.getFullYear() + 543).toString().slice(-2);
             const dateText = `วันที่ ${day}/${month}/${year}`;
             ctx.fillText(dateText, tempCanvas.width / 2, 95);
             
@@ -2489,12 +2507,15 @@
             alert('บันทึกรายงานเป็นภาพเรียบร้อยแล้ว');
         }
 
-        // ดาวน์โหลดรายงาน
+        // ดาวน์โหลดรายงาน (แก้ไขแล้ว: ใช้เมื่อวานในไฟล์)
         function downloadReport() {
             const now = new Date();
-            const day = now.getDate();
-            const month = now.getMonth() + 1;
-            const year = now.getFullYear() + 543;
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const day = yesterday.getDate();
+            const month = yesterday.getMonth() + 1;
+            const year = yesterday.getFullYear() + 543;
             
             let reportContent = `รายงานอ้อยเข้าหีบ ปี 2569\n`;
             reportContent += `วันที่สร้างรายงาน: ${day}/${month}/${year}\n`;
@@ -2704,8 +2725,11 @@
         // เพิ่มฟังก์ชันตรวจสอบและอัพเดทวันที่เริ่มต้น
         function checkAndExtendDateRange() {
             const now = new Date();
-            const currentDay = now.getDate();
-            const currentMonth = now.getMonth() + 1;
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const currentDay = yesterday.getDate();  // ใช้เมื่อวาน
+            const currentMonth = yesterday.getMonth() + 1;  // ใช้เมื่อวาน
             
             // ตรวจสอบว่าข้อมูลล่าสุดใน uploadedFiles มีวันที่เกินวันที่ใน dateRange หรือไม่
             Object.keys(uploadedFiles).forEach(key => {
