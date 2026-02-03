@@ -848,7 +848,7 @@
                 <div class="card-header">
                     <div>
                         <div class="card-value" id="percentageTarget">0%</div>
-                        <div class="card-label">ตันเข้าหีบ เทียบเป้าหมาย 2,800,000 ตัน</div>
+                        <div class="card-label">ตันเข้าหีบ เทียบเป้าหมาย 4,200,000 ตัน</div>
                     </div>
                     <div class="card-icon quota">
                         <i class="fas fa-percentage"></i>
@@ -1092,9 +1092,14 @@
         // ข้อมูลเขตการทำงานทั้งหมด (รวมทั้งสองโรงงาน)
         const allZones = ["1", "2", "3", "4", "5", "6", "7", "8", "10", "11", "12", "21", "C1", "C2", "C3", "C4"];
 
+        // เขตที่ใช้โทนสีฟ้า
+        const blueZones = ["1", "2", "3", "4", "5", "6", "7", "8", "10", "11", "12", "21"];
+        // เขตที่ใช้โทนสีเขียว
+        const greenZones = ["C1", "C2", "C3", "C4"];
+
         // เป้าหมายแต่ละเขต (ตัน/วัน) และการตั้งค่าแกน Y
         const zoneConfigs = {
-            // ครบุรี
+            // ครบุรี (โทนสีฟ้า)
             "1": { target: 2000, stepSize: 200, max: 3000, minorStep: 100 },
             "2": { target: 2200, stepSize: 200, max: 3000, minorStep: 100 },
             "3": { target: 1500, stepSize: 200, max: 2000, minorStep: 100 },
@@ -1107,7 +1112,7 @@
             "11": { target: 900, stepSize: 100, max: 1000, minorStep: 50 },
             "12": { target: 250, stepSize: 50, max: 500, minorStep: 25 },
             "21": { target: 1000, stepSize: 100, max: 1500, minorStep: 50 },
-            // สีคิ้ว
+            // สีคิ้ว (โทนสีเขียว)
             "C1": { target: 3000, stepSize: 200, max: 3000, minorStep: 100 },
             "C2": { target: 1700, stepSize: 200, max: 2000, minorStep: 100 },
             "C3": { target: 3000, stepSize: 200, max: 3000, minorStep: 100 },
@@ -2081,6 +2086,82 @@
             return dateRange;
         }
 
+        // ฟังก์ชันเลือกสีตามโหมด
+        function getChartColor(mode, isBorder = false, isHover = false) {
+            if (mode === 'kranburi') {
+                // ครบุรี: โทนสีฟ้า
+                if (isBorder) {
+                    return isHover ? '#1976D2' : '#2196F3';
+                } else {
+                    return isHover ? '#64B5F6' : '#90CAF9';
+                }
+            } else if (mode === 'sikhio') {
+                // สีคิ้ว: โทนสีเขียว
+                if (isBorder) {
+                    return isHover ? '#1B5E20' : '#2E7D32';
+                } else {
+                    return isHover ? '#4CAF50' : '#81C784';
+                }
+            } else {
+                // รวมทั้งสองโรงงาน: โทนสีม่วง
+                if (isBorder) {
+                    return isHover ? '#6A1B9A' : '#8E24AA';
+                } else {
+                    return isHover ? '#BA68C8' : '#CE93D8';
+                }
+            }
+        }
+
+        // ฟังก์ชันเลือกสีตามเขต (เพิ่มใหม่)
+        function getZoneColor(zone, isBorder = false, isHover = false) {
+            // ตรวจสอบว่าเขตอยู่ในกลุ่มไหน
+            if (blueZones.includes(zone)) {
+                // โทนสีฟ้า สำหรับเขต: 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 21
+                if (isBorder) {
+                    return isHover ? '#1565C0' : '#2196F3';
+                } else {
+                    return isHover ? '#42A5F5' : '#90CAF9';
+                }
+            } else if (greenZones.includes(zone)) {
+                // โทนสีเขียว สำหรับเขต: C1, C2, C3, C4
+                if (isBorder) {
+                    return isHover ? '#1B5E20' : '#2E7D32';
+                } else {
+                    return isHover ? '#4CAF50' : '#81C784';
+                }
+            } else {
+                // ค่าเริ่มต้น: โทนสีม่วง
+                if (isBorder) {
+                    return isHover ? '#6A1B9A' : '#8E24AA';
+                } else {
+                    return isHover ? '#BA68C8' : '#CE93D8';
+                }
+            }
+        }
+
+        // ฟังก์ชันเลือกสีเส้นสะสมตามโหมดหรือเขต (เพิ่มใหม่)
+        function getAccumulatedLineColor(mode, zone = null) {
+            if (zone) {
+                // ถ้ามีข้อมูลเขต ให้ใช้สีตามกลุ่มเขต
+                if (blueZones.includes(zone)) {
+                    // โทนสีมืดน้ำเงินเข้ม (#1a237e) สำหรับเขต: 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 21
+                    return '#1a237e';
+                } else if (greenZones.includes(zone)) {
+                    // โทนสีมืดเขียวเข้ม (#004d40) สำหรับเขต: C1, C2, C3, C4
+                    return '#004d40';
+                }
+            }
+            
+            // ถ้าไม่มีข้อมูลเขต ให้ใช้สีตามโหมด
+            if (mode === 'kranburi') {
+                return '#1a237e'; // สีมืดน้ำเงินเข้มสำหรับครบุรี
+            } else if (mode === 'sikhio') {
+                return '#004d40'; // สีมืดเขียวเข้มสำหรับสีคิ้ว
+            } else {
+                return '#4a148c'; // สีมืดม่วงเข้มสำหรับโหมดรวม
+            }
+        }
+
         // เตรียมข้อมูลสำหรับกราฟ
         function prepareChartData(processedData) {
             const dateRange = processedData.dateRange;
@@ -2122,8 +2203,8 @@
                             type: 'line',
                             label: 'ตันสะสม',
                             data: dateRange.map(date => (processedData.accumulatedWeights[date] || 0)),
-                            backgroundColor: 'rgba(156, 39, 176, 0.1)',
-                            borderColor: '#1a237e',
+                            backgroundColor: 'rgba(26, 35, 126, 0.1)', // สีพื้นหลังอ่อนตามสีเส้น
+                            borderColor: getAccumulatedLineColor(processedData.mode), // ใช้ฟังก์ชันใหม่
                             borderWidth: 2,
                             pointRadius: 0,
                             tension: 0.1,
@@ -2134,7 +2215,7 @@
                     ]
                 };
             } else {
-                // สำหรับมุมมองรายเขต
+                // สำหรับมุมมองรายเขต - ใช้ฟังก์ชัน getZoneColor แทน getChartColor
                 return {
                     labels: labels,
                     datasets: [
@@ -2149,25 +2230,25 @@
                             categoryPercentage: 1.0,
                             order: 1
                         },
-                        // Dataset 1: น้ำหนักรายวัน
+                        // Dataset 1: น้ำหนักรายวัน - เปลี่ยนมาใช้ getZoneColor
                         {
                             label: `เขต ${processedData.zone} - น้ำหนักรายวัน`,
                             data: dateRange.map(date => (processedData.dailyWeights[date] || 0)),
-                            backgroundColor: getChartColor('combined', false),
-                            borderColor: getChartColor('combined', true),
+                            backgroundColor: getZoneColor(processedData.zone, false),
+                            borderColor: getZoneColor(processedData.zone, true),
                             borderWidth: 1,
-                            hoverBackgroundColor: getChartColor('combined', false, true),
-                            hoverBorderColor: getChartColor('combined', true, true),
+                            hoverBackgroundColor: getZoneColor(processedData.zone, false, true),
+                            hoverBorderColor: getZoneColor(processedData.zone, true, true),
                             hoverBorderWidth: 2,
                             order: 2
                         },
-                        // Dataset 2: เส้นสะสม
+                        // Dataset 2: เส้นสะสม - ใช้ฟังก์ชัน getAccumulatedLineColor
                         {
                             type: 'line',
                             label: 'ตันสะสม',
                             data: dateRange.map(date => (processedData.accumulatedWeights[date] || 0)),
-                            backgroundColor: 'rgba(156, 39, 176, 0.1)',
-                            borderColor: '#9C27B0',
+                            backgroundColor: blueZones.includes(processedData.zone) ? 'rgba(26, 35, 126, 0.1)' : 'rgba(0, 77, 64, 0.1)', // สีพื้นหลังตามกลุ่มเขต
+                            borderColor: getAccumulatedLineColor(null, processedData.zone), // ใช้ฟังก์ชันใหม่พร้อมข้อมูลเขต
                             borderWidth: 2,
                             pointRadius: 0,
                             tension: 0.1,
@@ -2177,32 +2258,6 @@
                         }
                     ]
                 };
-            }
-        }
-
-        // ฟังก์ชันเลือกสีตามโหมด
-        function getChartColor(mode, isBorder = false, isHover = false) {
-            if (mode === 'kranburi') {
-                // ครบุรี: โทนสีฟ้า
-                if (isBorder) {
-                    return isHover ? '#1976D2' : '#2196F3';
-                } else {
-                    return isHover ? '#64B5F6' : '#90CAF9';
-                }
-            } else if (mode === 'sikhio') {
-                // สีคิ้ว: โทนสีเขียว
-                if (isBorder) {
-                    return isHover ? '#1B5E20' : '#2E7D32';
-                } else {
-                    return isHover ? '#4CAF50' : '#81C784';
-                }
-            } else {
-                // รวมทั้งสองโรงงาน: โทนสีม่วง
-                if (isBorder) {
-                    return isHover ? '#6A1B9A' : '#8E24AA';
-                } else {
-                    return isHover ? '#BA68C8' : '#CE93D8';
-                }
             }
         }
 
@@ -2673,7 +2728,8 @@
             const zoneLegend = document.getElementById('zoneLegend');
             
             if (currentView === 'byZone' && selectedZone) {
-                const zoneColor = getChartColor('combined', false);
+                const zoneColor = getZoneColor(selectedZone, false);  // ← ใช้ฟังก์ชัน getZoneColor แทน getChartColor
+                const accumulatedColor = getAccumulatedLineColor(null, selectedZone); // ← ใช้ฟังก์ชัน getAccumulatedLineColor
                 const targetValue = currentView === 'all' ? factoryConfigs[currentMode].target : zoneConfigs[selectedZone].target;
                 
                 let legendHTML = '';
@@ -2687,7 +2743,7 @@
                         <span>เป้าหมาย: ${targetValue.toLocaleString()} ตัน/วัน</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: #9C27B0"></div>
+                        <div class="legend-color" style="background-color: ${accumulatedColor}"></div>
                         <span>ตันสะสม</span>
                     </div>
                 `;
@@ -2696,6 +2752,7 @@
                 zoneLegend.style.display = 'flex';
             } else if (currentView === 'all') {
                 const modeColor = getChartColor(currentMode, false);
+                const accumulatedColor = getAccumulatedLineColor(currentMode); // ← ใช้ฟังก์ชัน getAccumulatedLineColor
                 const targetValue = factoryConfigs[currentMode].target;
                 
                 let legendHTML = '';
@@ -2709,7 +2766,7 @@
                         <span>เป้าหมาย: ${targetValue.toLocaleString()} ตัน/วัน</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-color" style="background-color: #9C27B0"></div>
+                        <div class="legend-color" style="background-color: ${accumulatedColor}"></div>
                         <span>ตันสะสม</span>
                     </div>
                 `;
