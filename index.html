@@ -28,7 +28,7 @@
         }
 
         body {
-            background-color: #e0f2f1;
+            background-color: #f5f5f5;
             color: var(--dark);
             line-height: 1.6;
         }
@@ -165,23 +165,23 @@
         }
 
         .card-icon.file {
-            background-color: #26a69a;
-            color: #004d40;
+            background-color: #E3F2FD;
+            color: #1976D2;
         }
 
         .card-icon.data {
-            background-color: #26a69a;
-            color: #004d40;
+            background-color: #F3E5F5;
+            color: #7B1FA2;
         }
 
         .card-icon.weight {
-            background-color: #80cbc4;
+            background-color: #E8F5E9;
             color: var(--primary);
         }
 
         .card-icon.quota {
-            background-color: #009688;
-            color: #00695c;
+            background-color: #FFF3E0;
+            color: #EF6C00;
         }
 
         .card-value {
@@ -229,24 +229,24 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            background-color: #004d40;
+            background-color: #fafafa;
             position: relative;
             overflow: hidden;
         }
 
         .upload-area:hover {
             border-color: var(--primary-light);
-            background-color: #78909c;
+            background-color: #f0fff0;
         }
 
         .upload-area.active {
             border-color: var(--primary);
-            background-color: #546e7a;
+            background-color: #E8F5E9;
         }
 
         .upload-area.error {
             border-color: var(--danger);
-            background-color: #37474f;
+            background-color: #FFEBEE;
         }
 
         .upload-icon {
@@ -301,7 +301,7 @@
             margin-top: 15px;
             padding: 10px;
             border-radius: 5px;
-            background-color: #CA9CAC;
+            background-color: #f8f9fa;
             font-size: 0.9rem;
         }
 
@@ -340,18 +340,18 @@
         }
 
         .status-text.pending {
-            background-color: #ECD4D4;
-            color: #C5D6BA;
+            background-color: #FFF3CD;
+            color: #856404;
         }
 
         .status-text.success {
-            background-color: #D6C3CE;
-            color: #ECD4D4;
+            background-color: #D4EDDA;
+            color: #155724;
         }
 
         .status-text.error {
-            background-color: #CA9CAC;
-            color: #F6C8B6;
+            background-color: #F8D7DA;
+            color: #721C24;
         }
 
         /* Sample Data Section */
@@ -375,7 +375,7 @@
         }
 
         thead {
-            background-color: #d4ccc4;
+            background-color: #f8f9fa;
         }
 
         th {
@@ -394,7 +394,7 @@
         }
 
         tbody tr:hover {
-            background-color: #d4ccc4;
+            background-color: #f8f9fa;
         }
 
         .no-data {
@@ -848,7 +848,7 @@
                 <div class="card-header">
                     <div>
                         <div class="card-value" id="percentageTarget">0%</div>
-                        <div class="card-label">ตันเข้าหีบ เทียบเป้าหมาย 2,400,000 ตัน</div>
+                        <div class="card-label">ตันเข้าหีบ เทียบเป้าหมาย 2,800,000 ตัน</div>
                     </div>
                     <div class="card-icon quota">
                         <i class="fas fa-percentage"></i>
@@ -1045,17 +1045,12 @@
                 <span>พื้นที่:</span>
                 <button class="mode-btn active" onclick="selectMode('kranburi')">ครบุรี</button>
                 <button class="mode-btn" onclick="selectMode('sikhio')">สีคิ้ว</button>
+                <button class="mode-btn" onclick="selectMode('combined')">รวมทั้งสองโรงงาน</button>
             </div>
             
             <div class="chart-controls" id="zoneViewControls" style="display: none; flex-wrap: wrap;">
-                <span>พื้นที่:</span>
-                <button class="mode-btn active" onclick="selectZoneMode('kranburi')">ครบุรี</button>
-                <button class="mode-btn" onclick="selectZoneMode('sikhio')">สีคิ้ว</button>
-                
-                <div style="width: 100%; margin-top: 10px;">
-                    <span>เลือกเขต:</span>
-                    <div class="zone-buttons" id="zoneButtons" style="display: inline-flex; flex-wrap: wrap; gap: 5px; margin-left: 10px;"></div>
-                </div>
+                <span>เลือกเขต:</span>
+                <div class="zone-buttons" id="zoneButtons" style="display: inline-flex; flex-wrap: wrap; gap: 5px; margin-left: 10px;"></div>
             </div>
             
             <div class="chart-container">
@@ -1094,11 +1089,8 @@
             farmers: null
         };
 
-        // ข้อมูลเขตการทำงาน
-        const zones = {
-            kranburi: ["1", "2", "3", "4", "5", "6", "7", "8", "10", "11", "12", "21"],
-            sikhio: ["C1", "C2", "C3", "C4"]
-        };
+        // ข้อมูลเขตการทำงานทั้งหมด (รวมทั้งสองโรงงาน)
+        const allZones = ["1", "2", "3", "4", "5", "6", "7", "8", "10", "11", "12", "21", "C1", "C2", "C3", "C4"];
 
         // เป้าหมายแต่ละเขต (ตัน/วัน) และการตั้งค่าแกน Y
         const zoneConfigs = {
@@ -1122,10 +1114,11 @@
             "C4": { target: 3100, stepSize: 200, max: 3200, minorStep: 100 }
         };
 
-        // เป้าหมายสะสมทั้งหมด (ตัน/วัน) และการตั้งค่าแกน Y
+        // เป้าหมายสะสมทั้งหมด (ตัน/วัน) และการตั้งค่าแกน Y - เพิ่มโหมดรวม
         const factoryConfigs = {
             kranburi: { target: 35000, stepSize: 2500, max: 40000, minorStep: 1250 },
-            sikhio: { target: 12500, stepSize: 1000, max: 15000, minorStep: 500 }
+            sikhio: { target: 12500, stepSize: 1000, max: 15000, minorStep: 500 },
+            combined: { target: 47500, stepSize: 3500, max: 55000, minorStep: 1750 }
         };
 
         // วันเริ่มต้นของแต่ละโรงงาน
@@ -1136,14 +1129,13 @@
 
         // วันที่สิ้นสุดฤดูหีบ
         const seasonEndDates = {
-            kranburi: { day: 28, month: 3, year: 69 },  // 28 มี.ค. 69
-            sikhio: { day: 28, month: 3, year: 69 }     // 28 มี.ค. 69
+            kranburi: { day: 31, month: 3, year: 69 },
+            sikhio: { day: 31, month: 3, year: 69 }
         };
 
         // ตัวแปร global
         let currentMode = 'kranburi';
         let currentView = 'all';
-        let currentZoneMode = 'kranburi';
         let selectedZone = null;
         let chartInstance = null;
         let currentDateRangeMode = 'current'; // 'current' หรือ 'fullSeason'
@@ -1474,8 +1466,9 @@
                 }
             });
             
+            // แก้ไขเป้าหมายจาก 2,400,000 เป็น 2,800,000 ตัน
             if (totalWeight > 0) {
-                percentageTarget = ((totalWeight / 2400000) * 100).toFixed(2);
+                percentageTarget = ((totalWeight / 2800000) * 100).toFixed(2);
             }
             
             document.getElementById('fileCount').textContent = `${fileCount}/3`;
@@ -1629,7 +1622,7 @@
             showReportPage();
         }
 
-        // เลือกโหมด (ครบุรี/สีคิ้ว)
+        // เลือกโหมด (ครบุรี/สีคิ้ว/รวม)
         function selectMode(mode) {
             currentMode = mode;
             
@@ -1638,20 +1631,6 @@
             });
             event.target.classList.add('active');
             
-            generateChart();
-        }
-
-        // เลือกโหมดสำหรับรายเขต
-        function selectZoneMode(mode) {
-            currentZoneMode = mode;
-            selectedZone = null;
-            
-            document.querySelectorAll('#zoneViewControls .mode-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            showZoneButtons();
             generateChart();
         }
 
@@ -1676,18 +1655,14 @@
             } else {
                 document.getElementById('allViewControls').style.display = 'none';
                 document.getElementById('zoneViewControls').style.display = 'flex';
-                currentZoneMode = 'kranburi';
+                selectedZone = null;
                 showZoneButtons();
-                document.querySelectorAll('#zoneViewControls .mode-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelectorAll('#zoneViewControls .mode-btn')[0].classList.add('active');
             }
             
             generateChart();
         }
 
-        // เลือกช่วงเวลา (เพิ่มฟังก์ชันใหม่)
+        // เลือกช่วงเวลา
         function selectDateRangeMode(mode) {
             currentDateRangeMode = mode;
             
@@ -1709,9 +1684,7 @@
             const zoneButtons = document.getElementById('zoneButtons');
             zoneButtons.innerHTML = '';
             
-            const zoneList = zones[currentZoneMode];
-            
-            zoneList.forEach(zone => {
+            allZones.forEach(zone => {
                 const button = document.createElement('button');
                 button.className = 'view-btn';
                 button.textContent = `เขต ${zone}`;
@@ -1730,8 +1703,8 @@
                 zoneButtons.appendChild(button);
             });
             
-            if (zoneList.length > 0 && !selectedZone) {
-                selectedZone = zoneList[0];
+            if (allZones.length > 0 && !selectedZone) {
+                selectedZone = allZones[0];
                 document.querySelectorAll('#zoneButtons .view-btn')[0].classList.add('active');
             }
         }
@@ -1757,13 +1730,17 @@
             
             let processedData;
             if (currentView === 'all') {
-                processedData = processDataForAllView(currentMode, currentDateRangeMode);
+                if (currentMode === 'combined') {
+                    processedData = processCombinedData(currentDateRangeMode);
+                } else {
+                    processedData = processDataForAllView(currentMode, currentDateRangeMode);
+                }
             } else {
                 if (!selectedZone) {
                     alert('กรุณาเลือกเขตที่ต้องการดูรายงาน');
                     return;
                 }
-                processedData = processDataForZoneView(currentZoneMode, selectedZone, currentDateRangeMode);
+                processedData = processDataForZoneView(selectedZone, currentDateRangeMode);
             }
             
             updateDashboardSummary(processedData);
@@ -1787,7 +1764,7 @@
             chartInstance = new Chart(ctx, config);
         }
 
-        // ประมวลผลข้อมูลสำหรับมุมมองทั้งหมด (แก้ไขแล้ว)
+        // ประมวลผลข้อมูลสำหรับมุมมองทั้งหมด
         function processDataForAllView(mode, dateRangeMode = 'current') {
             const sugarData = uploadedFiles[mode];
             
@@ -1856,12 +1833,86 @@
             };
         }
 
-        // ประมวลผลข้อมูลสำหรับมุมมองรายเขต (แก้ไขแล้ว)
-        function processDataForZoneView(mode, zone, dateRangeMode = 'current') {
-            const sugarData = uploadedFiles[mode];
+        // ฟังก์ชันใหม่: ประมวลผลข้อมูลรวมทั้งสองโรงงาน
+        function processCombinedData(dateRangeMode = 'current') {
+            const kranburiData = uploadedFiles.kranburi;
+            const sikhioData = uploadedFiles.sikhio;
+            
+            if (!kranburiData || !sikhioData) {
+                return { dailyWeights: {}, accumulatedWeights: {}, byZone: {} };
+            }
+            
+            // รวมข้อมูลจากทั้งสองโรงงาน
+            const combinedDailyWeights = {};
+            
+            // ประมวลผลข้อมูลครบุรี
+            kranburiData.rawData.forEach(row => {
+                const dateStr = parseDateColumn(row['ชั่งออก']);
+                if (!dateStr) return;
+                
+                const weight = parseFloat(row['น.น.สุทธิ']) || 0;
+                
+                if (!combinedDailyWeights[dateStr]) {
+                    combinedDailyWeights[dateStr] = 0;
+                }
+                combinedDailyWeights[dateStr] += weight;
+            });
+            
+            // ประมวลผลข้อมูลสีคิ้ว
+            sikhioData.rawData.forEach(row => {
+                const dateStr = parseDateColumn(row['ชั่งออก']);
+                if (!dateStr) return;
+                
+                const weight = parseFloat(row['น.น.สุทธิ']) || 0;
+                
+                if (!combinedDailyWeights[dateStr]) {
+                    combinedDailyWeights[dateStr] = 0;
+                }
+                combinedDailyWeights[dateStr] += weight;
+            });
+            
+            // สร้างช่วงวันที่ (ใช้วันที่เริ่มต้นของครบุรีเป็นหลัก)
+            const dateRange = generateDateRange('kranburi', dateRangeMode);
+            
+            // คำนวณน้ำหนักสะสม
+            const accumulatedWeights = {};
+            let accumulated = 0;
+            
+            dateRange.forEach(date => {
+                const dailyWeight = combinedDailyWeights[date] || 0;
+                accumulated += dailyWeight;
+                accumulatedWeights[date] = accumulated;
+            });
+            
+            const totalWeight = Object.values(combinedDailyWeights).reduce((a, b) => a + b, 0);
+            
+            // คำนวณวันที่ปัจจุบัน
+            const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const currentDateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${(yesterday.getFullYear() + 543).toString().slice(-2)}`;
+            
+            return {
+                dailyWeights: combinedDailyWeights,
+                accumulatedWeights: accumulatedWeights,
+                totalWeight: totalWeight,
+                dateRange: dateRange,
+                factoryName: 'รวมทั้งสองโรงงาน',
+                factoryConfig: factoryConfigs.combined,
+                startDate: '7/12/68',
+                currentDate: currentDateStr,
+                mode: 'combined',
+                dateRangeMode: dateRangeMode
+            };
+        }
+
+        // ประมวลผลข้อมูลสำหรับมุมมองรายเขต (รวมข้อมูลจากทั้งสองโรงงาน)
+        function processDataForZoneView(zone, dateRangeMode = 'current') {
+            const kranburiData = uploadedFiles.kranburi;
+            const sikhioData = uploadedFiles.sikhio;
             const farmerData = uploadedFiles.farmers;
             
-            if (!sugarData || !farmerData) {
+            if (!kranburiData || !sikhioData || !farmerData) {
                 return { dailyWeights: {}, accumulatedWeights: {}, byZone: {} };
             }
             
@@ -1875,8 +1926,9 @@
             
             const dailyWeights = {};
             
-            // ประมวลผลข้อมูลน้ำหนักเฉพาะเขตที่เลือก
-            sugarData.rawData.forEach(row => {
+            // ประมวลผลข้อมูลน้ำหนักเฉพาะเขตที่เลือกจากทั้งสองโรงงาน
+            // ประมวลผลจากครบุรี
+            kranburiData.rawData.forEach(row => {
                 const dateStr = parseDateColumn(row['ชั่งออก']);
                 if (!dateStr) return;
                 
@@ -1891,13 +1943,39 @@
                 }
             });
             
-            // ใช้ generateDateRange พร้อมโหมดช่วงเวลา
-            const dateRange = generateDateRange(mode, dateRangeMode);
+            // ประมวลผลจากสีคิ้ว
+            sikhioData.rawData.forEach(row => {
+                const dateStr = parseDateColumn(row['ชั่งออก']);
+                if (!dateStr) return;
+                
+                const quota = row['โควตา'] || '';
+                if (quota && addressToZoneMap[quota] === zone) {
+                    const weight = parseFloat(row['น.น.สุทธิ']) || 0;
+                    
+                    if (!dailyWeights[dateStr]) {
+                        dailyWeights[dateStr] = 0;
+                    }
+                    dailyWeights[dateStr] += weight;
+                }
+            });
             
-            const factoryName = mode === 'kranburi' ? 'ครบุรี' : 'สีคิ้ว';
+            // ใช้ generateDateRange พร้อมโหมดช่วงเวลา (ใช้วันที่เริ่มต้นของครบุรีเป็นหลัก)
+            const dateRange = generateDateRange('kranburi', dateRangeMode);
+            
+            // คำนวณน้ำหนักสะสมสำหรับเขตนี้
+            const accumulatedWeights = {};
+            let accumulated = 0;
+            
+            dateRange.forEach(date => {
+                const dailyWeight = dailyWeights[date] || 0;
+                accumulated += dailyWeight;
+                accumulatedWeights[date] = accumulated;
+            });
+            
+            const totalWeight = Object.values(dailyWeights).reduce((a, b) => a + b, 0);
+            
             const zoneConfig = zoneConfigs[zone];
-            const startDate = startDates[mode];
-            const startDateStr = `${startDate.day}/${startDate.month}/68`;
+            const startDateStr = '7/12/68';
             
             // คำนวณวันที่สิ้นสุดตามโหมด
             let currentDateStr;
@@ -1909,25 +1987,24 @@
                 currentDateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${(yesterday.getFullYear() + 543).toString().slice(-2)}`;
             } else {
                 // โหมดทั้งฤดู: ใช้วันที่สิ้นสุดฤดูหีบ
-                const endDate = seasonEndDates[mode];
+                const endDate = seasonEndDates.kranburi;
                 currentDateStr = `${endDate.day}/${endDate.month}/${endDate.year}`;
             }
             
             return {
                 dailyWeights: dailyWeights,
-                totalWeight: Object.values(dailyWeights).reduce((a, b) => a + b, 0),
+                accumulatedWeights: accumulatedWeights,
+                totalWeight: totalWeight,
                 zone: zone,
                 zoneConfig: zoneConfig,
                 dateRange: dateRange,
-                factoryName: factoryName,
                 startDate: startDateStr,
                 currentDate: currentDateStr,
-                mode: mode,
                 dateRangeMode: dateRangeMode
             };
         }
 
-        // สร้างช่วงวันที่ (แก้ไขแล้ว)
+        // สร้างช่วงวันที่
         function generateDateRange(mode, dateRangeMode = 'current') {
             const dateRange = [];
             
@@ -1979,7 +2056,7 @@
                 // กำหนดวันสิ้นสุดของเดือน (ใช้ตามโหมด)
                 let endDay = daysInCurrentMonth;
                 if (currentProcessingMonth === endDate.month && currentProcessingYear === endDate.year) {
-                    endDay = endDate.day; // ใช้วันที่สิ้นสุดตามโหมด
+                    endDay = endDate.day;
                 }
                 
                 // เพิ่มวันในเดือนนี้เข้าไปใน dateRange
@@ -2057,7 +2134,7 @@
                     ]
                 };
             } else {
-                // สำหรับมุมมองรายเขต: ไม่มีเส้นสะสม
+                // สำหรับมุมมองรายเขต
                 return {
                     labels: labels,
                     datasets: [
@@ -2076,15 +2153,28 @@
                         {
                             label: `เขต ${processedData.zone} - น้ำหนักรายวัน`,
                             data: dateRange.map(date => (processedData.dailyWeights[date] || 0)),
-                            backgroundColor: getChartColor(processedData.mode, false),
-                            borderColor: getChartColor(processedData.mode, true),
+                            backgroundColor: getChartColor('combined', false),
+                            borderColor: getChartColor('combined', true),
                             borderWidth: 1,
-                            hoverBackgroundColor: getChartColor(processedData.mode, false, true),
-                            hoverBorderColor: getChartColor(processedData.mode, true, true),
+                            hoverBackgroundColor: getChartColor('combined', false, true),
+                            hoverBorderColor: getChartColor('combined', true, true),
                             hoverBorderWidth: 2,
                             order: 2
+                        },
+                        // Dataset 2: เส้นสะสม
+                        {
+                            type: 'line',
+                            label: 'ตันสะสม',
+                            data: dateRange.map(date => (processedData.accumulatedWeights[date] || 0)),
+                            backgroundColor: 'rgba(156, 39, 176, 0.1)',
+                            borderColor: '#9C27B0',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.1,
+                            fill: false,
+                            yAxisID: 'y-accumulated',
+                            order: 0
                         }
-                        // ไม่มีเส้นสะสมสำหรับมุมมองรายเขต
                     ]
                 };
             }
@@ -2099,12 +2189,19 @@
                 } else {
                     return isHover ? '#64B5F6' : '#90CAF9';
                 }
-            } else {
+            } else if (mode === 'sikhio') {
                 // สีคิ้ว: โทนสีเขียว
                 if (isBorder) {
                     return isHover ? '#1B5E20' : '#2E7D32';
                 } else {
                     return isHover ? '#4CAF50' : '#81C784';
+                }
+            } else {
+                // รวมทั้งสองโรงงาน: โทนสีม่วง
+                if (isBorder) {
+                    return isHover ? '#6A1B9A' : '#8E24AA';
+                } else {
+                    return isHover ? '#BA68C8' : '#CE93D8';
                 }
             }
         }
@@ -2133,7 +2230,7 @@
             return niceStep;
         }
 
-        // สร้างการตั้งค่ากราฟสำหรับมุมมองทั้งหมด (แก้ไขแล้ว - ปรับแกน Y ขวาของสีคิ้ว)
+        // สร้างการตั้งค่ากราฟสำหรับมุมมองทั้งหมด
         function createAllViewConfig(chartData, processedData) {
             const dateRange = processedData.dateRange;
             const factoryConfig = processedData.factoryConfig;
@@ -2149,29 +2246,33 @@
             // คำนวณค่า max และ stepSize สำหรับแกน Y ขวา (ตันสะสม)
             let yRightMax, yRightStepSize;
             
-            if (processedData.mode === 'sikhio') {
-                // สำหรับสีคิ้ว: ปรับตามข้อมูลจริง
+            if (processedData.mode === 'kranburi') {
                 if (maxAccumulated > 0) {
-                    // คำนวณ stepSize ที่เหมาะสม
-                    yRightStepSize = calculateOptimalStepSize(maxAccumulated, 5);
-                    
-                    // คำนวณ max ที่เหมาะสม
+                    yRightStepSize = 200000;
                     yRightMax = Math.ceil(maxAccumulated / yRightStepSize) * yRightStepSize;
-                    
-                    // จำกัดขั้นต่ำ
+                    if (yRightMax < 200000) yRightMax = 200000;
+                } else {
+                    yRightStepSize = 200000;
+                    yRightMax = 2000000;
+                }
+            } else if (processedData.mode === 'sikhio') {
+                if (maxAccumulated > 0) {
+                    yRightStepSize = calculateOptimalStepSize(maxAccumulated, 5);
+                    yRightMax = Math.ceil(maxAccumulated / yRightStepSize) * yRightStepSize;
                     if (yRightMax < 50000) yRightMax = 50000;
                 } else {
-                    // ถ้าไม่มีข้อมูล ใช้ค่าเริ่มต้น
                     yRightStepSize = 50000;
                     yRightMax = 250000;
                 }
             } else {
-                // สำหรับครบุรี: ใช้ค่าเดิม
-                yRightStepSize = 100000;
-                yRightMax = 2500000; // 2,500,000 ตัน
-                
-                if (maxAccumulated > yRightMax) {
+                // สำหรับโหมดรวม
+                if (maxAccumulated > 0) {
+                    yRightStepSize = 250000;
                     yRightMax = Math.ceil(maxAccumulated / yRightStepSize) * yRightStepSize;
+                    if (yRightMax < 500000) yRightMax = 500000;
+                } else {
+                    yRightStepSize = 250000;
+                    yRightMax = 2500000;
                 }
             }
             
@@ -2223,11 +2324,11 @@
                                     if (context.tick.value % factoryConfig.minorStep === 0 && context.tick.value % factoryConfig.stepSize !== 0) {
                                         return 'rgba(0, 0, 0, 0.1)';
                                     }
-                                    return 'rgba(0, 0, 0, 0.05)'; // ลดความเข้มของเส้นกริด
+                                    return 'rgba(0, 0, 0, 0.05)';
                                 }
                             }
                         },
-                        // แกน Y ขวา: ตันสะสม (แก้ไขแล้วสำหรับสีคิ้ว)
+                        // แกน Y ขวา: ตันสะสม
                         'y-accumulated': {
                             type: 'linear',
                             position: 'right',
@@ -2244,12 +2345,14 @@
                             ticks: {
                                 stepSize: yRightStepSize,
                                 callback: function(value) {
-                                    // สำหรับสีคิ้ว ถ้าค่าน้อยอาจแสดงเต็มตัวเลข
-                                    if (processedData.mode === 'sikhio' && yRightMax < 1000000) {
-                                        return value.toLocaleString();
-                                    } else {
-                                        // สำหรับครบุรีหรือค่ามาก ให้ย่อเป็น K
+                                    if (processedData.mode === 'kranburi' || processedData.mode === 'combined') {
                                         return (value / 1000).toFixed(0) + 'K';
+                                    } else {
+                                        if (yRightMax < 1000000) {
+                                            return value.toLocaleString();
+                                        } else {
+                                            return (value / 1000).toFixed(0) + 'K';
+                                        }
                                     }
                                 },
                                 font: {
@@ -2257,10 +2360,10 @@
                                 }
                             },
                             grid: {
-                                drawOnChartArea: false, // ไม่วาดกริดบนพื้นที่กราฟ
+                                drawOnChartArea: false,
                             }
                         },
-                        // แกน X: วันที่ (แก้ไขแล้ว - แสดงแนวตั้ง 90 องศา)
+                        // แกน X: วันที่
                         x: {
                             title: {
                                 display: true,
@@ -2271,25 +2374,21 @@
                                 }
                             },
                             ticks: {
-                                // ปรับขนาดฟอนต์ตามจำนวนวันที่
                                 font: {
                                     size: dateFontSize,
                                     style: 'italic'
                                 },
-                                // แสดงทุกวัน ไม่ข้าม
                                 maxTicksLimit: dateRange.length,
                                 autoSkip: false,
-                                // แสดงแนวตั้ง 90 องศา
                                 maxRotation: 90,
                                 minRotation: 90,
                                 padding: 8,
                                 callback: function(value, index, values) {
-                                    // แสดง label ทุกวัน
                                     return dateRange[index] || '';
                                 }
                             },
                             grid: {
-                                display: false // ลบเส้นกริดแนวตั้ง
+                                display: false
                             }
                         }
                     },
@@ -2315,7 +2414,6 @@
                                     
                                     let value = context.parsed.y;
                                     
-                                    // แสดงหน่วยที่ถูกต้องตาม dataset
                                     if (context.datasetIndex === 0) {
                                         label += `เป้าหมาย ${value.toLocaleString()} ตัน`;
                                     } else if (context.datasetIndex === 1) {
@@ -2352,16 +2450,29 @@
             };
         }
 
-        // สร้างการตั้งค่ากราฟสำหรับมุมมองรายเขต (แก้ไขแล้ว - ปรับการแสดงวันที่)
+        // สร้างการตั้งค่ากราฟสำหรับมุมมองรายเขต
         function createZoneViewConfig(chartData, processedData) {
             const dateRange = processedData.dateRange;
             const zoneConfig = processedData.zoneConfig;
             const maxDailyWeight = Math.max(...Object.values(processedData.dailyWeights).filter(val => val !== undefined));
+            const maxAccumulated = Math.max(...Object.values(processedData.accumulatedWeights).filter(val => val !== undefined));
             
-            // คำนวณค่า max สำหรับแกน Y (ตันรายวัน)
-            let yMax = zoneConfig.max;
+            // คำนวณค่า max สำหรับแกน Y ซ้าย (ตันรายวัน)
+            let yLeftMax = zoneConfig.max;
             if (maxDailyWeight > zoneConfig.target) {
-                yMax = Math.ceil(maxDailyWeight / zoneConfig.stepSize) * zoneConfig.stepSize;
+                yLeftMax = Math.ceil(maxDailyWeight / zoneConfig.stepSize) * zoneConfig.stepSize;
+            }
+            
+            // คำนวณค่า max สำหรับแกน Y ขวา (ตันสะสม)
+            let yRightMax, yRightStepSize;
+            
+            if (maxAccumulated > 0) {
+                yRightStepSize = 500;
+                yRightMax = Math.ceil(maxAccumulated / yRightStepSize) * yRightStepSize;
+                if (yRightMax < 1000) yRightMax = 1000;
+            } else {
+                yRightStepSize = 500;
+                yRightMax = 5000;
             }
             
             // คำนวณจำนวนวันที่ทั้งหมด
@@ -2382,7 +2493,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        // แกน Y: ตันรายวัน (ไม่มีแกนขวา)
+                        // แกน Y ซ้าย: ตันรายวัน
                         y: {
                             type: 'linear',
                             position: 'left',
@@ -2395,7 +2506,7 @@
                                 }
                             },
                             min: 0,
-                            max: yMax,
+                            max: yLeftMax,
                             ticks: {
                                 stepSize: zoneConfig.stepSize,
                                 callback: function(value) {
@@ -2408,15 +2519,41 @@
                             grid: {
                                 drawTicks: false,
                                 color: function(context) {
-                                    // สร้างขีดเล็กทุก minorStep
                                     if (context.tick.value % zoneConfig.minorStep === 0 && context.tick.value % zoneConfig.stepSize !== 0) {
                                         return 'rgba(0, 0, 0, 0.1)';
                                     }
-                                    return 'rgba(0, 0, 0, 0.05)'; // ลดความเข้มของเส้นกริด
+                                    return 'rgba(0, 0, 0, 0.05)';
                                 }
                             }
                         },
-                        // แกน X: วันที่ (แก้ไขแล้ว - แสดงแนวตั้ง 90 องศา)
+                        // แกน Y ขวา: ตันสะสม
+                        'y-accumulated': {
+                            type: 'linear',
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'ตันสะสม',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            min: 0,
+                            max: yRightMax,
+                            ticks: {
+                                stepSize: yRightStepSize,
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                },
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        // แกน X: วันที่
                         x: {
                             title: {
                                 display: true,
@@ -2427,25 +2564,21 @@
                                 }
                             },
                             ticks: {
-                                // ปรับขนาดฟอนต์ตามจำนวนวันที่
                                 font: {
                                     size: dateFontSize,
                                     style: 'italic'
                                 },
-                                // แสดงทุกวัน ไม่ข้าม
                                 maxTicksLimit: dateRange.length,
                                 autoSkip: false,
-                                // แสดงแนวตั้ง 90 องศา
                                 maxRotation: 90,
                                 minRotation: 90,
                                 padding: 8,
                                 callback: function(value, index, values) {
-                                    // แสดง label ทุกวัน
                                     return dateRange[index] || '';
                                 }
                             },
                             grid: {
-                                display: false // ลบเส้นกริดแนวตั้ง
+                                display: false
                             }
                         }
                     },
@@ -2471,11 +2604,12 @@
                                     
                                     let value = context.parsed.y;
                                     
-                                    // แสดงหน่วยที่ถูกต้องตาม dataset
                                     if (context.datasetIndex === 0) {
                                         label += `เป้าหมาย ${value.toLocaleString()} ตัน`;
                                     } else if (context.datasetIndex === 1) {
                                         label += `น้ำหนักรายวัน ${value.toLocaleString()} ตัน`;
+                                    } else if (context.datasetIndex === 2) {
+                                        label += `ตันสะสม ${value.toLocaleString()} ตัน`;
                                     }
                                     
                                     return label;
@@ -2512,7 +2646,7 @@
             document.getElementById('totalWeightDashboard').textContent = Math.round(totalWeightInTons).toLocaleString();
         }
 
-        // อัพเดทหัวข้อกราฟ (แก้ไขแล้ว)
+        // อัพเดทหัวข้อกราฟ
         function updateChartTitle(processedData) {
             const chartTitleArea = document.getElementById('chartTitleArea');
             const chartSubtitle = document.getElementById('chartSubtitle');
@@ -2521,10 +2655,15 @@
             chartTitleArea.style.display = 'block';
             
             if (currentView === 'all') {
-                chartSubtitle.textContent = `โรงงาน${processedData.factoryName}`;
+                if (currentMode === 'combined') {
+                    chartSubtitle.textContent = `รวมทั้งสองโรงงาน`;
+                } else {
+                    chartSubtitle.textContent = `โรงงาน${processedData.factoryName}`;
+                }
                 chartDate.textContent = `วันที่ ${processedData.startDate} - ${processedData.currentDate}`;
             } else {
-                chartSubtitle.textContent = `โรงงาน${processedData.factoryName} ประจำเขต ${processedData.zone}`;
+                // แก้ไขตามข้อกำหนด: "ประจำเขต XX"
+                chartSubtitle.textContent = `ประจำเขต ${processedData.zone}`;
                 chartDate.textContent = `วันที่ ${processedData.startDate} - ${processedData.currentDate}`;
             }
         }
@@ -2534,7 +2673,7 @@
             const zoneLegend = document.getElementById('zoneLegend');
             
             if (currentView === 'byZone' && selectedZone) {
-                const zoneColor = getChartColor(currentZoneMode, false);
+                const zoneColor = getChartColor('combined', false);
                 const targetValue = currentView === 'all' ? factoryConfigs[currentMode].target : zoneConfigs[selectedZone].target;
                 
                 let legendHTML = '';
@@ -2546,6 +2685,10 @@
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: rgba(255, 152, 0, 0.3)"></div>
                         <span>เป้าหมาย: ${targetValue.toLocaleString()} ตัน/วัน</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #9C27B0"></div>
+                        <span>ตันสะสม</span>
                     </div>
                 `;
                 
@@ -2578,7 +2721,7 @@
             }
         }
 
-        // บันทึกรูปภาพกราฟ (แก้ไขแล้ว)
+        // บันทึกรูปภาพกราฟ
         function saveChartAsImage() {
             if (!chartInstance) {
                 alert('กรุณาสร้างกราฟก่อนบันทึกรายงาน');
@@ -2595,7 +2738,7 @@
             
             // ตั้งค่าขนาด canvas
             tempCanvas.width = chartCanvas.width;
-            tempCanvas.height = chartCanvas.height + 150; // เพิ่มพื้นที่สำหรับหัวข้อ
+            tempCanvas.height = chartCanvas.height + 150;
             
             // วาดพื้นหลังสีขาว
             ctx.fillStyle = 'white';
@@ -2613,32 +2756,41 @@
             
             let subtitleText = '';
             if (currentView === 'all') {
-                const factoryName = currentMode === 'kranburi' ? 'ครบุรี' : 'สีคิ้ว';
-                subtitleText = `โรงงาน${factoryName}`;
+                if (currentMode === 'combined') {
+                    subtitleText = `รวมทั้งสองโรงงาน`;
+                } else {
+                    const factoryName = currentMode === 'kranburi' ? 'ครบุรี' : 'สีคิ้ว';
+                    subtitleText = `โรงงาน${factoryName}`;
+                }
             } else {
-                const factoryName = currentZoneMode === 'kranburi' ? 'ครบุรี' : 'สีคิ้ว';
-                subtitleText = `โรงงาน${factoryName} ประจำเขต ${selectedZone}`;
+                subtitleText = `ประจำเขต ${selectedZone}`;
             }
             ctx.fillText(subtitleText, tempCanvas.width / 2, 70);
             
-            // วาดวันที่ (ใช้ตามโหมดช่วงเวลา)
+            // วาดวันที่
             ctx.fillStyle = '#6c757d';
             ctx.font = '16px Sarabun';
             
-            let dateText;
-            if (currentDateRangeMode === 'current') {
-                const now = new Date();
-                const yesterday = new Date(now);
-                yesterday.setDate(yesterday.getDate() - 1);
-                
-                const day = yesterday.getDate();
-                const month = yesterday.getMonth() + 1;
-                const year = (yesterday.getFullYear() + 543).toString().slice(-2);
-                dateText = `วันที่ ${day}/${month}/${year}`;
+            const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const currentDay = yesterday.getDate();
+            const currentMonth = yesterday.getMonth() + 1;
+            const currentYear = (yesterday.getFullYear() + 543).toString().slice(-2);
+            
+            let startDateStr;
+            if (currentView === 'all') {
+                if (currentMode === 'combined' || currentMode === 'kranburi') {
+                    startDateStr = '7/12/68';
+                } else {
+                    startDateStr = '9/12/68';
+                }
             } else {
-                const endDate = currentView === 'all' ? seasonEndDates[currentMode] : seasonEndDates[currentZoneMode];
-                dateText = `วันที่ 28/03/69 (สิ้นสุดฤดูหีบ)`;
+                startDateStr = '7/12/68';
             }
+            
+            const dateText = `วันที่ ${startDateStr} - ${currentDay}/${currentMonth}/${currentYear}`;
             ctx.fillText(dateText, tempCanvas.width / 2, 95);
             
             // วาดกราฟ
@@ -2647,14 +2799,14 @@
             // สร้างลิงก์ดาวน์โหลด
             const link = document.createElement('a');
             const rangeModeText = currentDateRangeMode === 'current' ? 'สะสมถึงปัจจุบัน' : 'สะสมทั้งฤดูหีบ';
-            link.download = `รายงานอ้อยเข้าหีบ_${currentMode}_${currentView === 'all' ? 'ทั้งหมด' : 'เขต' + selectedZone}_${rangeModeText}_${new Date().getTime()}.png`;
+            link.download = `รายงานอ้อยเข้าหีบ_${currentMode}_${currentView === 'all' ? 'ทั้งหมด' : 'เขต' + selectedZone}_${new Date().getTime()}.png`;
             link.href = tempCanvas.toDataURL('image/png');
             link.click();
             
             alert('บันทึกรายงานเป็นภาพเรียบร้อยแล้ว');
         }
 
-        // ดาวน์โหลดรายงาน (แก้ไขแล้ว)
+        // ดาวน์โหลดรายงาน
         function downloadReport() {
             const now = new Date();
             const yesterday = new Date(now);
@@ -2755,7 +2907,8 @@
             const map = {
                 kranburi: 'อ้อยเข้าหีบ ครบุรี',
                 sikhio: 'อ้อยเข้าหีบ สีคิ้ว',
-                farmers: 'ฐานข้อมูลชาวไร่'
+                farmers: 'ฐานข้อมูลชาวไร่',
+                combined: 'รวมทั้งสองโรงงาน'
             };
             return map[fileType] || 'ไฟล์ข้อมูล';
         }
