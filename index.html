@@ -1,3 +1,5 @@
+[file name]: CODE PD 22.txt
+[file content begin]
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -836,6 +838,7 @@
             <div class="card">
                 <div class="card-header">
                     <div>
+                        <!-- แก้ไข: ใช้ toLocaleString() เพื่อจัดรูปแบบจำนวนเต็ม -->
                         <div class="card-value" id="totalWeight">0</div>
                         <div class="card-label">น้ำหนักอ้อยสุทธิ (ตัน)</div>
                     </div>
@@ -848,7 +851,8 @@
                 <div class="card-header">
                     <div>
                         <div class="card-value" id="percentageTarget">0%</div>
-                        <div class="card-label">ตันเข้าหีบ เทียบเป้าหมาย 4,250,000 ตัน</div>
+                        <!-- แก้ไข: เป้าหมายเป็น 4,239,405 ตัน -->
+                        <div class="card-label">ตันเข้าหีบ เทียบเป้าหมาย 4,239,405 ตัน</div>
                     </div>
                     <div class="card-icon quota">
                         <i class="fas fa-percentage"></i>
@@ -1021,6 +1025,7 @@
             <!-- Chart Title Area -->
             <div id="chartTitleArea" style="text-align: center; margin-bottom: 20px; display: none;">
                 <h2 class="chart-title">รายงานอ้อยเข้าหีบ ปี 68/69</h2>
+                <!-- แก้ไข: เปลี่ยนจาก ประจำเขตxx เป็น เขตxx -->
                 <h3 class="chart-subtitle" id="chartSubtitle">โรงงานครบุรี</h3>
                 <p class="chart-date" id="chartDate">วันที่ 7/12/68 - 31/01/69</p>
             </div>
@@ -1117,6 +1122,26 @@
             "C2": { target: 1700, stepSize: 200, max: 2000, minorStep: 100 },
             "C3": { target: 3000, stepSize: 200, max: 3000, minorStep: 100 },
             "C4": { target: 3100, stepSize: 200, max: 3200, minorStep: 100 }
+        };
+
+        // เป้าหมายสะสมสูงสุดสำหรับแต่ละเขต (ตามที่กำหนด)
+        const zoneAccumulatedMaxConfigs = {
+            "1": { max: 176364 },
+            "2": { max: 211974 },
+            "3": { max: 145732 },
+            "4": { max: 142424 },
+            "5": { max: 235543 },
+            "6": { max: 235772 },
+            "7": { max: 214503 },
+            "8": { max: 117245 },
+            "10": { max: 120957 },
+            "11": { max: 93244 },
+            "12": { max: 22189 },
+            "21": { max: 90616 },
+            "C1": { max: 270360 },
+            "C2": { max: 168202 },
+            "C3": { max: 248404 },
+            "C4": { max: 295876 }
         };
 
         // เป้าหมายสะสมทั้งหมด (ตัน/วัน) และการตั้งค่าแกน Y - เพิ่มโหมดรวม
@@ -1471,14 +1496,15 @@
                 }
             });
             
-            // แก้ไขเป้าหมายจาก 2,400,000 เป็น 4,250,000 ตัน
+            // แก้ไขเป้าหมายจาก 2,800,000 เป็น 4,239,405 ตัน
             if (totalWeight > 0) {
-                percentageTarget = ((totalWeight / 2800000) * 100).toFixed(2);
+                percentageTarget = ((totalWeight / 4239405) * 100).toFixed(2);
             }
             
             document.getElementById('fileCount').textContent = `${fileCount}/3`;
             document.getElementById('totalRows').textContent = totalRows.toLocaleString();
-            document.getElementById('totalWeight').textContent = totalWeight.toFixed(2);
+            // แก้ไข: ใช้ toLocaleString() เพื่อจัดรูปแบบจำนวนเต็ม
+            document.getElementById('totalWeight').textContent = Math.round(totalWeight).toLocaleString();
             document.getElementById('percentageTarget').textContent = `${percentageTarget}%`;
         }
 
@@ -1767,6 +1793,11 @@
             }
             
             chartInstance = new Chart(ctx, config);
+            
+            // เพิ่ม Tooltips อัตโนมัติเมื่อกราฟโหลดเสร็จ
+            setTimeout(() => {
+                showChartTooltips(chartInstance, processedData);
+            }, 1000);
         }
 
         // ประมวลผลข้อมูลสำหรับมุมมองทั้งหมด
@@ -1946,6 +1977,15 @@
                     }
                     dailyWeights[dateStr] += weight;
                 }
+                
+                // เพิ่มเงื่อนไขสำหรับโควตา 899991 เป็นเขต 8
+                if (quota === '899991' && zone === '8') {
+                    const weight = parseFloat(row['น.น.สุทธิ']) || 0;
+                    if (!dailyWeights[dateStr]) {
+                        dailyWeights[dateStr] = 0;
+                    }
+                    dailyWeights[dateStr] += weight;
+                }
             });
             
             // ประมวลผลจากสีคิ้ว
@@ -1957,6 +1997,15 @@
                 if (quota && addressToZoneMap[quota] === zone) {
                     const weight = parseFloat(row['น.น.สุทธิ']) || 0;
                     
+                    if (!dailyWeights[dateStr]) {
+                        dailyWeights[dateStr] = 0;
+                    }
+                    dailyWeights[dateStr] += weight;
+                }
+                
+                // เพิ่มเงื่อนไขสำหรับโควตา 899991 เป็นเขต 8
+                if (quota === '899991' && zone === '8') {
+                    const weight = parseFloat(row['น.น.สุทธิ']) || 0;
                     if (!dailyWeights[dateStr]) {
                         dailyWeights[dateStr] = 0;
                     }
@@ -1980,6 +2029,7 @@
             const totalWeight = Object.values(dailyWeights).reduce((a, b) => a + b, 0);
             
             const zoneConfig = zoneConfigs[zone];
+            const zoneAccumulatedMax = zoneAccumulatedMaxConfigs[zone] || { max: 0 };
             const startDateStr = '7/12/68';
             
             // คำนวณวันที่สิ้นสุดตามโหมด
@@ -2002,6 +2052,7 @@
                 totalWeight: totalWeight,
                 zone: zone,
                 zoneConfig: zoneConfig,
+                zoneAccumulatedMax: zoneAccumulatedMax.max,
                 dateRange: dateRange,
                 startDate: startDateStr,
                 currentDate: currentDateStr,
@@ -2261,7 +2312,7 @@
             }
         }
 
-        // ฟังก์ชันคำนวณ stepSize ที่เหมาะสมสำหรับสีคิ้ว
+        // ฟังก์ชันคำนวณ stepSize ที่เหมาะสม
         function calculateOptimalStepSize(maxValue, desiredDivisions = 5) {
             if (maxValue <= 0) return 10000; // ค่าเริ่มต้น
             
@@ -2277,10 +2328,6 @@
             else if (normalized < 3) niceStep = 2 * magnitude;
             else if (normalized < 7) niceStep = 5 * magnitude;
             else niceStep = 10 * magnitude;
-            
-            // จำกัดขั้นต่ำและสูงสุด
-            if (niceStep < 10000) niceStep = 10000;
-            if (niceStep > 500000) niceStep = 500000;
             
             return niceStep;
         }
@@ -2509,6 +2556,7 @@
         function createZoneViewConfig(chartData, processedData) {
             const dateRange = processedData.dateRange;
             const zoneConfig = processedData.zoneConfig;
+            const zoneAccumulatedMax = processedData.zoneAccumulatedMax || 0;
             const maxDailyWeight = Math.max(...Object.values(processedData.dailyWeights).filter(val => val !== undefined));
             const maxAccumulated = Math.max(...Object.values(processedData.accumulatedWeights).filter(val => val !== undefined));
             
@@ -2518,11 +2566,19 @@
                 yLeftMax = Math.ceil(maxDailyWeight / zoneConfig.stepSize) * zoneConfig.stepSize;
             }
             
-            // คำนวณค่า max สำหรับแกน Y ขวา (ตันสะสม)
+            // คำนวณค่า max สำหรับแกน Y ขวา (ตันสะสม) - ใช้ค่าที่กำหนด
             let yRightMax, yRightStepSize;
             
-            if (maxAccumulated > 0) {
-                yRightStepSize = 500;
+            if (zoneAccumulatedMax > 0) {
+                yRightStepSize = calculateOptimalStepSize(zoneAccumulatedMax, 5);
+                yRightMax = Math.ceil(zoneAccumulatedMax / yRightStepSize) * yRightStepSize;
+                // ปัดเศษให้สวยงามลงในหลักหมื่น
+                if (yRightMax > zoneAccumulatedMax * 1.2) {
+                    yRightMax = Math.ceil(zoneAccumulatedMax / 10000) * 10000;
+                    yRightStepSize = calculateOptimalStepSize(yRightMax, 5);
+                }
+            } else if (maxAccumulated > 0) {
+                yRightStepSize = calculateOptimalStepSize(maxAccumulated, 5);
                 yRightMax = Math.ceil(maxAccumulated / yRightStepSize) * yRightStepSize;
                 if (yRightMax < 1000) yRightMax = 1000;
             } else {
@@ -2715,10 +2771,12 @@
                 } else {
                     chartSubtitle.textContent = `โรงงาน${processedData.factoryName}`;
                 }
+                // แก้ไข: วันที่แสดง Today - 1
                 chartDate.textContent = `วันที่ ${processedData.startDate} - ${processedData.currentDate}`;
             } else {
-                // แก้ไขตามข้อกำหนด: "ประจำเขต XX"
-                chartSubtitle.textContent = `ประจำเขต ${processedData.zone}`;
+                // แก้ไข: เปลี่ยนจาก ประจำเขตxx เป็น เขตxx
+                chartSubtitle.textContent = `เขต ${processedData.zone}`;
+                // แก้ไข: วันที่แสดง Today - 1
                 chartDate.textContent = `วันที่ ${processedData.startDate} - ${processedData.currentDate}`;
             }
         }
@@ -2778,6 +2836,43 @@
             }
         }
 
+        // ฟังก์ชันแสดง Tooltips อัตโนมัติ
+        function showChartTooltips(chart, processedData) {
+            if (!chart || !chart.tooltip) return;
+            
+            const tooltip = chart.tooltip;
+            const lastIndex = processedData.dateRange.length - 1;
+            
+            // กำหนดตำแหน่งสำหรับแสดง tooltips
+            const meta = chart.getDatasetMeta(1); // ข้อมูลน้ำหนักรายวัน
+            const lastDataPoint = meta.data[lastIndex];
+            
+            if (lastDataPoint) {
+                // แสดง tooltip สำหรับน้ำหนักรายวันล่าสุด
+                tooltip.setActiveElements([
+                    {
+                        datasetIndex: 1,
+                        index: lastIndex
+                    },
+                    {
+                        datasetIndex: 2,
+                        index: lastIndex
+                    }
+                ], {
+                    x: lastDataPoint.x,
+                    y: lastDataPoint.y
+                });
+                
+                chart.update();
+                
+                // ซ่อน tooltip หลังจาก 3 วินาที
+                setTimeout(() => {
+                    tooltip.setActiveElements([], { x: 0, y: 0 });
+                    chart.update();
+                }, 3000);
+            }
+        }
+
         // บันทึกรูปภาพกราฟ
         function saveChartAsImage() {
             if (!chartInstance) {
@@ -2820,11 +2915,12 @@
                     subtitleText = `โรงงาน${factoryName}`;
                 }
             } else {
-                subtitleText = `ประจำเขต ${selectedZone}`;
+                // แก้ไข: เปลี่ยนจาก ประจำเขตxx เป็น เขตxx
+                subtitleText = `เขต ${selectedZone}`;
             }
             ctx.fillText(subtitleText, tempCanvas.width / 2, 70);
             
-            // วาดวันที่
+            // วาดวันที่ (Today - 1)
             ctx.fillStyle = '#6c757d';
             ctx.font = '16px Sarabun';
             
@@ -2847,6 +2943,7 @@
                 startDateStr = '7/12/68';
             }
             
+            // แก้ไข: วันที่แสดง Today - 1
             const dateText = `วันที่ ${startDateStr} - ${currentDay}/${currentMonth}/${currentYear}`;
             ctx.fillText(dateText, tempCanvas.width / 2, 95);
             
@@ -3183,3 +3280,4 @@
     </script>
 </body>
 </html>
+[file content end]
