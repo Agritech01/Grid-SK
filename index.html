@@ -773,6 +773,25 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* Custom Tooltip Styles */
+        .custom-tooltip {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -90%); }
+            to { opacity: 1; transform: translate(-50%, -100%); }
+        }
+        
+        #tooltipGuide {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
     </style>
 </head>
 <body>
@@ -1038,12 +1057,6 @@
                     <span>ช่วงเวลา:</span>
                     <button class="view-btn active" onclick="selectDateRangeMode('current')">สะสมถึงปัจจุบัน</button>
                     <button class="view-btn" onclick="selectDateRangeMode('fullSeason')">สะสมทั้งฤดูหีบ</button>
-                    
-                    <!-- เพิ่มปุ่มควบคุมแถบลอย -->
-                    <button class="view-btn" onclick="toggleFloatingTooltips()" id="toggleTooltipsBtn">
-                        <i class="fas fa-layer-group"></i> แสดงแถบข้อมูล
-                    </button>
-                    
                     <button class="btn btn-success" onclick="saveChartAsImage()">
                         <i class="fas fa-save"></i> บันทึกรายงาน
                     </button>
@@ -1128,7 +1141,7 @@
             "C4": { target: 3100, stepSize: 200, max: 3200, minorStep: 100 }
         };
 
-        // เป้าหมายสะสมสูงสุดสำหรับแต่ละเขต (ตามที่กำหนด)
+        // ⭐⭐ เป้าหมายสะสมสูงสุดสำหรับแต่ละเขต (ตามที่กำหนด) ⭐⭐
         const zoneAccumulatedMaxConfigs = {
             "1": { max: 176364 },
             "2": { max: 211974 },
@@ -1173,8 +1186,6 @@
         let selectedZone = null;
         let chartInstance = null;
         let currentDateRangeMode = 'current'; // 'current' หรือ 'fullSeason'
-        let showFloatingTooltipsFlag = false; // ตัวแปรควบคุมการแสดงแถบลอย
-        let floatingTooltipsInitialized = false; // ตัวแปรตรวจสอบว่าวาดแถบลอยแล้วหรือยัง
 
         // อัพเดทวันที่ปัจจุบัน
         document.addEventListener('DOMContentLoaded', function() {
@@ -1716,225 +1727,6 @@
             generateChart();
         }
 
-        // ฟังก์ชันดึงข้อมูลปัจจุบัน
-        function getCurrentProcessedData() {
-            if (currentView === 'all') {
-                if (currentMode === 'combined') {
-                    return processCombinedData(currentDateRangeMode);
-                } else {
-                    return processDataForAllView(currentMode, currentDateRangeMode);
-                }
-            } else {
-                return processDataForZoneView(selectedZone, currentDateRangeMode);
-            }
-        }
-
-        // ฟังก์ชันเปิด/ปิดแถบลอย
-        function toggleFloatingTooltips() {
-            showFloatingTooltipsFlag = !showFloatingTooltipsFlag;
-            const btn = document.getElementById('toggleTooltipsBtn');
-            
-            if (showFloatingTooltipsFlag) {
-                btn.innerHTML = '<i class="fas fa-eye-slash"></i> ซ่อนแถบข้อมูล';
-                btn.classList.add('active');
-                // วาดแถบลอย
-                if (chartInstance) {
-                    showFloatingTooltips(chartInstance, getCurrentProcessedData());
-                }
-            } else {
-                btn.innerHTML = '<i class="fas fa-layer-group"></i> แสดงแถบข้อมูล';
-                btn.classList.remove('active');
-                // ล้างแถบลอยโดยวาดกราฟใหม่
-                if (chartInstance) {
-                    chartInstance.draw();
-                }
-            }
-        }
-
-        // ฟังก์ชันเลือกสีแถบลอยตามกลุ่ม
-        function getTooltipColors(mode, zone = null) {
-            if (zone) {
-                // ถ้ามีเขต ให้ใช้สีตามกลุ่มเขต
-                if (blueZones.includes(zone)) {
-                    // กลุ่มครบุรี: โทนสีน้ำเงิน
-                    return {
-                        target: '#4169E1',     // สีน้ำเงินรอยัล
-                        daily: '#4682B4',      // สีน้ำเงินเหล็ก
-                        accumulated: '#003366'  // สีน้ำเงินกรมท่าเข้ม
-                    };
-                } else if (greenZones.includes(zone)) {
-                    // กลุ่มสีคิ้ว: โทนสีเขียว
-                    return {
-                        target: '#006400',     // สีเขียวเข้ม
-                        daily: '#3CB371',      // สีเขียวมะนาวซี
-                        accumulated: '#2E8B57'  // สีเขียวทะเล
-                    };
-                }
-            }
-            
-            // ถ้าไม่มีเขต ให้ใช้สีตามโหมด
-            if (mode === 'kranburi') {
-                // ครบุรี: โทนสีน้ำเงิน
-                return {
-                    target: '#4169E1',
-                    daily: '#4682B4',
-                    accumulated: '#003366'
-                };
-            } else if (mode === 'sikhio') {
-                // สีคิ้ว: โทนสีเขียว
-                return {
-                    target: '#006400',
-                    daily: '#3CB371',
-                    accumulated: '#2E8B57'
-                };
-            } else {
-                // โหมดรวม: ใช้สีน้ำเงิน (เหมือนครบุรี)
-                return {
-                    target: '#4169E1',
-                    daily: '#4682B4',
-                    accumulated: '#003366'
-                };
-            }
-        }
-
-        // แสดงแถบสี่เหลี่ยมลอย
-        function showFloatingTooltips(chart, processedData) {
-            if (!chart || !chart.ctx || !showFloatingTooltipsFlag) return;
-            
-            const ctx = chart.ctx;
-            const lastIndex = processedData.dateRange.length - 1;
-            
-            // รับสีตามกลุ่ม
-            const colors = getTooltipColors(processedData.mode, processedData.zone);
-            
-            // 1. แถบเป้าหมายรายวัน
-            const targetValue = currentView === 'all' ? 
-                (processedData.mode === 'combined' ? factoryConfigs.combined.target : factoryConfigs[processedData.mode].target) :
-                zoneConfigs[processedData.zone].target;
-            
-            // ใช้เป้าหมายวันที่ 31/03/69
-            const finalTargetValue = targetValue;
-            
-            const yScale = chart.scales.y;
-            const targetYPosition = yScale.getPixelForValue(finalTargetValue);
-            
-            // วาดแถบเป้าหมาย
-            drawFloatingTooltip(
-                ctx,
-                { 
-                    x: chart.chartArea.right - 20, 
-                    y: targetYPosition 
-                },
-                `เป้าหมาย: ${finalTargetValue.toLocaleString()} ตัน/วัน`,
-                colors.target,
-                { x: chart.chartArea.right - 150, y: targetYPosition }
-            );
-            
-            // 2. แถบน้ำหนักวันล่าสุด
-            const metaDaily = chart.getDatasetMeta(1);
-            const lastDailyPoint = metaDaily.data[lastIndex];
-            
-            if (lastDailyPoint && processedData.dailyWeights[processedData.dateRange[lastIndex]]) {
-                const dailyWeight = Math.round(processedData.dailyWeights[processedData.dateRange[lastIndex]] || 0);
-                
-                drawFloatingTooltip(
-                    ctx,
-                    lastDailyPoint,
-                    `น้ำหนักวันล่าสุด: ${dailyWeight.toLocaleString()} ตัน`,
-                    colors.daily,
-                    { x: lastDailyPoint.x + 120, y: lastDailyPoint.y - 30 }
-                );
-            }
-            
-            // 3. แถบตันสะสม
-            const metaAccumulated = chart.getDatasetMeta(2);
-            const lastAccumulatedPoint = metaAccumulated.data[lastIndex];
-            
-            if (lastAccumulatedPoint && processedData.accumulatedWeights[processedData.dateRange[lastIndex]]) {
-                const accumulatedWeight = Math.round(processedData.accumulatedWeights[processedData.dateRange[lastIndex]] || 0);
-                
-                drawFloatingTooltip(
-                    ctx,
-                    lastAccumulatedPoint,
-                    `ตันสะสม: ${accumulatedWeight.toLocaleString()} ตัน`,
-                    colors.accumulated,
-                    { x: lastAccumulatedPoint.x + 120, y: lastAccumulatedPoint.y - 60 }
-                );
-            }
-            
-            floatingTooltipsInitialized = true;
-        }
-
-        // วาดแถบสี่เหลี่ยมลอย
-        function drawFloatingTooltip(ctx, dataPoint, text, color, position = null) {
-            // กำหนดตำแหน่ง
-            let tooltipX, tooltipY;
-            if (position) {
-                tooltipX = position.x;
-                tooltipY = position.y;
-            } else {
-                tooltipX = dataPoint.x + 100;
-                tooltipY = dataPoint.y;
-            }
-            
-            // ตรวจสอบขอบเขต
-            if (tooltipX > ctx.canvas.width - 200) tooltipX = ctx.canvas.width - 200;
-            if (tooltipY > ctx.canvas.height - 100) tooltipY = ctx.canvas.height - 100;
-            if (tooltipY < 50) tooltipY = 50;
-            
-            // วาดเส้นโยง (เส้นประ)
-            ctx.save();
-            ctx.beginPath();
-            ctx.setLineDash([5, 3]);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1.5;
-            ctx.moveTo(dataPoint.x, dataPoint.y);
-            ctx.lineTo(tooltipX, tooltipY);
-            ctx.stroke();
-            
-            // วาดจุดที่ปลายเส้น
-            ctx.beginPath();
-            ctx.fillStyle = color;
-            ctx.arc(dataPoint.x, dataPoint.y, 4, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // คำนวณขนาดข้อความ
-            ctx.font = 'bold 14px Sarabun';
-            const textMetrics = ctx.measureText(text);
-            const textWidth = textMetrics.width;
-            const textHeight = 20;
-            const padding = 15;
-            
-            const boxWidth = textWidth + padding * 2;
-            const boxHeight = textHeight + padding;
-            
-            // ปรับตำแหน่งให้อยู่ภายในกราฟ
-            if (tooltipX + boxWidth > ctx.canvas.width) {
-                tooltipX = ctx.canvas.width - boxWidth - 10;
-            }
-            if (tooltipY + boxHeight > ctx.canvas.height) {
-                tooltipY = ctx.canvas.height - boxHeight - 10;
-            }
-            
-            // วาดแถบสี่เหลี่ยม
-            ctx.fillStyle = color + '20'; // ความโปร่งแสง 20%
-            ctx.fillRect(tooltipX, tooltipY - boxHeight/2, boxWidth, boxHeight);
-            
-            // วาดขอบ
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.setLineDash([]);
-            ctx.strokeRect(tooltipX, tooltipY - boxHeight/2, boxWidth, boxHeight);
-            
-            // วาดข้อความ
-            ctx.fillStyle = '#333';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, tooltipX + boxWidth/2, tooltipY);
-            
-            ctx.restore();
-        }
-
         // แสดงปุ่มเลือกเขต
         function showZoneButtons() {
             const zoneButtons = document.getElementById('zoneButtons');
@@ -2005,7 +1797,6 @@
             
             if (chartInstance) {
                 chartInstance.destroy();
-                chartInstance = null;
             }
             
             const ctx = document.getElementById('sugarChart').getContext('2d');
@@ -2020,16 +1811,9 @@
             
             chartInstance = new Chart(ctx, config);
             
-            // แสดงแถบลอยถ้าเปิดอยู่
-            if (showFloatingTooltipsFlag) {
-                setTimeout(() => {
-                    showFloatingTooltips(chartInstance, processedData);
-                }, 500);
-            }
-            
-            // เพิ่ม Tooltips อัตโนมัติเมื่อกราฟโหลดเสร็จ
+            // เพิ่มการตั้งค่า Tooltip แบบโต้ตอบเมื่อกราฟโหลดเสร็จ
             setTimeout(() => {
-                showChartTooltips(chartInstance, processedData);
+                setupInteractiveTooltips();
             }, 1000);
         }
 
@@ -2071,22 +1855,6 @@
             
             const factoryName = mode === 'kranburi' ? 'ครบุรี' : 'สีคิ้ว';
             const factoryConfig = factoryConfigs[mode];
-            const startDate = startDates[mode];
-            const startDateStr = `${startDate.day}/${startDate.month}/68`;
-            
-            // คำนวณวันที่สิ้นสุดตามโหมด
-            let currentDateStr;
-            if (dateRangeMode === 'current') {
-                // โหมดปัจจุบัน: ใช้เมื่อวาน
-                const now = new Date();
-                const yesterday = new Date(now);
-                yesterday.setDate(yesterday.getDate() - 1);
-                currentDateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${(yesterday.getFullYear() + 543).toString().slice(-2)}`;
-            } else {
-                // โหมดทั้งฤดู: ใช้วันที่สิ้นสุดฤดูหีบ
-                const endDate = seasonEndDates[mode];
-                currentDateStr = `${endDate.day}/${endDate.month}/${endDate.year}`;
-            }
             
             return {
                 dailyWeights: dailyWeights,
@@ -2095,8 +1863,6 @@
                 dateRange: dateRange,
                 factoryName: factoryName,
                 factoryConfig: factoryConfig,
-                startDate: startDateStr,
-                currentDate: currentDateStr,
                 mode: mode,
                 dateRangeMode: dateRangeMode
             };
@@ -2155,12 +1921,6 @@
             
             const totalWeight = Object.values(combinedDailyWeights).reduce((a, b) => a + b, 0);
             
-            // คำนวณวันที่ปัจจุบัน
-            const now = new Date();
-            const yesterday = new Date(now);
-            yesterday.setDate(yesterday.getDate() - 1);
-            const currentDateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${(yesterday.getFullYear() + 543).toString().slice(-2)}`;
-            
             return {
                 dailyWeights: combinedDailyWeights,
                 accumulatedWeights: accumulatedWeights,
@@ -2168,8 +1928,6 @@
                 dateRange: dateRange,
                 factoryName: 'รวมทั้งสองโรงงาน',
                 factoryConfig: factoryConfigs.combined,
-                startDate: '7/12/68',
-                currentDate: currentDateStr,
                 mode: 'combined',
                 dateRangeMode: dateRangeMode
             };
@@ -2259,36 +2017,31 @@
                 accumulatedWeights[date] = accumulated;
             });
             
+            // ⭐⭐ ปรับจุดสุดท้ายให้แตะค่า MAX ถ้ายังไม่ถึง ⭐⭐
+            const zoneMax = zoneAccumulatedMaxConfigs[zone]?.max || 0;
+            const lastDate = dateRange[dateRange.length - 1];
+            const adjustedAccumulatedWeights = { ...accumulatedWeights };
+            
+            if (zoneMax > 0) {
+                // ถ้าข้อมูลจริงยังไม่ถึง MAX ให้ปรับจุดสุดท้าย
+                const currentMax = accumulatedWeights[lastDate] || 0;
+                if (currentMax < zoneMax) {
+                    adjustedAccumulatedWeights[lastDate] = zoneMax;
+                }
+            }
+            
             const totalWeight = Object.values(dailyWeights).reduce((a, b) => a + b, 0);
             
             const zoneConfig = zoneConfigs[zone];
-            const zoneAccumulatedMax = zoneAccumulatedMaxConfigs[zone] || { max: 0 };
-            const startDateStr = '7/12/68';
-            
-            // คำนวณวันที่สิ้นสุดตามโหมด
-            let currentDateStr;
-            if (dateRangeMode === 'current') {
-                // โหมดปัจจุบัน: ใช้เมื่อวาน
-                const now = new Date();
-                const yesterday = new Date(now);
-                yesterday.setDate(yesterday.getDate() - 1);
-                currentDateStr = `${yesterday.getDate()}/${yesterday.getMonth() + 1}/${(yesterday.getFullYear() + 543).toString().slice(-2)}`;
-            } else {
-                // โหมดทั้งฤดู: ใช้วันที่สิ้นสุดฤดูหีบ
-                const endDate = seasonEndDates.kranburi;
-                currentDateStr = `${endDate.day}/${endDate.month}/${endDate.year}`;
-            }
             
             return {
                 dailyWeights: dailyWeights,
-                accumulatedWeights: accumulatedWeights,
+                accumulatedWeights: adjustedAccumulatedWeights, // ⭐⭐ ใช้ข้อมูลที่ปรับแล้ว ⭐⭐
                 totalWeight: totalWeight,
                 zone: zone,
                 zoneConfig: zoneConfig,
-                zoneAccumulatedMax: zoneAccumulatedMax.max,
+                zoneAccumulatedMax: zoneMax,
                 dateRange: dateRange,
-                startDate: startDateStr,
-                currentDate: currentDateStr,
                 dateRangeMode: dateRangeMode
             };
         }
@@ -2565,6 +2318,52 @@
             return niceStep;
         }
 
+        // ⭐⭐ ฟังก์ชันคำนวณค่าสูงสุดที่สวยงามสำหรับแกน Y ⭐⭐
+        function calculateNiceMaxValue(originalMax, roundToNearest = 1000) {
+            if (originalMax <= 0) return roundToNearest;
+            
+            // ปัดเศษขึ้นเป็นหลักพันที่ใกล้เคียง
+            let niceMax = Math.ceil(originalMax / roundToNearest) * roundToNearest;
+            
+            // ตรวจสอบว่าไม่เกิน 10% จากค่าเดิม
+            if (niceMax > originalMax * 1.1) {
+                niceMax = Math.ceil(originalMax * 1.05 / roundToNearest) * roundToNearest;
+            }
+            
+            // ตรวจสอบกรณีพิเศษสำหรับค่าเล็กๆ
+            if (originalMax < 10000 && niceMax < 10000) {
+                // ปรับให้เป็นพหุคูณของ 2000 สำหรับค่า < 10,000
+                niceMax = Math.ceil(originalMax / 2000) * 2000;
+            }
+            
+            return niceMax;
+        }
+
+        // ⭐⭐ ฟังก์ชันคำนวณ stepSize ที่สวยงาม ⭐⭐
+        function calculateNiceStepSize(maxValue, desiredDivisions = 5) {
+            if (maxValue <= 0) return 1000;
+            
+            // คำนวณ stepSize พื้นฐาน
+            let stepSize = Math.ceil(maxValue / desiredDivisions / 1000) * 1000;
+            
+            // ทำให้ stepSize เป็นตัวเลขที่สวยงาม
+            const niceSteps = [1000, 2000, 5000, 10000, 20000, 25000, 50000, 100000];
+            for (let i = 0; i < niceSteps.length; i++) {
+                if (stepSize <= niceSteps[i]) {
+                    stepSize = niceSteps[i];
+                    break;
+                }
+            }
+            
+            // ตรวจสอบว่าจำนวนช่องไม่มากเกินไป
+            const actualDivisions = Math.ceil(maxValue / stepSize);
+            if (actualDivisions > 8) {
+                stepSize = Math.ceil(maxValue / 6 / 1000) * 1000;
+            }
+            
+            return stepSize;
+        }
+
         // สร้างการตั้งค่ากราฟสำหรับมุมมองทั้งหมด
         function createAllViewConfig(chartData, processedData) {
             const dateRange = processedData.dateRange;
@@ -2785,11 +2584,11 @@
             };
         }
 
-        // สร้างการตั้งค่ากราฟสำหรับมุมมองรายเขต
+        // ⭐⭐ สร้างการตั้งค่ากราฟสำหรับมุมมองรายเขต ⭐⭐
         function createZoneViewConfig(chartData, processedData) {
             const dateRange = processedData.dateRange;
             const zoneConfig = processedData.zoneConfig;
-            const zoneAccumulatedMax = processedData.zoneAccumulatedMax || 0;
+            const zoneAccumulatedMax = zoneAccumulatedMaxConfigs[selectedZone] || { max: 0 };
             const maxDailyWeight = Math.max(...Object.values(processedData.dailyWeights).filter(val => val !== undefined));
             const maxAccumulated = Math.max(...Object.values(processedData.accumulatedWeights).filter(val => val !== undefined));
             
@@ -2799,17 +2598,43 @@
                 yLeftMax = Math.ceil(maxDailyWeight / zoneConfig.stepSize) * zoneConfig.stepSize;
             }
             
-            // คำนวณค่า max สำหรับแกน Y ขวา (ตันสะสม) - ใช้ค่าที่กำหนด
+            // ⭐⭐ ฟิกซ์ค่า MAX สำหรับแกน Y ขวา ⭐⭐
             let yRightMax, yRightStepSize;
             
-            if (zoneAccumulatedMax > 0) {
-                yRightStepSize = calculateOptimalStepSize(zoneAccumulatedMax, 5);
-                yRightMax = Math.ceil(zoneAccumulatedMax / yRightStepSize) * yRightStepSize;
-                // ปัดเศษให้สวยงามลงในหลักหมื่น
-                if (yRightMax > zoneAccumulatedMax * 1.2) {
-                    yRightMax = Math.ceil(zoneAccumulatedMax / 10000) * 10000;
-                    yRightStepSize = calculateOptimalStepSize(yRightMax, 5);
+            // ใช้ค่า MAX จาก configuration เสมอ
+            if (zoneAccumulatedMax.max > 0) {
+                // ⭐⭐ ปัดเศษให้เป็นหลักพันที่ใกล้เคียงและสวยงาม ⭐⭐
+                const zoneMaxValue = zoneAccumulatedMax.max;
+                
+                // ปัดเศษขึ้นเป็นหลักพัน
+                yRightMax = Math.ceil(zoneMaxValue / 1000) * 1000;
+                
+                // ตรวจสอบว่ายังต้องเพิ่มอีกไหม (เช่น 176,364 -> 180,000)
+                if (zoneMaxValue > yRightMax) {
+                    yRightMax += 1000;
                 }
+                
+                // ตรวจสอบว่าไม่เกิน 10% จากค่าเดิม
+                if (yRightMax > zoneMaxValue * 1.1) {
+                    yRightMax = Math.ceil(zoneMaxValue * 1.1 / 1000) * 1000;
+                }
+                
+                // ⭐⭐ แบ่งช่องอัตโนมัติ (5-6 ช่อง) ⭐⭐
+                const desiredDivisions = 5;
+                yRightStepSize = Math.ceil(yRightMax / desiredDivisions / 1000) * 1000;
+                
+                // ตรวจสอบว่า stepSize ไม่น้อยเกินไป
+                if (yRightStepSize < 1000) yRightStepSize = 1000;
+                
+                // ปรับ yRightMax ให้เป็นพหุคูณของ yRightStepSize
+                yRightMax = Math.ceil(zoneMaxValue / yRightStepSize) * yRightStepSize;
+                
+                // ตรวจสอบว่าไม่น้อยกว่าค่า MAX จริง
+                if (yRightMax < zoneMaxValue) {
+                    yRightMax += yRightStepSize;
+                }
+                
+                // ตัวอย่าง: 176,364 -> 180,000, stepSize = 36,000 (180,000/5)
             } else if (maxAccumulated > 0) {
                 yRightStepSize = calculateOptimalStepSize(maxAccumulated, 5);
                 yRightMax = Math.ceil(maxAccumulated / yRightStepSize) * yRightStepSize;
@@ -2870,7 +2695,7 @@
                                 }
                             }
                         },
-                        // แกน Y ขวา: ตันสะสม
+                        // ⭐⭐ แกน Y ขวา: ตันสะสม (ปรับใหม่) ⭐⭐
                         'y-accumulated': {
                             type: 'linear',
                             position: 'right',
@@ -2887,10 +2712,34 @@
                             ticks: {
                                 stepSize: yRightStepSize,
                                 callback: function(value) {
+                                    // ⭐⭐ แสดงค่า MAX พิเศษ ⭐⭐
+                                    const zoneMaxValue = zoneAccumulatedMax.max;
+                                    if (zoneMaxValue > 0 && Math.abs(value - zoneMaxValue) < (yRightStepSize * 0.1)) {
+                                        return `MAX\n${zoneMaxValue.toLocaleString()}`;
+                                    }
+                                    
+                                    // แสดงเป็น K (พันตัน) ถ้าค่าเกิน 10,000
+                                    if (value >= 10000) {
+                                        return (value / 1000).toFixed(0) + 'K';
+                                    }
                                     return value.toLocaleString();
                                 },
                                 font: {
-                                    size: 12
+                                    size: 12,
+                                    weight: function(context) {
+                                        const zoneMaxValue = zoneAccumulatedMax.max;
+                                        if (zoneMaxValue > 0 && Math.abs(context.value - zoneMaxValue) < (yRightStepSize * 0.1)) {
+                                            return 'bold';
+                                        }
+                                        return 'normal';
+                                    }
+                                },
+                                color: function(context) {
+                                    const zoneMaxValue = zoneAccumulatedMax.max;
+                                    if (zoneMaxValue > 0 && Math.abs(context.value - zoneMaxValue) < (yRightStepSize * 0.1)) {
+                                        return '#FF0000'; // สีแดงสำหรับค่า MAX
+                                    }
+                                    return '#666666';
                                 }
                             },
                             grid: {
@@ -2954,6 +2803,13 @@
                                         label += `น้ำหนักรายวัน ${value.toLocaleString()} ตัน`;
                                     } else if (context.datasetIndex === 2) {
                                         label += `ตันสะสม ${value.toLocaleString()} ตัน`;
+                                        
+                                        // ⭐⭐ แสดงเปอร์เซ็นต์เทียบกับ MAX ⭐⭐
+                                        const zoneMaxValue = zoneAccumulatedMaxConfigs[selectedZone]?.max;
+                                        if (zoneMaxValue && zoneMaxValue > 0) {
+                                            const percentage = ((value / zoneMaxValue) * 100).toFixed(1);
+                                            label += ` (${percentage}% ของเป้าหมาย)`;
+                                        }
                                     }
                                     
                                     return label;
@@ -2990,7 +2846,7 @@
             document.getElementById('totalWeightDashboard').textContent = Math.round(totalWeightInTons).toLocaleString();
         }
 
-        // อัพเดทหัวข้อกราฟ
+        // อัพเดทหัวข้อกราฟ - แก้ไขให้แสดงวันที่ปัจจุบัน-1
         function updateChartTitle(processedData) {
             const chartTitleArea = document.getElementById('chartTitleArea');
             const chartSubtitle = document.getElementById('chartSubtitle');
@@ -2998,30 +2854,42 @@
             
             chartTitleArea.style.display = 'block';
             
+            // คำนวณวันที่เมื่อวาน (Today - 1)
+            const now = new Date();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            // แปลงเป็นปี พ.ศ. และเอาแค่ 2 หลักท้าย
+            const day = yesterday.getDate().toString().padStart(2, '0');
+            const month = (yesterday.getMonth() + 1).toString().padStart(2, '0');
+            const year = (yesterday.getFullYear() + 543).toString().slice(-2); // เอาแค่ 2 หลักท้าย
+            
+            const dateText = `${day}/${month}/${year}`;
+            
             if (currentView === 'all') {
                 if (currentMode === 'combined') {
                     chartSubtitle.textContent = `รวมทั้งสองโรงงาน`;
                 } else {
                     chartSubtitle.textContent = `โรงงาน${processedData.factoryName}`;
                 }
-                // แก้ไข: วันที่แสดง Today - 1
-                chartDate.textContent = `วันที่ ${processedData.startDate} - ${processedData.currentDate}`;
+                // แสดงวันที่ปัจจุบัน-1
+                chartDate.textContent = dateText;
             } else {
-                // แก้ไข: เปลี่ยนจาก ประจำเขตxx เป็น เขตxx
                 chartSubtitle.textContent = `เขต ${processedData.zone}`;
-                // แก้ไข: วันที่แสดง Today - 1
-                chartDate.textContent = `วันที่ ${processedData.startDate} - ${processedData.currentDate}`;
+                // แสดงวันที่ปัจจุบัน-1
+                chartDate.textContent = dateText;
             }
         }
 
-        // สร้าง legend สำหรับเขต
+        // ⭐⭐ สร้าง legend สำหรับเขต ⭐⭐
         function createZoneLegend() {
             const zoneLegend = document.getElementById('zoneLegend');
             
             if (currentView === 'byZone' && selectedZone) {
-                const zoneColor = getZoneColor(selectedZone, false);  // ← ใช้ฟังก์ชัน getZoneColor แทน getChartColor
-                const accumulatedColor = getAccumulatedLineColor(null, selectedZone); // ← ใช้ฟังก์ชัน getAccumulatedLineColor
+                const zoneColor = getZoneColor(selectedZone, false);
+                const accumulatedColor = getAccumulatedLineColor(null, selectedZone);
                 const targetValue = currentView === 'all' ? factoryConfigs[currentMode].target : zoneConfigs[selectedZone].target;
+                const zoneMax = zoneAccumulatedMaxConfigs[selectedZone]?.max || 0;
                 
                 let legendHTML = '';
                 legendHTML += `
@@ -3031,7 +2899,7 @@
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: rgba(255, 152, 0, 0.3)"></div>
-                        <span>เป้าหมาย: ${targetValue.toLocaleString()} ตัน/วัน</span>
+                        <span>เป้าหมายรายวัน: ${targetValue.toLocaleString()} ตัน/วัน</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background-color: ${accumulatedColor}"></div>
@@ -3039,11 +2907,21 @@
                     </div>
                 `;
                 
+                // ⭐⭐ เพิ่มแสดงค่า MAX ใน legend ⭐⭐
+                if (zoneMax > 0) {
+                    legendHTML += `
+                        <div class="legend-item">
+                            <div class="legend-color" style="background-color: #FF0000; border: 1px solid #FF0000;"></div>
+                            <span><strong>เป้าหมายสะสม MAX: ${zoneMax.toLocaleString()} ตัน</strong></span>
+                        </div>
+                    `;
+                }
+                
                 zoneLegend.innerHTML = legendHTML;
                 zoneLegend.style.display = 'flex';
             } else if (currentView === 'all') {
                 const modeColor = getChartColor(currentMode, false);
-                const accumulatedColor = getAccumulatedLineColor(currentMode); // ← ใช้ฟังก์ชัน getAccumulatedLineColor
+                const accumulatedColor = getAccumulatedLineColor(currentMode);
                 const targetValue = factoryConfigs[currentMode].target;
                 
                 let legendHTML = '';
@@ -3069,40 +2947,229 @@
             }
         }
 
-        // ฟังก์ชันแสดง Tooltips อัตโนมัติ
-        function showChartTooltips(chart, processedData) {
-            if (!chart || !chart.tooltip) return;
+        // ฟังก์ชันใหม่: แสดง Tooltip แบบโต้ตอบด้วยการคลิกหรือชี้จุดต่างๆ
+        function setupInteractiveTooltips() {
+            const chartCanvas = document.getElementById('sugarChart');
+            if (!chartCanvas) return;
             
-            const tooltip = chart.tooltip;
-            const lastIndex = processedData.dateRange.length - 1;
+            // เพิ่มกล่องคำอธิบายการใช้งาน
+            const tooltipGuide = document.createElement('div');
+            tooltipGuide.id = 'tooltipGuide';
+            tooltipGuide.style.cssText = `
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                border-left: 4px solid var(--primary);
+                z-index: 100;
+                max-width: 300px;
+                display: none;
+            `;
             
-            // กำหนดตำแหน่งสำหรับแสดง tooltips
-            const meta = chart.getDatasetMeta(1); // ข้อมูลน้ำหนักรายวัน
-            const lastDataPoint = meta.data[lastIndex];
+            tooltipGuide.innerHTML = `
+                <h4 style="margin-top: 0; color: var(--primary);">
+                    <i class="fas fa-mouse-pointer"></i> คลิกเพื่อดูข้อมูล
+                </h4>
+                <div style="margin-bottom: 10px;">
+                    <strong><i class="fas fa-chart-line"></i> เส้นสะสม:</strong> คลิกที่เส้นเพื่อดูตันสะสม
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong><i class="fas fa-chart-bar"></i> แท่งกราฟ:</strong> คลิกที่แท่งเพื่อดูน้ำหนักรายวัน
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong><i class="fas fa-bullseye"></i> แกน Y:</strong> คลิกที่ตัวเลขเพื่อดูเป้าหมาย
+                </div>
+                <div style="font-size: 0.8rem; color: var(--gray);">
+                    <i class="fas fa-info-circle"></i> ข้อมูลจะแสดงเป็น Tooltip ลอย
+                </div>
+            `;
             
-            if (lastDataPoint) {
-                // แสดง tooltip สำหรับน้ำหนักรายวันล่าสุด
-                tooltip.setActiveElements([
-                    {
-                        datasetIndex: 1,
-                        index: lastIndex
-                    },
-                    {
-                        datasetIndex: 2,
-                        index: lastIndex
-                    }
-                ], {
-                    x: lastDataPoint.x,
-                    y: lastDataPoint.y
-                });
-                
-                chart.update();
-                
-                // ซ่อน tooltip หลังจาก 3 วินาที
+            chartCanvas.parentNode.style.position = 'relative';
+            chartCanvas.parentNode.appendChild(tooltipGuide);
+            
+            // แสดงคำแนะนำเมื่อโหลดกราฟเสร็จ
+            setTimeout(() => {
+                tooltipGuide.style.display = 'block';
                 setTimeout(() => {
-                    tooltip.setActiveElements([], { x: 0, y: 0 });
-                    chart.update();
+                    tooltipGuide.style.display = 'none';
+                }, 5000);
+            }, 1000);
+            
+            // ฟังก์ชันแสดง Tooltip ตามประเภท
+            function showCustomTooltip(type, value, x, y, date = null) {
+                const tooltipBox = document.createElement('div');
+                tooltipBox.className = 'custom-tooltip';
+                tooltipBox.style.cssText = `
+                    position: absolute;
+                    background: rgba(0, 0, 0, 0.85);
+                    color: white;
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    z-index: 1000;
+                    pointer-events: none;
+                    max-width: 300px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    border-left: 4px solid;
+                    transform: translate(-50%, -100%);
+                    margin-top: -10px;
+                `;
+                
+                let title = '';
+                let content = '';
+                let borderColor = '';
+                
+                if (type === 'accumulated') {
+                    title = '<i class="fas fa-chart-line"></i> ตันสะสม';
+                    borderColor = '#1a237e';
+                    if (date) {
+                        content = `<strong>วันที่ ${date}</strong><br>ตันสะสม: <span style="color: #4FC3F7">${value.toLocaleString()} ตัน</span>`;
+                    } else {
+                        content = `ตันสะสม: <span style="color: #4FC3F7">${value.toLocaleString()} ตัน</span>`;
+                    }
+                } else if (type === 'daily') {
+                    title = '<i class="fas fa-chart-bar"></i> น้ำหนักรายวัน';
+                    borderColor = '#2196F3';
+                    if (date) {
+                        content = `<strong>วันที่ ${date}</strong><br>น้ำหนักรายวัน: <span style="color: #4FC3F7">${value.toLocaleString()} ตัน</span>`;
+                    } else {
+                        content = `น้ำหนักรายวัน: <span style="color: #4FC3F7">${value.toLocaleString()} ตัน</span>`;
+                    }
+                } else if (type === 'target') {
+                    title = '<i class="fas fa-bullseye"></i> เป้าหมาย';
+                    borderColor = '#FF9800';
+                    content = `เป้าหมายรายวัน: <span style="color: #FFD54F">${value.toLocaleString()} ตัน</span>`;
+                }
+                
+                tooltipBox.style.borderLeftColor = borderColor;
+                tooltipBox.innerHTML = `
+                    <div style="margin-bottom: 8px; color: ${borderColor}; font-weight: bold;">${title}</div>
+                    <div>${content}</div>
+                    <div style="position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); 
+                               width: 0; height: 0; border-left: 8px solid transparent; 
+                               border-right: 8px solid transparent; border-top: 8px solid ${borderColor};"></div>
+                `;
+                
+                tooltipBox.style.left = x + 'px';
+                tooltipBox.style.top = y + 'px';
+                
+                document.body.appendChild(tooltipBox);
+                
+                // ซ่อน Tooltip หลังจาก 3 วินาที
+                setTimeout(() => {
+                    if (tooltipBox.parentNode) {
+                        tooltipBox.parentNode.removeChild(tooltipBox);
+                    }
                 }, 3000);
+                
+                return tooltipBox;
+            }
+            
+            // ตั้งค่าการโต้ตอบกับกราฟ
+            chartCanvas.addEventListener('click', function(event) {
+                if (!chartInstance) return;
+                
+                const rect = chartCanvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                const points = chartInstance.getElementsAtEventForMode(
+                    event, 'nearest', { intersect: true }, true
+                );
+                
+                if (points && points.length > 0) {
+                    const firstPoint = points[0];
+                    const datasetIndex = firstPoint.datasetIndex;
+                    const elementIndex = firstPoint.index;
+                    
+                    if (datasetIndex === 2) { // เส้นสะสม
+                        const accumulatedValue = chartInstance.data.datasets[2].data[elementIndex];
+                        const date = chartInstance.data.labels[elementIndex];
+                        showCustomTooltip('accumulated', accumulatedValue, event.clientX, event.clientY, date);
+                    } else if (datasetIndex === 1) { // น้ำหนักรายวัน
+                        const dailyValue = chartInstance.data.datasets[1].data[elementIndex];
+                        const date = chartInstance.data.labels[elementIndex];
+                        showCustomTooltip('daily', dailyValue, event.clientX, event.clientY, date);
+                    } else if (datasetIndex === 0) { // เป้าหมาย
+                        const targetValue = chartInstance.data.datasets[0].data[elementIndex];
+                        showCustomTooltip('target', targetValue, event.clientX, event.clientY);
+                    }
+                }
+            });
+            
+            // เพิ่ม event listener สำหรับการชี้เมาส์ (hover)
+            chartCanvas.addEventListener('mousemove', function(event) {
+                if (!chartInstance) return;
+                
+                const rect = chartCanvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                // ตรวจสอบว่าชี้ที่เส้นแกน Y ซ้าย (เป้าหมายรายวัน) หรือไม่
+                const chartArea = chartInstance.chartArea;
+                const yAxisLeftX = chartArea.left;
+                
+                if (x >= yAxisLeftX - 20 && x <= yAxisLeftX + 20) {
+                    // ชี้ใกล้แกน Y ซ้าย
+                    chartCanvas.style.cursor = 'pointer';
+                } else {
+                    chartCanvas.style.cursor = 'default';
+                }
+            });
+            
+            // เพิ่มการคลิกที่แกน Y เพื่อดูเป้าหมาย
+            chartCanvas.addEventListener('click', function(event) {
+                if (!chartInstance) return;
+                
+                const rect = chartCanvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                const chartArea = chartInstance.chartArea;
+                const yAxisLeftX = chartArea.left;
+                
+                // ตรวจสอบว่าคลิกที่แกน Y ซ้ายหรือไม่
+                if (x >= yAxisLeftX - 30 && x <= yAxisLeftX + 30) {
+                    let targetValue;
+                    
+                    if (currentView === 'all') {
+                        if (currentMode === 'combined') {
+                            targetValue = factoryConfigs.combined.target;
+                        } else {
+                            targetValue = factoryConfigs[currentMode].target;
+                        }
+                    } else {
+                        targetValue = zoneConfigs[selectedZone].target;
+                    }
+                    
+                    showCustomTooltip('target', targetValue, event.clientX, event.clientY);
+                }
+                
+                // ตรวจสอบว่าคลิกที่แกน Y ขวาหรือไม่ (ตันสะสม)
+                const yAxisRightX = chartArea.right;
+                if (x >= yAxisRightX - 30 && x <= yAxisRightX + 30) {
+                    const processedData = getCurrentProcessedData();
+                    if (processedData && processedData.totalWeight) {
+                        showCustomTooltip('accumulated', processedData.totalWeight, event.clientX, event.clientY, 'สะสมทั้งหมด');
+                    }
+                }
+            });
+        }
+
+        // ฟังก์ชันช่วยเหลือ: ดึงข้อมูลที่ประมวลผลปัจจุบัน
+        function getCurrentProcessedData() {
+            if (currentView === 'all') {
+                if (currentMode === 'combined') {
+                    return processCombinedData(currentDateRangeMode);
+                } else {
+                    return processDataForAllView(currentMode, currentDateRangeMode);
+                }
+            } else {
+                if (!selectedZone) return null;
+                return processDataForZoneView(selectedZone, currentDateRangeMode);
             }
         }
 
@@ -3122,7 +3189,7 @@
             const ctx = tempCanvas.getContext('2d');
             
             // ตั้งค่าขนาด canvas
-            tempCanvas.width = chartCanvas.width + 200; // เพิ่มพื้นที่สำหรับแถบลอย
+            tempCanvas.width = chartCanvas.width;
             tempCanvas.height = chartCanvas.height + 150;
             
             // วาดพื้นหลังสีขาว
@@ -3148,7 +3215,6 @@
                     subtitleText = `โรงงาน${factoryName}`;
                 }
             } else {
-                // แก้ไข: เปลี่ยนจาก ประจำเขตxx เป็น เขตxx
                 subtitleText = `เขต ${selectedZone}`;
             }
             ctx.fillText(subtitleText, tempCanvas.width / 2, 70);
@@ -3157,137 +3223,21 @@
             ctx.fillStyle = '#6c757d';
             ctx.font = '16px Sarabun';
             
+            // คำนวณวันเมื่อวาน
             const now = new Date();
             const yesterday = new Date(now);
             yesterday.setDate(yesterday.getDate() - 1);
             
-            const currentDay = yesterday.getDate();
-            const currentMonth = yesterday.getMonth() + 1;
+            const currentDay = yesterday.getDate().toString().padStart(2, '0');
+            const currentMonth = (yesterday.getMonth() + 1).toString().padStart(2, '0');
             const currentYear = (yesterday.getFullYear() + 543).toString().slice(-2);
             
-            let startDateStr;
-            if (currentView === 'all') {
-                if (currentMode === 'combined' || currentMode === 'kranburi') {
-                    startDateStr = '7/12/68';
-                } else {
-                    startDateStr = '9/12/68';
-                }
-            } else {
-                startDateStr = '7/12/68';
-            }
-            
-            // แก้ไข: วันที่แสดง Today - 1
-            const dateText = `วันที่ ${startDateStr} - ${currentDay}/${currentMonth}/${currentYear}`;
+            // แสดงเป็น DD/MM/YY
+            const dateText = `${currentDay}/${currentMonth}/${currentYear}`;
             ctx.fillText(dateText, tempCanvas.width / 2, 95);
             
             // วาดกราฟ
             ctx.drawImage(chartCanvas, 0, 120);
-            
-            // วาดแถบลอยถ้าเปิดอยู่
-            if (showFloatingTooltipsFlag && chartInstance) {
-                const processedData = getCurrentProcessedData();
-                const colors = getTooltipColors(processedData.mode, processedData.zone);
-                const lastIndex = processedData.dateRange.length - 1;
-                
-                // รับข้อมูลจากกราฟ
-                const metaDaily = chartInstance.getDatasetMeta(1);
-                const lastDailyPoint = metaDaily.data[lastIndex];
-                const metaAccumulated = chartInstance.getDatasetMeta(2);
-                const lastAccumulatedPoint = metaAccumulated.data[lastIndex];
-                
-                // วาดแถบเป้าหมาย
-                const targetValue = currentView === 'all' ? 
-                    (processedData.mode === 'combined' ? factoryConfigs.combined.target : factoryConfigs[processedData.mode].target) :
-                    zoneConfigs[processedData.zone].target;
-                
-                const targetY = 120 + (chartCanvas.height * 0.3); // ตำแหน่งประมาณบนแกน Y
-                const targetX = tempCanvas.width - 100;
-                
-                // วาดเส้นโยงและแถบเป้าหมาย
-                ctx.save();
-                ctx.beginPath();
-                ctx.setLineDash([5, 3]);
-                ctx.strokeStyle = colors.target;
-                ctx.lineWidth = 1.5;
-                ctx.moveTo(targetX - 80, targetY);
-                ctx.lineTo(targetX, targetY);
-                ctx.stroke();
-                
-                // วาดแถบสี่เหลี่ยมเป้าหมาย
-                ctx.fillStyle = colors.target + '20';
-                ctx.fillRect(targetX + 10, targetY - 20, 180, 40);
-                ctx.strokeStyle = colors.target;
-                ctx.lineWidth = 2;
-                ctx.setLineDash([]);
-                ctx.strokeRect(targetX + 10, targetY - 20, 180, 40);
-                
-                ctx.fillStyle = '#333';
-                ctx.font = 'bold 14px Sarabun';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(`เป้าหมาย: ${targetValue.toLocaleString()} ตัน/วัน`, targetX + 100, targetY);
-                ctx.restore();
-                
-                // วาดแถบน้ำหนักวันล่าสุด (ถ้ามีข้อมูล)
-                if (lastDailyPoint && processedData.dailyWeights[processedData.dateRange[lastIndex]]) {
-                    const dailyWeight = Math.round(processedData.dailyWeights[processedData.dateRange[lastIndex]] || 0);
-                    const pointX = lastDailyPoint.x;
-                    const pointY = lastDailyPoint.y + 120;
-                    
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.setLineDash([5, 3]);
-                    ctx.strokeStyle = colors.daily;
-                    ctx.lineWidth = 1.5;
-                    ctx.moveTo(pointX, pointY);
-                    ctx.lineTo(pointX + 100, pointY - 30);
-                    ctx.stroke();
-                    
-                    ctx.fillStyle = colors.daily + '20';
-                    ctx.fillRect(pointX + 110, pointY - 50, 200, 40);
-                    ctx.strokeStyle = colors.daily;
-                    ctx.lineWidth = 2;
-                    ctx.setLineDash([]);
-                    ctx.strokeRect(pointX + 110, pointY - 50, 200, 40);
-                    
-                    ctx.fillStyle = '#333';
-                    ctx.font = 'bold 14px Sarabun';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(`น้ำหนักวันล่าสุด: ${dailyWeight.toLocaleString()} ตัน`, pointX + 210, pointY - 30);
-                    ctx.restore();
-                }
-                
-                // วาดแถบตันสะสม (ถ้ามีข้อมูล)
-                if (lastAccumulatedPoint && processedData.accumulatedWeights[processedData.dateRange[lastIndex]]) {
-                    const accumulatedWeight = Math.round(processedData.accumulatedWeights[processedData.dateRange[lastIndex]] || 0);
-                    const pointX = lastAccumulatedPoint.x;
-                    const pointY = lastAccumulatedPoint.y + 120;
-                    
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.setLineDash([5, 3]);
-                    ctx.strokeStyle = colors.accumulated;
-                    ctx.lineWidth = 1.5;
-                    ctx.moveTo(pointX, pointY);
-                    ctx.lineTo(pointX + 100, pointY - 60);
-                    ctx.stroke();
-                    
-                    ctx.fillStyle = colors.accumulated + '20';
-                    ctx.fillRect(pointX + 110, pointY - 80, 200, 40);
-                    ctx.strokeStyle = colors.accumulated;
-                    ctx.lineWidth = 2;
-                    ctx.setLineDash([]);
-                    ctx.strokeRect(pointX + 110, pointY - 80, 200, 40);
-                    
-                    ctx.fillStyle = '#333';
-                    ctx.font = 'bold 14px Sarabun';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(`ตันสะสม: ${accumulatedWeight.toLocaleString()} ตัน`, pointX + 210, pointY - 60);
-                    ctx.restore();
-                }
-            }
             
             // สร้างลิงก์ดาวน์โหลด
             const link = document.createElement('a');
@@ -3305,8 +3255,8 @@
             const yesterday = new Date(now);
             yesterday.setDate(yesterday.getDate() - 1);
             
-            const day = yesterday.getDate();
-            const month = yesterday.getMonth() + 1;
+            const day = yesterday.getDate().toString().padStart(2, '0');
+            const month = (yesterday.getMonth() + 1).toString().padStart(2, '0');
             const year = yesterday.getFullYear() + 543;
             
             let reportContent = `รายงานอ้อยเข้าหีบ ปี 2569\n`;
@@ -3375,15 +3325,6 @@
                 if (chartInstance) {
                     chartInstance.destroy();
                     chartInstance = null;
-                }
-                
-                // รีเซ็ตสถานะแถบลอย
-                showFloatingTooltipsFlag = false;
-                floatingTooltipsInitialized = false;
-                const btn = document.getElementById('toggleTooltipsBtn');
-                if (btn) {
-                    btn.innerHTML = '<i class="fas fa-layer-group"></i> แสดงแถบข้อมูล';
-                    btn.classList.remove('active');
                 }
             }
         }
