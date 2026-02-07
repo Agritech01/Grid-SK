@@ -3,113 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sugar Cane Dashboard 68/69</title>
+    <title>Executive Dashboard - Cane Production 68/69</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary: #2e7d32;
-            --secondary: #1976d2;
-            --bg-light: #f4f7f6;
+            --executive-blue: #1a237e; /* น้ำเงินเข้ม สุขุม */
+            --accent-gold: #c5a059;    /* ทองหม่น สำหรับเน้นความสำคัญ */
+            --success-green: #2e7d32;
+            --bg-gray: #f8f9fa;
+            --text-dark: #202124;
             --white: #ffffff;
         }
+        
         body {
-            font-family: 'Sarabun', Arial, sans-serif;
-            background-color: var(--bg-light);
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-gray);
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 0;
+            color: var(--text-dark);
         }
-        .container {
-            max-width: 1280px;
+
+        /* สำหรับพิมพ์หรือบันทึกรูป */
+        #report-area {
+            padding: 30px;
+            max-width: 1400px;
             margin: auto;
-            background: var(--white);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+
         header {
-            text-align: center;
-            border-bottom: 3px solid var(--primary);
-            padding-bottom: 15px;
-            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--executive-blue);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
         }
-        .upload-section {
+
+        .title-group h1 {
+            margin: 0;
+            font-size: 24px;
+            color: var(--executive-blue);
+        }
+
+        .title-group p {
+            margin: 5px 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Upload Section */
+        .upload-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
-        }
-        .drop-zone {
-            border: 2px dashed #ccc;
+            background: #fff;
+            padding: 20px;
             border-radius: 8px;
-            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .upload-box {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
             text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-            background: #fafafa;
+            transition: all 0.3s;
+            background: #fdfdfd;
         }
-        .drop-zone:hover {
-            border-color: var(--primary);
-            background: #f0fdf4;
+
+        .upload-box.ready {
+            border-color: var(--success-green);
+            background: #f1f8e9;
         }
-        .drop-zone.active {
-            border-color: var(--secondary);
-            background: #e3f2fd;
-        }
-        .file-info {
-            font-size: 0.85em;
-            color: #666;
-            margin-top: 10px;
-        }
-        .btn-group {
+
+        .upload-box h3 { margin-top: 0; font-size: 16px; }
+
+        /* Dashboard Elements */
+        .zone-selector {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 25px;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: #fff;
             padding: 15px;
-            background: #eee;
             border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
+
         .btn-zone {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 20px;
-            background: var(--white);
+            padding: 8px 18px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
             cursor: pointer;
+            font-size: 14px;
             font-weight: bold;
-            transition: 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            color: #555;
+            transition: 0.3s;
         }
-        .btn-zone:hover { background: var(--primary); color: white; }
-        .btn-zone.active { background: var(--primary); color: white; }
-        
-        .dashboard-grid {
+
+        .btn-zone:hover { background: #eee; }
+        .btn-zone.active {
+            background: var(--executive-blue);
+            color: white;
+            border-color: var(--executive-blue);
+        }
+
+        .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
-            margin-top: 25px;
+            margin-bottom: 25px;
         }
-        .stat-card {
+
+        .metric-card {
             background: var(--white);
             padding: 20px;
-            border-radius: 10px;
-            border-left: 5px solid var(--primary);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 8px;
             text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--accent-gold);
         }
-        .stat-card h4 { margin: 0; color: #666; font-size: 0.9em; }
-        .stat-card p { margin: 10px 0 0; font-size: 1.5em; font-weight: bold; color: var(--primary); }
-        
-        #chart-container {
+
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--executive-blue);
+        }
+
+        .chart-wrapper {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: 550px;
             position: relative;
-            height: 500px;
-            margin-top: 30px;
         }
-        .hidden { display: none; }
-        .loader { text-align: center; padding: 20px; font-weight: bold; color: var(--secondary); }
+
+        .action-bar {
+            margin-top: 30px;
+            text-align: right;
+        }
+
+        .btn-save {
+            background: var(--success-green);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-save:hover { opacity: 0.9; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .status-pending { background: #ffe0b2; color: #e65100; }
+        .status-complete { background: #c8e6c9; color: #1b5e20; }
     </style>
 </head>
 <body>
+
+<div id="report-area">
+    <header>
+        <div class="title-group">
+            <h1>รายงานสรุปยอดอ้อยเข้าหีบ ปีฤดูกาล 68/69</h1>
+            <p>ข้อมูล ณ วันที่: <span id="current-date">-</span> | วิเคราะห์ข้อมูลรายวันและพยากรณ์ยอดหีบ</p>
+        </div>
+        <div id="file-status-indicator">
+            <span class="status-badge status-pending" id="process-status">รอการอัปโหลดไฟล์</span>
+        </div>
+    </header>
+
+    <div class="upload-container no-print">
+        <div class="upload-box" id="target-drop">
+            <h3>1. ไฟล์ DATA TARGET</h3>
+            <input type="file" id="file-target" accept=".csv" hidden>
+            <button onclick="document.getElementById('file-target').click()">เลือกไฟล์ CSV</button>
+            <div class="file-info" id="target-name">ยังไม่ได้เลือกไฟล์ (บังคับ)</div>
+        </div>
+        <div class="upload-box" id="actual-drop">
+            <h3>2. ไฟล์รายงานอ้อยเข้าหีบ 68/69</h3>
+            <input type="file" id="file-actual" accept=".csv" hidden>
+            <button onclick="document.getElementById('file-actual').click()">เลือกไฟล์ CSV</button>
+            <div class="file-info" id="actual-name">ยังไม่ได้เลือกไฟล์ (บังคับ)</div>
+        </div>
+    </div>
