@@ -301,7 +301,141 @@
     document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH', {
         year: 'numeric', month: 'long', day: 'numeric'
     });
+// 2. ฟังก์ชันหลักในการอ่านไฟล์ทั้งสอง
+    async function parseAllFiles() {
+        const targetFile = fileInputs.target.files[0];
+        const actualFile = fileInputs.actual.files[0];
 
+        try {
+            // อ่านไฟล์ Target
+            targetData = await parseCSV(targetFile);
+            // อ่านไฟล์รายงานเข้าหีบ
+            actualData = await parseCSV(actualFile);
+
+            console.log("Data loaded successfully");
+            initDashboard(); // เริ่มสร้าง UI หลังจากโหลดข้อมูลเสร็จ
+        } catch (error) {
+            alert("เกิดข้อผิดพลาดในการอ่านไฟล์: " + error);
+            console.error(error);
+        }
+    }
+
+    // Helper: สั่ง parse CSV เป็น JSON
+    function parseCSV(file) {
+        return new Promise((resolve, reject) => {
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                dynamicTyping: true,
+                complete: (results) => resolve(results.data),
+                error: (error) => reject(error)
+            });
+        });
+    }
+
+    // 3. เตรียมข้อมูลสำหรับแดชบอร์ด
+    const ZONES = ['1', '2', '3', '4', '5', '6', '7', '8', '10', '11', '12', '21', 'C1', 'C2', 'C3', 'C4'];
+    
+    function initDashboard() {
+        const zoneBtnsContainer = document.getElementById('zone-btns');
+        zoneBtnsContainer.innerHTML = ''; // ล้างค่าเก่า
+
+        // สร้างปุ่ม "รวมทุกเขต"
+        const btnAll = createZoneBtn("รวมทุกเขต");
+        zoneBtnsContainer.appendChild(btnAll);
+
+        // สร้างปุ่มรายเขต
+        ZONES.forEach(z => {
+            zoneBtnsContainer.appendChild(createZoneBtn(z));
+        });
+
+        document.getElementById('dashboard-content').classList.remove('hidden');
+        updateDashboard("รวมทุกเขต"); // แสดงผลครั้งแรก
+    }
+
+    function createZoneBtn(label) {
+        const btn = document.createElement('button');
+        btn.className = 'btn-zone';
+        btn.innerText = label;
+        btn.onclick = () => {
+            document.querySelectorAll('.btn-zone').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateDashboard(label);
+        };
+        if(label === "รวมทุกเขต") btn.classList.add('active');
+        return btn;
+    }
+
+    // 4. ฟังก์ชันคำนวณข้อมูลตามเขตที่เลือก
+    function updateDashboard(zone) {
+        selectedZone = zone;
+        
+        // --- ส่วนที่ 1: ดึงเป้าหมาย (Target) ---
+        let targetMax = 0;
+        let std14 = 0, std5 = 0, std21 = 0;
+
+        if (zone === "รวมทุกเขต") {
+            targetMax = targetData.reduce((sum, row) => sum + (Number(row["เป้าหมาย MAX"]) || 0), 0);
+            std14 = targetData.reduce((sum, row) => sum + (Number(row["STD 14/12"]) || 0), 0);
+            std5 = targetData.reduce((sum, row) => sum + (Number(row["STD 5/1"]) || 0), 0);
+            std21 = targetData.reduce((sum, row) => sum + (Number(row["STD 21/1"]) || 0), 0);
+        } else {
+            const row = targetData.find(r => String(r["เขต"]) === zone);
+            if (row) {
+                targetMax = Number(row["เป้าหมาย MAX"]) || 0;
+                std14 = Number(row["STD 14/12"]) || 0;
+                std5 = Number(row["STD 5/1"]) || 0;
+                std21 = Number(row["STD 21/1"]) || 0;
+            }
+        }
+
+        // --- ส่วนที่ 2: ดึงข้อมูลจริง (Actual) ---
+        // สร้าง Array ของวันที่ (Column name ในไฟล์ Actual)
+        const dateHeaders = Object.keys(actualData[0]).filter(h => h !== "เขต");
+        const dailyActual = dateHeaders.map(date => {
+            let sum = 0;
+            actualData.forEach(row => {
+                if (zone === "รวมทุกเขต" || String(row["เขต"]) === zone) {
+                    sum += (Number(row[date]) || 0);
+                }
+            });
+            return { date, value: sum };
+        });
+
+        // --- ส่วนที่ 3: คำนวณยอดสะสมและพยากรณ์ (Accumulated & Forecast) ---
+        let runningSum = 0;
+        let lastActualIndex = -1;
+        const accumulatedData = dailyActual.map((d, index) => {
+            if (d.value > 0) {
+                runningSum += d.value;
+                lastActualIndex = index;
+                return runningSum;
+            }
+            return null; // วันที่ยังไม่มีข้อมูลจริง
+        });
+
+        // คำนวณ Forecast สำหรับวันที่เหลือ
+        const remainingTarget = targetMax - runningSum;
+        const remainingDays = dailyActual.length - (lastActualIndex + 1);
+        const avgNeeded = remainingDays > 0 ? (remainingTarget / remainingDays) : 0;
+
+        const forecastData = dailyActual.map((d, index) => {
+            if (index < lastActualIndex) return null;
+            if (index === lastActualIndex) return runningSum;
+            runningSum += avgNeeded;
+            return runningSum;
+        });
+
+        // อัปเดตการ์ดตัวเลข (Metrics)
+        document.getElementById('val-target').innerText = targetMax.toLocaleString();
+        document.getElementById('val-actual').innerText = (accumulatedData[lastActualIndex] || 0).toLocaleString();
+        const percent = targetMax > 0 ? ((accumulatedData[lastActualIndex] || 0) / targetMax * 100).toFixed(2) : 0;
+        document.getElementById('val-percent').innerText = percent + "%";
+        document.getElementById('val-remain').innerText = (targetMax - (accumulatedData[lastActualIndex] || 0)).toLocaleString();
+
+        // ส่งข้อมูลไปวาดกราฟ (จะส่ง Logic ในรอบที่ 4)
+        renderChart(dateHeaders, dailyActual.map(d => d.value), accumulatedData, forecastData, {std14, std5, std21});
+    }
 </script>
 
     
