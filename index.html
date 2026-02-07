@@ -209,3 +209,99 @@
             <div class="file-info" id="actual-name">ยังไม่ได้เลือกไฟล์ (บังคับ)</div>
         </div>
     </div>
+<div id="dashboard-content" class="hidden">
+        <div class="zone-selector" id="zone-btns">
+            </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-label">เป้าหมายเขต (ตัน)</span>
+                <div class="metric-value" id="val-target">-</div>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">หีบสะสมจริง (ตัน)</span>
+                <div class="metric-value" id="val-actual">-</div>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">ความคืบหน้า (%)</span>
+                <div class="metric-value" id="val-percent">-</div>
+            </div>
+            <div class="metric-card">
+                <span class="metric-label">ยอดคงเหลือ (ตัน)</span>
+                <div class="metric-value" id="val-remain">-</div>
+            </div>
+        </div>
+
+        <div class="chart-wrapper">
+            <canvas id="mainChart"></canvas>
+        </div>
+
+        <div class="action-bar">
+            <button class="btn-save" id="btn-save-img">💾 บันทึกรายงานเป็นรูปภาพ</button>
+        </div>
+    </div>
+</div> <script>
+    // Global Variables
+    let targetData = [];
+    let actualData = [];
+    let selectedZone = "รวมทุกเขต";
+    let chartInstance = null;
+
+    // Configuration
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+
+    // 1. ระบบจัดการการอัปโหลดไฟล์
+    const fileInputs = {
+        target: document.getElementById('file-target'),
+        actual: document.getElementById('file-actual')
+    };
+
+    const displayNames = {
+        target: document.getElementById('target-name'),
+        actual: document.getElementById('actual-name')
+    };
+
+    // ตรวจสอบไฟล์ที่อัปโหลด
+    function handleFileSelect(type, file) {
+        if (!file) return;
+
+        // ตรวจสอบขนาดไฟล์
+        if (file.size > MAX_FILE_SIZE) {
+            alert(`ไฟล์ ${file.name} มีขนาดใหญ่เกิน 100MB`);
+            return;
+        }
+
+        // ตรวจสอบนามสกุลไฟล์
+        if (!file.name.endsWith('.csv')) {
+            alert(`กรุณาอัปโหลดไฟล์นามสกุล .csv เท่านั้น (${file.name})`);
+            return;
+        }
+
+        displayNames[type].innerText = `✅ ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+        document.getElementById(`${type}-drop`).classList.add('ready');
+
+        checkReadyToProcess();
+    }
+
+    fileInputs.target.addEventListener('change', (e) => handleFileSelect('target', e.target.files[0]));
+    fileInputs.actual.addEventListener('change', (e) => handleFileSelect('actual', e.target.files[0]));
+
+    // ตรวจสอบความครบถ้วนของ 2 ไฟล์ก่อนเริ่มทำงาน
+    function checkReadyToProcess() {
+        if (fileInputs.target.files.length > 0 && fileInputs.actual.files.length > 0) {
+            document.getElementById('process-status').innerText = "กำลังประมวลผลข้อมูล...";
+            document.getElementById('process-status').className = "status-badge status-complete";
+            
+            // เริ่มการอ่านไฟล์ (จะส่ง Logic ในรอบที่ 3)
+            parseAllFiles();
+        }
+    }
+
+    // ฟังก์ชันเบื้องต้นสำหรับการแสดงวันที่ปัจจุบันบนหัวรายงาน
+    document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+</script>
+
+    
