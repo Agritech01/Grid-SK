@@ -436,6 +436,107 @@
         // ส่งข้อมูลไปวาดกราฟ (จะส่ง Logic ในรอบที่ 4)
         renderChart(dateHeaders, dailyActual.map(d => d.value), accumulatedData, forecastData, {std14, std5, std21});
     }
+    // 5. ฟังก์ชันวาดกราฟ (วางต่อท้ายในแท็บ <script>)
+    function renderChart(labels, actualDaily, accumulated, forecast, targetSTDs) {
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        
+        // ล้างกราฟเก่าก่อนวาดใหม่ (เพื่อป้องกันกราฟซ้อนกัน)
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        // สร้างข้อมูลเป้าหมายรายวัน (Background Target)
+        // กำหนดเงื่อนไข: STD 14/12 (7-27 ธ.ค.), STD 5/1 (5-20 ม.ค.), STD 21/1 (21 ม.ค. - 31 มี.ค.)
+        const targetBackground = labels.map(date => {
+            const [d, m, y] = date.split('/');
+            const day = parseInt(d);
+            const month = parseInt(m);
+            
+            // ช่วง 7/12 - 27/12
+            if (month === 12 && day >= 7 && day <= 27) return targetSTDs.std14;
+            // ช่วง 5/1 - 20/1
+            if (month === 1 && day >= 5 && day <= 20) return targetSTDs.std5;
+            // ช่วง 21/1 - 31/3
+            if ((month === 1 && day >= 21) || (month === 2) || (month === 3)) return targetSTDs.std21;
+            
+            return null; // วันที่ไม่มีเป้าหมาย (เช่น 28/12 - 04/01)
+        });
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'เป้าหมาย (Target)',
+                        data: targetBackground,
+                        backgroundColor: 'rgba(197, 160, 89, 0.2)', // สีทองจางๆ
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        barPercentage: 1.0,
+                        categoryPercentage: 1.0,
+                        order: 3
+                    },
+                    {
+                        label: 'ยอดหีบรายวัน (Actual)',
+                        data: actualDaily,
+                        backgroundColor: '#1a237e', // สีน้ำเงินเข้ม
+                        borderRadius: 4,
+                        order: 2
+                    },
+                    {
+                        label: 'เส้นสะสม/พยากรณ์',
+                        data: forecast,
+                        type: 'line',
+                        borderColor: '#2e7d32', // สีเขียว
+                        backgroundColor: 'transparent',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        fill: false,
+                        tension: 0.1,
+                        order: 1,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toLocaleString() + ' ตัน';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10 } }
+                    },
+                    y: {
+                        title: { display: true, text: 'ปริมาณอ้อยรายวัน (ตัน)' },
+                        beginAtZero: true
+                    },
+                    y1: {
+                        title: { display: true, text: 'สะสมรวม (ตัน)' },
+                        position: 'right',
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+    }
 </script>
 
     
