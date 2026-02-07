@@ -3,594 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Executive Dashboard - Cane Production 68/69</title>
+    <title>Sugar Cane Dashboard 68/69</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --executive-blue: #1a237e; /* น้ำเงินเข้ม สุขุม */
-            --accent-gold: #c5a059;    /* ทองหม่น สำหรับเน้นความสำคัญ */
-            --success-green: #2e7d32;
-            --bg-gray: #f8f9fa;
-            --text-dark: #202124;
-            --white: #ffffff;
-        }
+        :root { --primary: #2c3e50; --secondary: #34495e; --accent: #27ae60; --light: #f4f7f6; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--light); margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 1300px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
         
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg-gray);
-            margin: 0;
-            padding: 0;
-            color: var(--text-dark);
-        }
+        /* Upload Zone */
+        .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .upload-card { border: 2px dashed #cbd5e0; padding: 20px; border-radius: 10px; text-align: center; transition: 0.3s; background: #fff; }
+        .upload-card:hover { border-color: var(--accent); background: #f0fff4; }
+        .upload-card input { margin-top: 10px; width: 100%; }
+        .status-badge { display: inline-block; margin-top: 10px; padding: 4px 12px; border-radius: 15px; font-size: 0.8em; background: #edf2f7; }
+        .status-ready { background: #c6f6d5; color: #2f855a; }
 
-        /* สำหรับพิมพ์หรือบันทึกรูป */
-        #report-area {
-            padding: 30px;
-            max-width: 1400px;
-            margin: auto;
-        }
+        /* Filter Buttons */
+        .filter-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 12px; }
+        .btn-zone { padding: 8px 16px; border: 1px solid #cbd5e0; background: white; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        .btn-zone:hover { background: #edf2f7; }
+        .btn-zone.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--executive-blue);
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-        }
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { padding: 20px; border-radius: 12px; color: white; text-align: center; position: relative; overflow: hidden; }
+        .stat-card.blue { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .stat-card.green { background: linear-gradient(135deg, #27ae60, #219150); }
+        .stat-card.orange { background: linear-gradient(135deg, #f39c12, #d35400); }
+        .stat-card.red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .stat-label { font-size: 0.9em; opacity: 0.9; margin-bottom: 10px; }
+        .stat-value { font-size: 1.8em; font-weight: bold; }
 
-        .title-group h1 {
-            margin: 0;
-            font-size: 24px;
-            color: var(--executive-blue);
-        }
+        /* Chart Area */
+        .chart-container { position: relative; height: 550px; width: 100%; background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #eee; }
+        
+        .footer-actions { margin-top: 30px; text-align: right; }
+        .btn-download { background: #2d3748; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; }
+        .btn-download:hover { background: #1a202c; }
 
-        .title-group p {
-            margin: 5px 0 0;
-            color: #666;
-            font-size: 14px;
-        }
-
-        /* Upload Section */
-        .upload-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 30px;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .upload-box {
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s;
-            background: #fdfdfd;
-        }
-
-        .upload-box.ready {
-            border-color: var(--success-green);
-            background: #f1f8e9;
-        }
-
-        .upload-box h3 { margin-top: 0; font-size: 16px; }
-
-        /* Dashboard Elements */
-        .zone-selector {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 20px;
-            background: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
-        .btn-zone {
-            padding: 8px 18px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: white;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
-            color: #555;
-            transition: 0.3s;
-        }
-
-        .btn-zone:hover { background: #eee; }
-        .btn-zone.active {
-            background: var(--executive-blue);
-            color: white;
-            border-color: var(--executive-blue);
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .metric-card {
-            background: var(--white);
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            border-top: 4px solid var(--accent-gold);
-        }
-
-        .metric-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        .metric-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: var(--executive-blue);
-        }
-
-        .chart-wrapper {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            height: 550px;
-            position: relative;
-        }
-
-        .action-bar {
-            margin-top: 30px;
-            text-align: right;
-        }
-
-        .btn-save {
-            background: var(--success-green);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .btn-save:hover { opacity: 0.9; }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-        .status-pending { background: #ffe0b2; color: #e65100; }
-        .status-complete { background: #c8e6c9; color: #1b5e20; }
+        #dataPreview { margin-top: 20px; font-size: 0.75rem; color: #718096; max-height: 100px; overflow: auto; display: none; }
     </style>
 </head>
 <body>
 
-<div id="report-area">
-    <header>
-        <div class="title-group">
-            <h1>รายงานสรุปยอดอ้อยเข้าหีบ ปีฤดูกาล 68/69</h1>
-            <p>ข้อมูล ณ วันที่: <span id="current-date">-</span> | วิเคราะห์ข้อมูลรายวันและพยากรณ์ยอดหีบ</p>
-        </div>
-        <div id="file-status-indicator">
-            <span class="status-badge status-pending" id="process-status">รอการอัปโหลดไฟล์</span>
-        </div>
-    </header>
+<div class="container" id="dashboardNode">
+    <h2>📊 รายงานวิเคราะห์อ้อยเข้าหีบ ปี 68/69</h2>
 
-    <div class="upload-container no-print">
-        <div class="upload-box" id="target-drop">
-            <h3>1. ไฟล์ DATA TARGET</h3>
-            <input type="file" id="file-target" accept=".csv" hidden>
-            <button onclick="document.getElementById('file-target').click()">เลือกไฟล์ CSV</button>
-            <div class="file-info" id="target-name">ยังไม่ได้เลือกไฟล์ (บังคับ)</div>
+    <div class="upload-grid" id="uploadPanel">
+        <div class="upload-card">
+            <strong>1. ไฟล์ DATA TARGET</strong>
+            <input type="file" id="targetUpload" accept=".csv">
+            <div id="targetStatus" class="status-badge">รอไฟล์...</div>
         </div>
-        <div class="upload-box" id="actual-drop">
-            <h3>2. ไฟล์รายงานอ้อยเข้าหีบ 68/69</h3>
-            <input type="file" id="file-actual" accept=".csv" hidden>
-            <button onclick="document.getElementById('file-actual').click()">เลือกไฟล์ CSV</button>
-            <div class="file-info" id="actual-name">ยังไม่ได้เลือกไฟล์ (บังคับ)</div>
+        <div class="upload-card">
+            <strong>2. ไฟล์รายงานเข้าหีบ 68/69</strong>
+            <input type="file" id="actualUpload" accept=".csv">
+            <div id="actualStatus" class="status-badge">รอไฟล์...</div>
         </div>
     </div>
-<div id="dashboard-content" class="hidden">
-        <div class="zone-selector" id="zone-btns">
-            </div>
 
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <span class="metric-label">เป้าหมายเขต (ตัน)</span>
-                <div class="metric-value" id="val-target">-</div>
+    <div class="filter-container" id="zoneFilter" style="display:none;"></div>
+
+    <div id="mainDashboard" style="display:none;">
+        <div class="stats-grid">
+            <div class="stat-card blue">
+                <div class="stat-label">เป้าหมายเขต (ตัน)</div>
+                <div class="stat-value" id="cardTarget">-</div>
             </div>
-            <div class="metric-card">
-                <span class="metric-label">หีบสะสมจริง (ตัน)</span>
-                <div class="metric-value" id="val-actual">-</div>
+            <div class="stat-card green">
+                <div class="stat-label">หีบสะสมจริง (ตัน)</div>
+                <div class="stat-value" id="cardAcc">-</div>
             </div>
-            <div class="metric-card">
-                <span class="metric-label">ความคืบหน้า (%)</span>
-                <div class="metric-value" id="val-percent">-</div>
+            <div class="stat-card orange">
+                <div class="stat-label">% เทียบเป้าหมาย</div>
+                <div class="stat-value" id="cardPercent">-</div>
             </div>
-            <div class="metric-card">
-                <span class="metric-label">ยอดคงเหลือ (ตัน)</span>
-                <div class="metric-value" id="val-remain">-</div>
+            <div class="stat-card red">
+                <div class="stat-label">คงเหลือเป้า (ตัน)</div>
+                <div class="stat-value" id="cardRemain">-</div>
             </div>
         </div>
 
-        <div class="chart-wrapper">
-            <canvas id="mainChart"></canvas>
+        <div class="chart-container">
+            <canvas id="sugarChart"></canvas>
         </div>
 
-        <div class="action-bar">
-            <button class="btn-save" id="btn-save-img">💾 บันทึกรายงานเป็นรูปภาพ</button>
+        <div class="footer-actions">
+            <button class="btn-download" onclick="exportImage()">📸 บันทึกรายงานเป็นรูปภาพ</button>
         </div>
     </div>
-</div> <script>
-    // Global Variables
-    let targetData = [];
-    let actualData = [];
-    let selectedZone = "รวมทุกเขต";
-    let chartInstance = null;
-
-    // Configuration
-    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
-
-    // 1. ระบบจัดการการอัปโหลดไฟล์
-    const fileInputs = {
-        target: document.getElementById('file-target'),
-        actual: document.getElementById('file-actual')
-    };
-
-    const displayNames = {
-        target: document.getElementById('target-name'),
-        actual: document.getElementById('actual-name')
-    };
-
-    // ตรวจสอบไฟล์ที่อัปโหลด
-    function handleFileSelect(type, file) {
-        if (!file) return;
-
-        // ตรวจสอบขนาดไฟล์
-        if (file.size > MAX_FILE_SIZE) {
-            alert(`ไฟล์ ${file.name} มีขนาดใหญ่เกิน 100MB`);
-            return;
-        }
-
-        // ตรวจสอบนามสกุลไฟล์
-        if (!file.name.endsWith('.csv')) {
-            alert(`กรุณาอัปโหลดไฟล์นามสกุล .csv เท่านั้น (${file.name})`);
-            return;
-        }
-
-        displayNames[type].innerText = `✅ ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
-        document.getElementById(`${type}-drop`).classList.add('ready');
-
-        checkReadyToProcess();
-    }
-
-    fileInputs.target.addEventListener('change', (e) => handleFileSelect('target', e.target.files[0]));
-    fileInputs.actual.addEventListener('change', (e) => handleFileSelect('actual', e.target.files[0]));
-
-    // ตรวจสอบความครบถ้วนของ 2 ไฟล์ก่อนเริ่มทำงาน
-    function checkReadyToProcess() {
-        if (fileInputs.target.files.length > 0 && fileInputs.actual.files.length > 0) {
-            document.getElementById('process-status').innerText = "กำลังประมวลผลข้อมูล...";
-            document.getElementById('process-status').className = "status-badge status-complete";
-            
-            // เริ่มการอ่านไฟล์ (จะส่ง Logic ในรอบที่ 3)
-            parseAllFiles();
-        }
-    }
-
-    // ฟังก์ชันเบื้องต้นสำหรับการแสดงวันที่ปัจจุบันบนหัวรายงาน
-    document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH', {
-        year: 'numeric', month: 'long', day: 'numeric'
-    });
-// 2. ฟังก์ชันหลักในการอ่านไฟล์ทั้งสอง
-    async function parseAllFiles() {
-        const targetFile = fileInputs.target.files[0];
-        const actualFile = fileInputs.actual.files[0];
-
-        try {
-            // อ่านไฟล์ Target
-            targetData = await parseCSV(targetFile);
-            // อ่านไฟล์รายงานเข้าหีบ
-            actualData = await parseCSV(actualFile);
-
-            console.log("Data loaded successfully");
-            initDashboard(); // เริ่มสร้าง UI หลังจากโหลดข้อมูลเสร็จ
-        } catch (error) {
-            alert("เกิดข้อผิดพลาดในการอ่านไฟล์: " + error);
-            console.error(error);
-        }
-    }
-
-    // Helper: สั่ง parse CSV เป็น JSON
-    function parseCSV(file) {
-        return new Promise((resolve, reject) => {
-            Papa.parse(file, {
-                header: true,
-                skipEmptyLines: true,
-                dynamicTyping: true,
-                complete: (results) => resolve(results.data),
-                error: (error) => reject(error)
-            });
-        });
-    }
-
-    // 3. เตรียมข้อมูลสำหรับแดชบอร์ด
-    const ZONES = ['1', '2', '3', '4', '5', '6', '7', '8', '10', '11', '12', '21', 'C1', 'C2', 'C3', 'C4'];
     
-    function initDashboard() {
-        const zoneBtnsContainer = document.getElementById('zone-btns');
-        zoneBtnsContainer.innerHTML = ''; // ล้างค่าเก่า
+    <div id="dataPreview"></div>
+</div>
 
-        // สร้างปุ่ม "รวมทุกเขต"
-        const btnAll = createZoneBtn("รวมทุกเขต");
-        zoneBtnsContainer.appendChild(btnAll);
+<script>
+    let rawTarget = [];
+    let rawActual = [];
+    let myChart = null;
+    const zones = ["1", "2", "3", "4", "5", "6", "7", "8", "10", "11", "12", "21", "C1", "C2", "C3", "C4"];
 
-        // สร้างปุ่มรายเขต
-        ZONES.forEach(z => {
-            zoneBtnsContainer.appendChild(createZoneBtn(z));
+    // 1-3. File Upload & Processing
+    document.getElementById('targetUpload').addEventListener('change', (e) => handleFile(e, 'target'));
+    document.getElementById('actualUpload').addEventListener('change', (e) => handleFile(e, 'actual'));
+
+    function handleFile(event, type) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (file.size > 100 * 1024 * 1024) { alert("ไฟล์ต้องไม่เกิน 100MB"); return; }
+        
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                if (type === 'target') {
+                    rawTarget = results.data;
+                    updateStatus('targetStatus', "✓ ไฟล์ Target พร้อม");
+                } else {
+                    rawActual = results.data;
+                    updateStatus('actualStatus', "✓ ไฟล์รายงานพร้อม");
+                }
+                checkReady();
+            }
+        });
+    }
+
+    function updateStatus(id, text) {
+        const el = document.getElementById(id);
+        el.innerText = text;
+        el.classList.add('status-ready');
+    }
+
+    function checkReady() {
+        if (rawTarget.length > 0 && rawActual.length > 0) {
+            initFilterButtons();
+            document.getElementById('zoneFilter').style.display = 'flex';
+            document.getElementById('mainDashboard').style.display = 'block';
+            document.getElementById('uploadPanel').style.display = 'none';
+            updateDashboard('รวมทุกเขต');
+        }
+    }
+
+    function initFilterButtons() {
+        const container = document.getElementById('zoneFilter');
+        container.innerHTML = `<button class="btn-zone active" onclick="changeZone(this, 'รวมทุกเขต')">รวมทุกเขต</button>`;
+        zones.forEach(z => {
+            container.innerHTML += `<button class="btn-zone" onclick="changeZone(this, '${z}')">เขต ${z}</button>`;
+        });
+    }
+
+    function changeZone(btn, zone) {
+        document.querySelectorAll('.btn-zone').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateDashboard(zone);
+    }
+
+    // --- Core Logic ---
+    function parseNum(val) {
+        if (!val) return 0;
+        return parseFloat(String(val).replace(/,/g, '')) || 0;
+    }
+
+    function generateDateRange() {
+        let dates = [];
+        let start = new Date(1968, 11, 7); // Dec 7, 1968 (mapping CSV format)
+        let end = new Date(1969, 2, 31);   // Mar 31, 1969
+        let current = new Date(start);
+        while (current <= end) {
+            dates.push(new Date(current));
+            current.setDate(current.getDate() + 1);
+        }
+        return dates;
+    }
+
+    function updateDashboard(selectedZone) {
+        const dates = generateDateRange();
+        
+        // 1. Process Target Data
+        let targetMax = 0, std1 = 0, std2 = 0, std3 = 0;
+        rawTarget.forEach(row => {
+            if (selectedZone === 'รวมทุกเขต' || String(row["เขต"]).trim() === selectedZone) {
+                targetMax += parseNum(row["เป้าหมาย MAX"]);
+                std1 += parseNum(row[" STD 14/12 "]);
+                std2 += parseNum(row[" STD 5/1 "]);
+                std3 += parseNum(row[" STD 21/1 "]);
+            }
         });
 
-        document.getElementById('dashboard-content').classList.remove('hidden');
-        updateDashboard("รวมทุกเขต"); // แสดงผลครั้งแรก
-    }
+        // 2. Prepare Target Background Series
+        const targetSeries = dates.map(d => {
+            const m = d.getMonth() + 1;
+            const day = d.getDate();
+            // 07/12 - 27/12
+            if (m === 12 && day >= 7 && day <= 27) return std1;
+            // 05/01 - 20/01
+            if (m === 1 && day >= 5 && day <= 20) return std2;
+            // 21/01 - 31/03
+            if ((m === 1 && day >= 21) || m === 2 || m === 3) return std3;
+            return 0; // Holiday/No target
+        });
 
-    function createZoneBtn(label) {
-        const btn = document.createElement('button');
-        btn.className = 'btn-zone';
-        btn.innerText = label;
-        btn.onclick = () => {
-            document.querySelectorAll('.btn-zone').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            updateDashboard(label);
-        };
-        if(label === "รวมทุกเขต") btn.classList.add('active');
-        return btn;
-    }
-
-    // 4. ฟังก์ชันคำนวณข้อมูลตามเขตที่เลือก
-    function updateDashboard(zone) {
-        selectedZone = zone;
-        
-        // --- ส่วนที่ 1: ดึงเป้าหมาย (Target) ---
-        let targetMax = 0;
-        let std14 = 0, std5 = 0, std21 = 0;
-
-        if (zone === "รวมทุกเขต") {
-            targetMax = targetData.reduce((sum, row) => sum + (Number(row["เป้าหมาย MAX"]) || 0), 0);
-            std14 = targetData.reduce((sum, row) => sum + (Number(row["STD 14/12"]) || 0), 0);
-            std5 = targetData.reduce((sum, row) => sum + (Number(row["STD 5/1"]) || 0), 0);
-            std21 = targetData.reduce((sum, row) => sum + (Number(row["STD 21/1"]) || 0), 0);
-        } else {
-            const row = targetData.find(r => String(r["เขต"]) === zone);
-            if (row) {
-                targetMax = Number(row["เป้าหมาย MAX"]) || 0;
-                std14 = Number(row["STD 14/12"]) || 0;
-                std5 = Number(row["STD 5/1"]) || 0;
-                std21 = Number(row["STD 21/1"]) || 0;
-            }
-        }
-
-        // --- ส่วนที่ 2: ดึงข้อมูลจริง (Actual) ---
-        // สร้าง Array ของวันที่ (Column name ในไฟล์ Actual)
-        const dateHeaders = Object.keys(actualData[0]).filter(h => h !== "เขต");
-        const dailyActual = dateHeaders.map(date => {
+        // 3. Process Actual Daily Data
+        let lastDataIdx = -1;
+        const actualDaily = dates.map((d, idx) => {
+            const colName = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
             let sum = 0;
-            actualData.forEach(row => {
-                if (zone === "รวมทุกเขต" || String(row["เขต"]) === zone) {
-                    sum += (Number(row[date]) || 0);
+            rawActual.forEach(row => {
+                if (selectedZone === 'รวมทุกเขต' || String(row["เขต"]).trim() === selectedZone) {
+                    sum += parseNum(row[colName]);
                 }
             });
-            return { date, value: sum };
+            if (sum > 0) lastDataIdx = idx;
+            return sum;
         });
 
-        // --- ส่วนที่ 3: คำนวณยอดสะสมและพยากรณ์ (Accumulated & Forecast) ---
-        let runningSum = 0;
-        let lastActualIndex = -1;
-        const accumulatedData = dailyActual.map((d, index) => {
-            if (d.value > 0) {
-                runningSum += d.value;
-                lastActualIndex = index;
-                return runningSum;
-            }
-            return null; // วันที่ยังไม่มีข้อมูลจริง
-        });
-
-        // คำนวณ Forecast สำหรับวันที่เหลือ
-        const remainingTarget = targetMax - runningSum;
-        const remainingDays = dailyActual.length - (lastActualIndex + 1);
-        const avgNeeded = remainingDays > 0 ? (remainingTarget / remainingDays) : 0;
-
-        const forecastData = dailyActual.map((d, index) => {
-            if (index < lastActualIndex) return null;
-            if (index === lastActualIndex) return runningSum;
-            runningSum += avgNeeded;
-            return runningSum;
-        });
-
-        // อัปเดตการ์ดตัวเลข (Metrics)
-        document.getElementById('val-target').innerText = targetMax.toLocaleString();
-        document.getElementById('val-actual').innerText = (accumulatedData[lastActualIndex] || 0).toLocaleString();
-        const percent = targetMax > 0 ? ((accumulatedData[lastActualIndex] || 0) / targetMax * 100).toFixed(2) : 0;
-        document.getElementById('val-percent').innerText = percent + "%";
-        document.getElementById('val-remain').innerText = (targetMax - (accumulatedData[lastActualIndex] || 0)).toLocaleString();
-
-        // ส่งข้อมูลไปวาดกราฟ (จะส่ง Logic ในรอบที่ 4)
-        renderChart(dateHeaders, dailyActual.map(d => d.value), accumulatedData, forecastData, {std14, std5, std21});
-    }
-    // 5. ฟังก์ชันวาดกราฟ (วางต่อท้ายในแท็บ <script>)
-    function renderChart(labels, actualDaily, accumulated, forecast, targetSTDs) {
-        const ctx = document.getElementById('mainChart').getContext('2d');
-        
-        // ล้างกราฟเก่าก่อนวาดใหม่ (เพื่อป้องกันกราฟซ้อนกัน)
-        if (chartInstance) {
-            chartInstance.destroy();
+        // 4. Accumulated and Projection
+        let accSum = 0;
+        const actualAcc = [];
+        for (let i = 0; i <= lastDataIdx; i++) {
+            accSum += actualDaily[i];
+            actualAcc.push(accSum);
         }
 
-        // สร้างข้อมูลเป้าหมายรายวัน (Background Target)
-        // กำหนดเงื่อนไข: STD 14/12 (7-27 ธ.ค.), STD 5/1 (5-20 ม.ค.), STD 21/1 (21 ม.ค. - 31 มี.ค.)
-        const targetBackground = labels.map(date => {
-            const [d, m, y] = date.split('/');
-            const day = parseInt(d);
-            const month = parseInt(m);
-            
-            // ช่วง 7/12 - 27/12
-            if (month === 12 && day >= 7 && day <= 27) return targetSTDs.std14;
-            // ช่วง 5/1 - 20/1
-            if (month === 1 && day >= 5 && day <= 20) return targetSTDs.std5;
-            // ช่วง 21/1 - 31/3
-            if ((month === 1 && day >= 21) || (month === 2) || (month === 3)) return targetSTDs.std21;
-            
-            return null; // วันที่ไม่มีเป้าหมาย (เช่น 28/12 - 04/01)
-        });
+        const projectionLine = new Array(actualAcc.length - 1).fill(null);
+        projectionLine.push(accSum);
 
-        chartInstance = new Chart(ctx, {
-            type: 'bar',
+        if (lastDataIdx < dates.length - 1) {
+            const remainingTarget = targetMax - accSum;
+            const remainingDays = dates.length - 1 - lastDataIdx;
+            const dailyProj = remainingTarget / remainingDays;
+            
+            let tempAcc = accSum;
+            for (let i = lastDataIdx + 1; i < dates.length; i++) {
+                tempAcc += dailyProj;
+                projectionLine.push(tempAcc);
+            }
+        }
+
+        // Update Cards
+        document.getElementById('cardTarget').innerText = targetMax.toLocaleString();
+        document.getElementById('cardAcc').innerText = accSum.toLocaleString();
+        document.getElementById('cardPercent').innerText = ((accSum / (targetMax || 1)) * 100).toFixed(2) + "%";
+        document.getElementById('cardRemain').innerText = Math.max(0, targetMax - accSum).toLocaleString();
+
+        renderChart(dates, targetSeries, actualDaily, actualAcc, projectionLine);
+    }
+
+    function renderChart(dates, targets, daily, acc, proj) {
+        const labels = dates.map(d => d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
+        const ctx = document.getElementById('sugarChart').getContext('2d');
+        
+        if (myChart) myChart.destroy();
+
+        myChart = new Chart(ctx, {
             data: {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'เป้าหมาย (Target)',
-                        data: targetBackground,
-                        backgroundColor: 'rgba(197, 160, 89, 0.2)', // สีทองจางๆ
-                        borderColor: 'transparent',
-                        borderWidth: 0,
-                        barPercentage: 1.0,
-                        categoryPercentage: 1.0,
-                        order: 3
+                        type: 'line',
+                        label: 'ตันสะสมจริง',
+                        data: acc,
+                        borderColor: '#27ae60',
+                        backgroundColor: '#27ae60',
+                        borderWidth: 3,
+                        yAxisID: 'yAcc',
+                        pointRadius: 0,
+                        order: 1
                     },
                     {
-                        label: 'ยอดหีบรายวัน (Actual)',
-                        data: actualDaily,
-                        backgroundColor: '#1a237e', // สีน้ำเงินเข้ม
-                        borderRadius: 4,
+                        type: 'line',
+                        label: 'พยากรณ์สะสม',
+                        data: proj,
+                        borderColor: '#27ae60',
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        yAxisID: 'yAcc',
+                        fill: false,
                         order: 2
                     },
                     {
-                        label: 'เส้นสะสม/พยากรณ์',
-                        data: forecast,
-                        type: 'line',
-                        borderColor: '#2e7d32', // สีเขียว
-                        backgroundColor: 'transparent',
-                        borderWidth: 3,
-                        pointRadius: 0,
-                        fill: false,
-                        tension: 0.1,
-                        order: 1,
-                        yAxisID: 'y1'
+                        type: 'bar',
+                        label: 'ยอดหีบรายวัน',
+                        data: daily,
+                        backgroundColor: '#3498db',
+                        yAxisID: 'yDaily',
+                        order: 3
+                    },
+                    {
+                        type: 'bar',
+                        label: 'เป้าหมายรายวัน (STD)',
+                        data: targets,
+                        backgroundColor: 'rgba(200, 200, 200, 0.2)',
+                        barPercentage: 1,
+                        categoryPercentage: 1,
+                        yAxisID: 'yDaily',
+                        order: 4
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
                 plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) label += ': ';
-                                if (context.parsed.y !== null) {
-                                    label += context.parsed.y.toLocaleString() + ' ตัน';
-                                }
-                                return label;
-                            }
-                        }
-                    }
+                    tooltip: { mode: 'index', intersect: false }
                 },
                 scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 10 } }
-                    },
-                    y: {
-                        title: { display: true, text: 'ปริมาณอ้อยรายวัน (ตัน)' },
+                    yDaily: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'ตันรายวัน' },
                         beginAtZero: true
                     },
-                    y1: {
-                        title: { display: true, text: 'สะสมรวม (ตัน)' },
+                    yAcc: {
+                        type: 'linear',
                         position: 'right',
-                        beginAtZero: true,
-                        grid: { drawOnChartArea: false }
+                        title: { display: true, text: 'สะสมรวม' },
+                        grid: { drawOnChartArea: false },
+                        beginAtZero: true
                     }
                 }
             }
         });
     }
-    // 6. ระบบบันทึกรายงานเป็นรูปภาพ (วางต่อท้ายในแท็บ <script>)
-    document.getElementById('btn-save-img').addEventListener('click', function() {
-        const reportArea = document.getElementById('report-area');
-        const actionButtons = document.querySelector('.action-bar');
-        const uploadSection = document.querySelector('.upload-container');
 
-        // ซ่อนส่วนที่ไม่ต้องการให้เห็นในรูปภาพ
-        actionButtons.style.display = 'none';
-        uploadSection.style.display = 'none';
-
-        html2canvas(reportArea, {
-            scale: 2, // เพิ่มความชัดของรูปภาพ
-            backgroundColor: "#f8f9fa",
-            logging: false
-        }).then(canvas => {
+    function exportImage() {
+        const dashboard = document.getElementById('dashboardNode');
+        html2canvas(dashboard, { scale: 2 }).then(canvas => {
             const link = document.createElement('a');
-            const dateStr = new Date().toISOString().slice(0, 10);
-            link.download = `Dashboard-Cane-${selectedZone}-${dateStr}.png`;
+            link.download = 'Sugar_Cane_Report_6869.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
-
-            // แสดงส่วนที่ซ่อนกลับมา
-            actionButtons.style.display = 'block';
-            uploadSection.style.display = 'grid';
         });
-    });
-
-    // 7. เพิ่ม Event Listener สำหรับการลากไฟล์วาง (Drag and Drop) - เสริมความสะดวก
-    ['target-drop', 'actual-drop'].forEach(id => {
-        const dropZone = document.getElementById(id);
-        const type = id.split('-')[0];
-        const input = document.getElementById(`file-${type}`);
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('active');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('active');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('active');
-            const files = e.dataTransfer.files;
-            if (files.length) {
-                input.files = files;
-                handleFileSelect(type, files[0]);
-            }
-        });
-    });
+    }
+</script>
 </body>
 </html>
-</script>
-
-    
