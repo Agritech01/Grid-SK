@@ -537,6 +537,62 @@
             }
         });
     }
+    // 6. ระบบบันทึกรายงานเป็นรูปภาพ (วางต่อท้ายในแท็บ <script>)
+    document.getElementById('btn-save-img').addEventListener('click', function() {
+        const reportArea = document.getElementById('report-area');
+        const actionButtons = document.querySelector('.action-bar');
+        const uploadSection = document.querySelector('.upload-container');
+
+        // ซ่อนส่วนที่ไม่ต้องการให้เห็นในรูปภาพ
+        actionButtons.style.display = 'none';
+        uploadSection.style.display = 'none';
+
+        html2canvas(reportArea, {
+            scale: 2, // เพิ่มความชัดของรูปภาพ
+            backgroundColor: "#f8f9fa",
+            logging: false
+        }).then(canvas => {
+            const link = document.createElement('a');
+            const dateStr = new Date().toISOString().slice(0, 10);
+            link.download = `Dashboard-Cane-${selectedZone}-${dateStr}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            // แสดงส่วนที่ซ่อนกลับมา
+            actionButtons.style.display = 'block';
+            uploadSection.style.display = 'grid';
+        });
+    });
+
+    // 7. เพิ่ม Event Listener สำหรับการลากไฟล์วาง (Drag and Drop) - เสริมความสะดวก
+    ['target-drop', 'actual-drop'].forEach(id => {
+        const dropZone = document.getElementById(id);
+        const type = id.split('-')[0];
+        const input = document.getElementById(`file-${type}`);
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('active');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('active');
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                input.files = files;
+                handleFileSelect(type, files[0]);
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
 </script>
 
     
