@@ -216,19 +216,25 @@ function handleFile(event, type) {
             const k3 = `${day}/${month}/${year + 543}`;
             const k4 = `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year + 543}`;
 
+            let lastDataIdx = -1;
+        // ใช้ชื่อวันที่จากหัวตารางโดยตรง (dateStr) เพื่อให้ตัดจบตามข้อมูลจริง
+        const actualDaily = dates.map((dateStr, idx) => {
             let sum = 0, found = false;
             rawActual.forEach(row => {
                 if (isValidZone(row["เขต"], selectedZone)) {
-                    const matchKey = Object.keys(row).find(key => {
-                        const ck = key.trim();
-                        return ck === k1 || ck === k2 || ck === k3 || ck === k4;
-                    });
-                    if (matchKey) {
-                        const val = parseNum(row[matchKey]);
-                        if (row[matchKey] !== "" && row[matchKey] !== null) { found = true; sum += val; }
+                    // ดึงค่าโดยใช้ชื่อวันที่ที่เป็นหัวตารางตรงๆ
+                    const val = row[dateStr]; 
+                    if (val !== undefined && val !== "" && val !== null) {
+                        sum += parseNum(val);
+                        found = true;
                     }
                 }
             });
+            // ถ้าเจอนข้อมูล จะจำตำแหน่ง (Index) ล่าสุดไว้ เพื่อให้กราฟเส้นสะสมหยุดแค่วันนี้
+            if (found) lastDataIdx = idx;
+            return sum;
+        });
+            
             if (found) lastDataIdx = idx;
             return sum;
         });
