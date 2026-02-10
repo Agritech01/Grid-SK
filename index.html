@@ -184,17 +184,27 @@ function handleFile(event, type) {
     }
 
     function updateDashboard(selectedZone) {
-        const dates = generateDateRange();
-        let targetMax = 0, std1 = 0, std2 = 0, std3 = 0;
+    // 1. เปลี่ยนจาก generateDateRange() มาใช้ window.activeDates ที่เราหาไว้ล่าสุด
+    const dates = window.activeDates; // <--- แก้ไขจุดนี้
 
-        rawTarget.forEach(row => {
-            if (isValidZone(row["เขต"], selectedZone)) {
-                targetMax += parseNum(row["เป้าหมาย MAX"]);
-                std1 += parseNum(row["STD 14/12"]);
-                std2 += parseNum(row["STD 5/1"]);
-                std3 += parseNum(row["STD 21/1"]);
-            }
-        });
+    let targetMax = 0, std1 = 0, std2 = 0, std3 = 0;
+
+    // ส่วนนี้คือการคำนวณค่าจาก rawTarget (ใช้ของเดิมของคุณได้เลย)
+    rawTarget.forEach(row => {
+        // ตรวจสอบชื่อคอลัมน์ให้ตรงนะครับ เช่น row["ZONE"] หรือ row["เขต"] 
+        // จากที่คุณส่งมาคือ row["เขต"]
+        if (isValidZone(row["เขต"], selectedZone)) {
+            targetMax += parseNum(row["เป้าหมาย MAX"]);
+            std1 += parseNum(row["STD 14/12"]);
+            std2 += parseNum(row["STD 5/1"]);
+            std3 += parseNum(row["STD 21/1"]);
+        }
+    });
+
+    // --- จุดสังเกตเพิ่มเติม (สำคัญมาก) ---
+    // หลังจากนี้ใน CODE ของคุณน่าจะมีส่วนที่วนลูปหาค่า Actual (ข้อมูลจริง)
+    // ให้ตรวจสอบว่ามันใช้ตัวแปร 'dates' ในการวนลูปหรือไม่
+    // ถ้าใช้ 'dates' (ซึ่งตอนนี้คือ window.activeDates) กราฟจะตัดจบที่วันที่ปัจจุบันทันทีครับ
 
         const targetSeries = dates.map(d => {
             const m = d.getMonth() + 1, day = d.getDate();
