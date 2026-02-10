@@ -15,7 +15,7 @@
         .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: var(--primary); margin-bottom: 10px; line-height: 1.4; }
         .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        .upload-card { border: 2px dashed #cbd5e0; padding: 20px; border-radius: 10px; text-align: center; background: #fff; }
+        .upload-card { border: 2px dashed #cbd5e0; padding: 20px; border-radius: 10px; text-align: center; background: #fff; position: relative; }
         .status-badge { display: inline-block; margin-top: 10px; padding: 4px 12px; border-radius: 15px; font-size: 0.8em; background: #edf2f7; }
         .status-ready { background: #c6f6d5; color: #2f855a; }
         .filter-container { display: flex; flex-wrap: nowrap; gap: 4px; justify-content: space-between; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 12px; overflow-x: auto; }
@@ -32,6 +32,7 @@
         .stat-value { font-size: 1.8em; font-weight: bold; }
         .footer-actions { margin-top: 30px; text-align: right; }
         .btn-download { background: #2d3748; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-reset { background: #718096; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: 10px; }
     </style>
 </head>
 <body>
@@ -41,12 +42,12 @@
     
     <div class="upload-grid" id="uploadPanel">
         <div class="upload-card">
-            <strong>1. ไฟล์ DATA TARGET (เขต, เป้าหมาย MAX, STD...)</strong><br>
+            <strong>1. ไฟล์ DATA TARGET (เขต, เป้าหมาย MAX, STD...)</strong><br><br>
             <input type="file" id="targetUpload" accept=".csv">
             <div id="targetStatus" class="status-badge">รอไฟล์...</div>
         </div>
         <div class="upload-card">
-            <strong>2. ไฟล์รายงานเข้าหีบรายวัน (เขต, วันที่...)</strong><br>
+            <strong>2. ไฟล์รายงานเข้าหีบรายวัน (เขต, วันที่...)</strong><br><br>
             <input type="file" id="actualUpload" accept=".csv">
             <div id="actualStatus" class="status-badge">รอไฟล์...</div>
         </div>
@@ -65,6 +66,7 @@
             <div class="stat-card red"><div class="stat-label">คงเหลือเป้า (ตัน)</div><div class="stat-value" id="cardRemain">-</div></div>
         </div>
         <div class="footer-actions">
+            <button class="btn-reset" onclick="resetDashboard()">📂 อัพโหลดไฟล์ใหม่</button>
             <button class="btn-download" onclick="exportImage()">📸 บันทึกรายงานเป็นรูปภาพ</button>
         </div>
     </div>
@@ -72,97 +74,79 @@
 
 <script>
     Chart.register(ChartDataLabels);
-    let rawTarget = [], rawActual = [], myChart = null;
+    
+    // สถานะข้อมูล (State)
+    let rawTarget = [];
+    let rawActual = [];
+    let myChart = null;
     const zones = ["1", "2", "3", "4", "5", "6", "7", "8", "10", "11", "12", "21", "C1", "C2", "C3", "C4"];
 
+    // จัดการการอัพโหลดไฟล์
     document.getElementById('targetUpload').addEventListener('change', (e) => handleFile(e, 'target'));
     document.getElementById('actualUpload').addEventListener('change', (e) => handleFile(e, 'actual'));
 
-function handleFile(event, type) {
-    const file = event.target.files[0];
-    if (!file) return;
+    function handleFile(event, type) {
+        const file = event.target.files[0];
+        if (!file) return;
 
-    // --- ส่วนที่ปรับปรุง: ล้างค่าทุกอย่างทันทีที่เลือกไฟล์ใหม่ ---
-    document.getElementById('mainDashboard').style.display = 'none'; // ซ่อน Dashboard
-    document.getElementById('zoneFilter').innerHTML = ''; // ล้างปุ่มเขต
-    if (myChart) {
-        myChart.destroy(); // ทำลายกราฟเดิมทิ้ง
-        myChart = null;
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            transformHeader: (h) => h.trim(), // ล้างช่องว่างที่หัวตาราง
+            complete: function(results) {
+                if (type === 'target') {
+                    rawTarget = results.data;
+                    document.getElementById('targetStatus').innerText = "✓ Target พร้อม (" + rawTarget.length + " แถว)";
+                    document.getElementById('targetStatus').classList.add('status-ready');
+                } else {
+                    rawActual = results.data;
+                    document.getElementById('actualStatus').innerText = "✓ ข้อมูลจริงพร้อม (" + rawActual.length + " แถว)";
+                    document.getElementById('actualStatus').classList.add('status-ready');
+                }
+                
+                // ถ้ามีข้อมูลครบทั้งสองส่วน ให้แสดงผล
+                if (rawTarget.length > 0 && rawActual.length > 0) {
+                    initDashboard();
+                }
+            }
+        });
+        event.target.value = ''; // ล้างค่า input เพื่อให้อัพโหลดซ้ำได้
     }
 
-    if (type === 'target') {
+    // ฟังก์ชันรีเซ็ตหน้าจอ (ล้างข้อมูลเก่าทั้งหมด)
+    function resetDashboard() {
         rawTarget = [];
-        document.getElementById('targetStatus').innerText = "กำลังประมวลผล...";
+        rawActual = [];
+        if (myChart) {
+            myChart.destroy();
+            myChart = null;
+        }
+        
+        document.getElementById('targetStatus').innerText = "รอไฟล์...";
         document.getElementById('targetStatus').classList.remove('status-ready');
-    } else {
-        rawActual = []; 
-        document.getElementById('actualStatus').innerText = "กำลังประมวลผล...";
+        document.getElementById('actualStatus').innerText = "รอไฟล์...";
         document.getElementById('actualStatus').classList.remove('status-ready');
+        
+        document.getElementById('uploadPanel').style.display = 'grid';
+        document.getElementById('zoneFilter').style.display = 'none';
+        document.getElementById('mainDashboard').style.display = 'none';
+        document.getElementById('zoneFilter').innerHTML = '';
     }
 
-    Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: (h) => h.trim(),
-        complete: function(results) {
-            if (type === 'target') {
-                rawTarget = results.data;
-                document.getElementById('targetStatus').innerText = "✓ Target พร้อม";
-                document.getElementById('targetStatus').classList.add('status-ready');
-            } else {
-                rawActual = results.data;
-                document.getElementById('actualStatus').innerText = "✓ ข้อมูลจริงพร้อม";
-                document.getElementById('actualStatus').classList.add('status-ready');
-            }
-      
-            // ตรวจสอบว่ามีข้อมูลครบทั้งสองไฟล์จึงแสดง Dashboard
-            if (rawTarget.length > 0 && rawActual.length > 0) {
-                showDashboard();
-            }
-        }
-    });
-    
-    // ล้างค่า input เพื่อให้อัปโหลดไฟล์เดิมซ้ำได้
-    event.target.value = '';
-}
-
-  function showDashboard() {
-    // 1. ค้นหาชื่อคอลัมน์ทั้งหมดจากข้อมูลจริง (Actual)
-    const headers = Object.keys(rawActual[0]);
-    
-    // 2. กรองเอาเฉพาะคอลัมน์ที่เป็นวันที่ (ที่มีเครื่องหมาย /)
-    const dateColumns = headers.filter(h => h.includes('/'));
-
-    // 3. หาว่าวันไหนคือวันล่าสุดที่มีข้อมูล (ไม่ใช่ค่าว่างหรือ 0)
-    let lastDateWithData = dateColumns[0];
-    for (let date of dateColumns) {
-        // เช็คว่ามีแถวไหนสักแถวที่มีตัวเลขในวันนี้
-        const hasData = rawActual.some(row => row[date] && row[date] !== "0" && row[date] !== "");
-        if (hasData) {
-            lastDateWithData = date;
-        } else {
-            break; // เจอช่องว่างแปลว่าเป็นวันในอนาคต ให้หยุด
-        }
+    function initDashboard() {
+        initFilterButtons();
+        document.getElementById('zoneFilter').style.display = 'flex';
+        document.getElementById('mainDashboard').style.display = 'block';
+        document.getElementById('uploadPanel').style.display = 'none';
+        updateDashboard('รวมทุกเขต');
     }
-
-    // 4. สร้างรายการวันที่ "ปัจจุบันที่มีข้อมูลจริง" เก็บไว้ในตัวแปรชื่อ activeDates
-    // และส่งตัวแปรนี้ไปให้ฟังก์ชันอื่นๆ ใช้งาน
-    window.activeDates = dateColumns.slice(0, dateColumns.indexOf(lastDateWithData) + 1);
-
-    // --- ส่วนแสดงผลหน้าจอเดิมของคุณ ---
-    initFilterButtons();
-    document.getElementById('zoneFilter').style.display = 'flex';
-    document.getElementById('mainDashboard').style.display = 'block';
-    document.getElementById('uploadPanel').style.display = 'none';
-    
-    // เรียกแสดงผล
-    updateDashboard('รวมทุกเขต');
-}
 
     function initFilterButtons() {
         const container = document.getElementById('zoneFilter');
         container.innerHTML = `<button class="btn-zone active" onclick="changeZone(this, 'รวมทุกเขต')">รวมทุกเขต</button>`;
-        zones.forEach(z => { container.innerHTML += `<button class="btn-zone" onclick="changeZone(this, '${z}')">เขต ${z}</button>`; });
+        zones.forEach(z => { 
+            container.innerHTML += `<button class="btn-zone" onclick="changeZone(this, '${z}')">เขต ${z}</button>`; 
+        });
     }
 
     function changeZone(btn, zone) {
@@ -171,96 +155,114 @@ function handleFile(event, type) {
         updateDashboard(zone);
     }
 
+    // ฟังก์ชันช่วยจัดการตัวเลข
     function parseNum(val) {
-        if (!val) return 0;
+        if (val === undefined || val === null || val === "") return 0;
         let cleanVal = String(val).replace(/[^0-9.-]/g, '');
         return parseFloat(cleanVal) || 0;
     }
 
-    function updateDashboard(selectedZone) {
-    // 1. เปลี่ยนจาก generateDateRange() มาใช้ window.activeDates ที่เราหาไว้ล่าสุด
-    const dates = window.activeDates; // <--- แก้ไขจุดนี้
-
-    let targetMax = 0, std1 = 0, std2 = 0, std3 = 0;
-
-    // ส่วนนี้คือการคำนวณค่าจาก rawTarget (ใช้ของเดิมของคุณได้เลย)
-    rawTarget.forEach(row => {
-        // ตรวจสอบชื่อคอลัมน์ให้ตรงนะครับ เช่น row["ZONE"] หรือ row["เขต"] 
-        // จากที่คุณส่งมาคือ row["เขต"]
-        if (isValidZone(row["เขต"], selectedZone)) {
-            targetMax += parseNum(row["เป้าหมาย MAX"]);
-            std1 += parseNum(row["STD 14/12"]);
-            std2 += parseNum(row["STD 5/1"]);
-            std3 += parseNum(row["STD 21/1"]);
+    // สร้างช่วงวันที่คงเดิม (07/12/1968 - 31/03/1969)
+    function generateDateRange() {
+        let dates = [], 
+            start = new Date(1968, 11, 7, 12, 0, 0), // ใช้เวลาเที่ยงเพื่อป้องกัน timezone shift
+            end = new Date(1969, 2, 31, 12, 0, 0),
+            current = new Date(start);
+        while (current <= end) { 
+            dates.push(new Date(current));
+            current.setDate(current.getDate() + 1); 
         }
-    });
+        return dates;
+    }
 
-    // --- จุดสังเกตเพิ่มเติม (สำคัญมาก) ---
-    // หลังจากนี้ใน CODE ของคุณน่าจะมีส่วนที่วนลูปหาค่า Actual (ข้อมูลจริง)
-    // ให้ตรวจสอบว่ามันใช้ตัวแปร 'dates' ในการวนลูปหรือไม่
-    // ถ้าใช้ 'dates' (ซึ่งตอนนี้คือ window.activeDates) กราฟจะตัดจบที่วันที่ปัจจุบันทันทีครับ
+    function updateDashboard(selectedZone) {
+        const dates = generateDateRange();
+        let targetMax = 0, std1 = 0, std2 = 0, std3 = 0;
 
-       // --- วางชุดนี้แทนที่ชุดที่ลบไปครับ ---
-    
-    // 1. คำนวณเส้นเป้าหมาย (Target)
-    // 1. คำนวณเส้นเป้าหมาย (Target) ตามเงื่อนไขวันที่
-    const targetSeries = dates.map(dateStr => {
-        const parts = dateStr.split('/');
-        const day = parseInt(parts[0]);
-        const month = parseInt(parts[1]);
-        if (month === 12 && day >= 7 && day <= 27) return std1;
-        if (month === 1 && day >= 5 && day <= 20) return std2;
-        if ((month === 1 && day >= 21) || month === 2 || month === 3) return std3;
-        return 0;
-    });
-
-    // 2. คำนวณค่าจริงรายวัน (Actual Daily) และหาจุดสิ้นสุดข้อมูลล่าสุดที่มีจริง
-    // --- จุดที่วางต้องหน้าตาเป็นแบบนี้เท่านั้น ---
-        let lastDataIdx = -1;
-    const actualDaily = dates.map((dateStr, idx) => {
-        let sum = 0, found = false;
-        rawActual.forEach(row => {
+        // 1. คำนวณ Target
+        rawTarget.forEach(row => {
             if (isValidZone(row["เขต"], selectedZone)) {
-                const val = row[dateStr]; 
-                if (val !== undefined && val !== "" && val !== null) {
-                    sum += parseNum(val);
-                    found = true;
-                }
+                targetMax += parseNum(row["เป้าหมาย MAX"]);
+                std1 += parseNum(row["STD 14/12"]);
+                std2 += parseNum(row["STD 5/1"]);
+                std3 += parseNum(row["STD 21/1"]);
             }
         });
-        if (found) lastDataIdx = idx; // ต้องมีบรรทัดนี้ในลูป
-        return sum;                   // ต้องมีบรรทัดนี้ในลูป
-    }); // ต้องจบด้วย }); แค่อันเดียวตรงนี้
 
-    let accSum = 0, actualAcc = [];
-    for (let i = 0; i <= lastDataIdx; i++) { 
-        accSum += actualDaily[i]; 
-        actualAcc.push(accSum); 
-    }
-        
+        const targetSeries = dates.map(d => {
+            const m = d.getMonth() + 1, day = d.getDate();
+            if (d.getFullYear() === 1968 && m === 12 && day >= 7 && day <= 27) return std1;
+            if (d.getFullYear() === 1969 && m === 1 && day >= 5 && day <= 20) return std2;
+            if (d.getFullYear() === 1969 && ((m === 1 && day >= 21) || m === 2 || m === 3)) return std3;
+            return 0;
+        });
+
+        // 2. คำนวณยอดจริงรายวัน (Actual)
+        let lastDataIdx = -1;
+        const actualDaily = dates.map((d, idx) => {
+            const dStr = String(d.getDate()).padStart(2, '0');
+            const mStr = String(d.getMonth() + 1).padStart(2, '0');
+            const yStr = d.getFullYear();
+            const searchKey = `${dStr}/${mStr}/${yStr}`;
+
+            let daySum = 0;
+            let foundInDay = false;
+
+            rawActual.forEach(row => {
+                if (isValidZone(row["เขต"], selectedZone)) {
+                    // หา key ที่ตรงกัน (เผื่อกรณีมีช่องว่างหน้า/หลังคอลัมน์)
+                    const actualKey = Object.keys(row).find(k => k.trim() === searchKey);
+                    if (actualKey) {
+                        const val = row[actualKey];
+                        if (val !== undefined && val !== null && String(val).trim() !== "") {
+                            const n = parseNum(val);
+                            daySum += n;
+                            if (n > 0) foundInDay = true; // มียอดอ้อยจริง
+                        }
+                    }
+                }
+            });
+
+            if (foundInDay) lastDataIdx = idx; // อัพเดทวันสุดท้ายที่มีข้อมูล
+            return daySum;
+        });
+
+        // 3. คำนวณยอดสะสม (Accumulated)
         let accSum = 0, actualAcc = [];
-        for (let i = 0; i <= lastDataIdx; i++) { accSum += actualDaily[i]; actualAcc.push(accSum);}
+        for (let i = 0; i <= lastDataIdx; i++) { 
+            accSum += actualDaily[i];
+            actualAcc.push(accSum);
+        }
         
+        // 4. คำนวณเส้นคาดการณ์ (Projection)
         const projectionLine = new Array(actualAcc.length > 0 ? actualAcc.length - 1 : 0).fill(null);
         if (actualAcc.length > 0) projectionLine.push(accSum);
+
         if (lastDataIdx < dates.length - 1 && lastDataIdx !== -1) {
-            let remTarget = Math.max(0, targetMax - accSum), remDays = dates.length - 1 - lastDataIdx, dailyProj = remTarget / remDays, tempAcc = accSum;
-            for (let i = lastDataIdx + 1; i < dates.length; i++) { tempAcc += dailyProj; projectionLine.push(tempAcc); }
+            let remTarget = Math.max(0, targetMax - accSum);
+            let remDays = (dates.length - 1) - lastDataIdx;
+            let dailyProj = remTarget / remDays;
+            let tempAcc = accSum;
+            for (let i = lastDataIdx + 1; i < dates.length; i++) { 
+                tempAcc += dailyProj;
+                projectionLine.push(tempAcc);
+            }
         }
 
+        // แสดงผลหัวรายงาน
         const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const lastDateObj = dates[lastDataIdx !== -1 ? lastDataIdx : 0];
-        const displayYear = lastDateObj.getFullYear() + 600;
-        
         document.getElementById('dashboardTitle').innerHTML = `รายงานอ้อยเข้าหีบ ปี 68/69<br>
             <span style="font-size: 0.8em; color: var(--accent);">${selectedZone === 'รวมทุกเขต' ? 'รวมทุกเขต' : 'เขต ' + selectedZone}</span><br>
-            <span style="font-size: 0.6em; font-weight: normal;">ข้อมูล ณ วันที่ ${lastDateObj.getDate()} ${thaiMonths[lastDateObj.getMonth()]} ${displayYear}</span>`;
-        
+            <span style="font-size: 0.6em; font-weight: normal;">ข้อมูล ณ วันที่ ${lastDateObj.getDate()} ${thaiMonths[lastDateObj.getMonth()]} ${lastDateObj.getFullYear() + 543}</span>`;
+
+        // อัพเดทตัวเลขใน Card
         document.getElementById('cardTarget').innerText = Math.round(targetMax).toLocaleString();
         document.getElementById('cardAcc').innerText = Math.round(accSum).toLocaleString();
         document.getElementById('cardPercent').innerText = ((accSum / (targetMax || 1)) * 100).toFixed(2) + "%";
         document.getElementById('cardRemain').innerText = Math.max(0, Math.round(targetMax - accSum)).toLocaleString();
 
+        // แสดงกราฟ
         renderChart(dates, targetSeries, actualDaily, actualAcc, projectionLine, lastDataIdx);
     }
 
@@ -273,6 +275,7 @@ function handleFile(event, type) {
     function renderChart(dates, targets, daily, acc, proj, lastIdx) {
         const labels = dates.map(d => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}`);
         const ctx = document.getElementById('sugarChart').getContext('2d');
+        
         if (myChart) myChart.destroy();
         
         myChart = new Chart(ctx, {
@@ -281,45 +284,45 @@ function handleFile(event, type) {
                 datasets: [
                     { 
                         type: 'line', 
-                        label: 'ตันสะสม', 
+                        label: 'ตันสะสม (Actual)', 
                         data: acc, 
                         borderColor: '#27ae60', 
                         backgroundColor: '#27ae60', 
                         borderWidth: 3, 
                         yAxisID: 'yAcc', 
-                        // ปรับให้มีจุดแดงที่จุดสุดท้ายของข้อมูลจริง
                         pointRadius: (ctx) => (ctx.dataIndex === lastIdx ? 5 : 0),
                         pointBackgroundColor: '#FF0000',
-                        pointBorderColor: '#FF0000',
                         order: 1, 
                         datalabels: { display: (context) => context.dataIndex === lastIdx, anchor: 'end', align: 'right', backgroundColor: '#33CCCC', color: 'white', borderRadius: 4, padding: 4, formatter: (val) => Math.round(val).toLocaleString() } 
                     },
                     { 
                         type: 'line', 
-                        label: 'คาดการณ์สะสม', 
+                        label: 'คาดการณ์สะสม (Projection)', 
                         data: proj, 
                         borderColor: '#27ae60', 
-                        borderDash: [5, 5], // เส้นประ
+                        borderDash: [5, 5],
                         yAxisID: 'yAcc', 
-                        // ปรับให้มีจุดแดงที่จุดสิ้นสุดพยากรณ์
                         pointRadius: (ctx) => (ctx.dataIndex === proj.length - 1 ? 5 : 0),
                         pointBackgroundColor: '#FF0000',
-                        pointBorderColor: '#FF0000',
                         order: 2, 
                         datalabels: { display: (context) => context.dataIndex === proj.length - 1, anchor: 'end', align: 'right', backgroundColor: '#4682B4', color: 'white', borderRadius: 4, padding: 4, formatter: (val) => Math.round(val).toLocaleString() } 
                     },
                     { 
                         type: 'bar', 
-                        label: 'ตันรายวัน', 
-                        data: daily, 
+                        label: 'ตันรายวัน (Actual)', 
+                        data: daily.slice(0, lastIdx + 1), 
                         backgroundColor: '#3498db', 
                         yAxisID: 'yDaily', 
                         order: 3, 
-                        datalabels: { display: (context) => context.dataIndex === lastIdx, anchor: 'end', align: 'top', backgroundColor: '#00CCFF', color: 'white', borderRadius: 4, padding: 4, formatter: (val) => Math.round(val).toLocaleString() } 
+                        datalabels: { 
+                            display: (context) => context.dataIndex === lastIdx || (context.dataIndex > 0 && context.dataIndex % 10 === 0), 
+                            anchor: 'end', align: 'top', backgroundColor: '#00CCFF', color: 'white', borderRadius: 4, padding: 2, font: { size: 9 },
+                            formatter: (val) => val > 0 ? Math.round(val).toLocaleString() : ''
+                        } 
                     },
                     { 
                         type: 'bar', 
-                        label: 'เป้าหมาย STD รายวัน (ตัน)', 
+                        label: 'เป้าหมาย STD รายวัน', 
                         data: targets, 
                         backgroundColor: 'rgba(200, 200, 200, 0.2)', 
                         barPercentage: 1, 
@@ -334,7 +337,7 @@ function handleFile(event, type) {
                 responsive: true, maintainAspectRatio: false,
                 plugins: { 
                     tooltip: { mode: 'index', intersect: false }, 
-                    datalabels: { clip: false, clamp: true, font: { weight: 'bold', size: 10 } } 
+                    datalabels: { clip: false, clamp: true, font: { weight: 'bold' } } 
                 },
                 scales: {
                     x: { ticks: { autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 9 } } },
@@ -350,7 +353,7 @@ function handleFile(event, type) {
         const filter = document.getElementById('zoneFilter'), footer = document.querySelector('.footer-actions');
         filter.style.display = 'none'; footer.style.display = 'none';
         html2canvas(node, { scale: 2 }).then(canvas => {
-            const link = document.createElement('a'); link.download = 'Sugar_Report.png'; link.href = canvas.toURL(); link.click();
+            const link = document.createElement('a'); link.download = 'Sugar_Report_68-69.png'; link.href = canvas.toDataURL(); link.click();
             filter.style.display = 'flex'; footer.style.display = 'block';
         });
     }
