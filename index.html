@@ -177,12 +177,6 @@ function handleFile(event, type) {
         return parseFloat(cleanVal) || 0;
     }
 
-    function generateDateRange() {
-        let dates = [], start = new Date(1968, 11, 7), end = new Date(1969, 2, 31), current = new Date(start);
-        while (current <= end) { dates.push(new Date(current)); current.setDate(current.getDate() + 1); }
-        return dates;
-    }
-
     function updateDashboard(selectedZone) {
     // 1. เปลี่ยนจาก generateDateRange() มาใช้ window.activeDates ที่เราหาไว้ล่าสุด
     const dates = window.activeDates; // <--- แก้ไขจุดนี้
