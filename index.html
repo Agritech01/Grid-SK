@@ -203,6 +203,7 @@ function handleFile(event, type) {
        // --- วางชุดนี้แทนที่ชุดที่ลบไปครับ ---
     
     // 1. คำนวณเส้นเป้าหมาย (Target)
+    // 1. คำนวณเส้นเป้าหมาย (Target) ตามเงื่อนไขวันที่
     const targetSeries = dates.map(dateStr => {
         const parts = dateStr.split('/');
         const day = parseInt(parts[0]);
@@ -213,8 +214,9 @@ function handleFile(event, type) {
         return 0;
     });
 
-    // 2. คำนวณค่าจริงรายวัน (Actual Daily) และหาจุดสิ้นสุดข้อมูล
-    let lastDataIdx = -1;
+    // 2. คำนวณค่าจริงรายวัน (Actual Daily) และหาจุดสิ้นสุดข้อมูลล่าสุดที่มีจริง
+    // --- จุดที่วางต้องหน้าตาเป็นแบบนี้เท่านั้น ---
+        let lastDataIdx = -1;
     const actualDaily = dates.map((dateStr, idx) => {
         let sum = 0, found = false;
         rawActual.forEach(row => {
@@ -226,14 +228,16 @@ function handleFile(event, type) {
                 }
             }
         });
+        if (found) lastDataIdx = idx; // ต้องมีบรรทัดนี้ในลูป
+        return sum;                   // ต้องมีบรรทัดนี้ในลูป
+    }); // ต้องจบด้วย }); แค่อันเดียวตรงนี้
 
-    
-    // --- จบส่วนที่วางแทนที่ ---
-            
-            if (found) lastDataIdx = idx;
-            return sum;
-        });
-
+    let accSum = 0, actualAcc = [];
+    for (let i = 0; i <= lastDataIdx; i++) { 
+        accSum += actualDaily[i]; 
+        actualAcc.push(accSum); 
+    }
+        
         let accSum = 0, actualAcc = [];
         for (let i = 0; i <= lastDataIdx; i++) { accSum += actualDaily[i]; actualAcc.push(accSum);}
         
