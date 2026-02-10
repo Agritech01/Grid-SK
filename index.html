@@ -226,9 +226,7 @@ function handleFile(event, type) {
                 }
             }
         });
-        if (found) lastDataIdx = idx; // จำตำแหน่งวันล่าสุดที่มีข้อมูล
-        return sum;
-    });
+
     
     // --- จบส่วนที่วางแทนที่ ---
             
@@ -237,7 +235,7 @@ function handleFile(event, type) {
         });
 
         let accSum = 0, actualAcc = [];
-        for (let i = 0; i <= lastDataIdx; i++) { accSum += actualDaily[i]; actualAcc.push(accSum); }
+        for (let i = 0; i <= lastDataIdx; i++) { accSum += actualDaily[i]; actualAcc.push(accSum);}
         
         const projectionLine = new Array(actualAcc.length > 0 ? actualAcc.length - 1 : 0).fill(null);
         if (actualAcc.length > 0) projectionLine.push(accSum);
