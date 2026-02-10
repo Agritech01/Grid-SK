@@ -126,13 +126,38 @@ function handleFile(event, type) {
     event.target.value = '';
 }
 
-    function showDashboard() {
-        initFilterButtons();
-        document.getElementById('zoneFilter').style.display = 'flex';
-        document.getElementById('mainDashboard').style.display = 'block';
-        document.getElementById('uploadPanel').style.display = 'none';
-        updateDashboard('รวมทุกเขต');
+  function showDashboard() {
+    // 1. ค้นหาชื่อคอลัมน์ทั้งหมดจากข้อมูลจริง (Actual)
+    const headers = Object.keys(rawActual[0]);
+    
+    // 2. กรองเอาเฉพาะคอลัมน์ที่เป็นวันที่ (ที่มีเครื่องหมาย /)
+    const dateColumns = headers.filter(h => h.includes('/'));
+
+    // 3. หาว่าวันไหนคือวันล่าสุดที่มีข้อมูล (ไม่ใช่ค่าว่างหรือ 0)
+    let lastDateWithData = dateColumns[0];
+    for (let date of dateColumns) {
+        // เช็คว่ามีแถวไหนสักแถวที่มีตัวเลขในวันนี้
+        const hasData = rawActual.some(row => row[date] && row[date] !== "0" && row[date] !== "");
+        if (hasData) {
+            lastDateWithData = date;
+        } else {
+            break; // เจอช่องว่างแปลว่าเป็นวันในอนาคต ให้หยุด
+        }
     }
+
+    // 4. สร้างรายการวันที่ "ปัจจุบันที่มีข้อมูลจริง" เก็บไว้ในตัวแปรชื่อ activeDates
+    // และส่งตัวแปรนี้ไปให้ฟังก์ชันอื่นๆ ใช้งาน
+    window.activeDates = dateColumns.slice(0, dateColumns.indexOf(lastDateWithData) + 1);
+
+    // --- ส่วนแสดงผลหน้าจอเดิมของคุณ ---
+    initFilterButtons();
+    document.getElementById('zoneFilter').style.display = 'flex';
+    document.getElementById('mainDashboard').style.display = 'block';
+    document.getElementById('uploadPanel').style.display = 'none';
+    
+    // เรียกแสดงผล
+    updateDashboard('รวมทุกเขต');
+}
 
     function initFilterButtons() {
         const container = document.getElementById('zoneFilter');
