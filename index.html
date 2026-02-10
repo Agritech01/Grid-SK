@@ -82,9 +82,16 @@ function handleFile(event, type) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // --- ส่วนที่เพิ่มเข้ามาเพื่อล้างค่าเดิม ---
+    // --- ส่วนที่ปรับปรุง: ล้างค่าทุกอย่างทันทีที่เลือกไฟล์ใหม่ ---
+    document.getElementById('mainDashboard').style.display = 'none'; // ซ่อน Dashboard
+    document.getElementById('zoneFilter').innerHTML = ''; // ล้างปุ่มเขต
+    if (myChart) {
+        myChart.destroy(); // ทำลายกราฟเดิมทิ้ง
+        myChart = null;
+    }
+
     if (type === 'target') {
-        rawTarget = []; 
+        rawTarget = [];
         document.getElementById('targetStatus').innerText = "กำลังประมวลผล...";
         document.getElementById('targetStatus').classList.remove('status-ready');
     } else {
@@ -107,11 +114,15 @@ function handleFile(event, type) {
                 document.getElementById('actualStatus').innerText = "✓ ข้อมูลจริงพร้อม";
                 document.getElementById('actualStatus').classList.add('status-ready');
             }
-            if (rawTarget.length > 0 && rawActual.length > 0) showDashboard();
+      
+            // ตรวจสอบว่ามีข้อมูลครบทั้งสองไฟล์จึงแสดง Dashboard
+            if (rawTarget.length > 0 && rawActual.length > 0) {
+                showDashboard();
+            }
         }
     });
-
-    // เพิ่มบรรทัดนี้: ล้างค่า input เพื่อให้เบราว์เซอร์ยอมให้อัพโหลดไฟล์เดิมซ้ำได้เพื่อรีเฟรช
+    
+    // ล้างค่า input เพื่อให้อัปโหลดไฟล์เดิมซ้ำได้
     event.target.value = '';
 }
 
