@@ -3,64 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sugar Cane Dashboard 68/69</title>
+    <title>Sugar Cane Dashboard 68/69 - Professional Version</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #2c3e50; --secondary: #34495e; --accent: #27ae60; --light: #f4f7f6; }
         body { font-family: 'Sarabun', sans-serif; background-color: var(--light); margin: 0; padding: 20px; color: #333; }
-        .container { max-width: 1300px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        
-        /* Upload Zone */
+        .container { max-width: 1400px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: var(--primary); margin-bottom: 10px; line-height: 1.4; }
         .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-        .upload-card { border: 2px dashed #cbd5e0; padding: 20px; border-radius: 10px; text-align: center; transition: 0.3s; background: #fff; }
-        .upload-card:hover { border-color: var(--accent); background: #f0fff4; }
-        .upload-card input { margin-top: 10px; width: 100%; }
+        .upload-card { border: 2px dashed #cbd5e0; padding: 20px; border-radius: 10px; text-align: center; background: #fff; }
         .status-badge { display: inline-block; margin-top: 10px; padding: 4px 12px; border-radius: 15px; font-size: 0.8em; background: #edf2f7; }
         .status-ready { background: #c6f6d5; color: #2f855a; }
-
-        /* Filter Buttons */
-        .filter-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 30px; padding: 15px; background: #f8fafc; border-radius: 12px; }
-        .btn-zone { padding: 8px 16px; border: 1px solid #cbd5e0; background: white; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; }
-        .btn-zone:hover { background: #edf2f7; }
+        .filter-container { display: flex; flex-wrap: nowrap; gap: 4px; justify-content: space-between; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 12px; overflow-x: auto; }
+        .btn-zone { flex: 1; padding: 8px 4px; border: 1px solid #cbd5e0; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; white-space: nowrap; text-align: center; }
         .btn-zone.active { background: var(--primary); color: white; border-color: var(--primary); }
-
-        /* Stats Cards */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { padding: 20px; border-radius: 12px; color: white; text-align: center; position: relative; overflow: hidden; }
-        .stat-card.blue { background: linear-gradient(135deg, #3498db, #2980b9); }
-        .stat-card.green { background: linear-gradient(135deg, #27ae60, #219150); }
-        .stat-card.orange { background: linear-gradient(135deg, #f39c12, #d35400); }
-        .stat-card.red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .stat-label { font-size: 0.9em; opacity: 0.9; margin-bottom: 10px; }
+        .chart-container { position: relative; height: 550px; width: 100%; background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .stat-card { padding: 20px; border-radius: 12px; color: #2c3e50; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .stat-card.blue { background: linear-gradient(135deg, #D6EAF8, #AED6F1); }
+        .stat-card.green { background: linear-gradient(135deg, #D5F5E3, #ABEBC6); }
+        .stat-card.orange { background: linear-gradient(135deg, #FCF3CF, #FAD7A0); }
+        .stat-card.red { background: linear-gradient(135deg, #FADBD8, #F5B7B1); }
+        .stat-label { font-size: 0.95em; font-weight: 600; opacity: 0.85; margin-bottom: 10px; }
         .stat-value { font-size: 1.8em; font-weight: bold; }
-
-        /* Chart Area */
-        .chart-container { position: relative; height: 550px; width: 100%; background: #fff; padding: 15px; border-radius: 12px; border: 1px solid #eee; }
-        
         .footer-actions { margin-top: 30px; text-align: right; }
-        .btn-download { background: #2d3748; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: 600; }
-        .btn-download:hover { background: #1a202c; }
-
-        #dataPreview { margin-top: 20px; font-size: 0.75rem; color: #718096; max-height: 100px; overflow: auto; display: none; }
+        .btn-download { background: #2d3748; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="container" id="dashboardNode">
-    <h2>📊 รายงานวิเคราะห์อ้อยเข้าหีบ ปี 68/69</h2>
-
+    <h2 id="dashboardTitle">รายงานอ้อยเข้าหีบ ปี 68/69</h2>
+    
     <div class="upload-grid" id="uploadPanel">
         <div class="upload-card">
-            <strong>1. ไฟล์ DATA TARGET</strong>
+            <strong>1. ไฟล์ DATA TARGET (เขต, เป้าหมาย MAX, STD...)</strong><br>
             <input type="file" id="targetUpload" accept=".csv">
             <div id="targetStatus" class="status-badge">รอไฟล์...</div>
         </div>
         <div class="upload-card">
-            <strong>2. ไฟล์รายงานเข้าหีบ 68/69</strong>
+            <strong>2. ไฟล์รายงานเข้าหีบรายวัน (เขต, วันที่...)</strong><br>
             <input type="file" id="actualUpload" accept=".csv">
             <div id="actualStatus" class="status-badge">รอไฟล์...</div>
         </div>
@@ -69,90 +55,78 @@
     <div class="filter-container" id="zoneFilter" style="display:none;"></div>
 
     <div id="mainDashboard" style="display:none;">
-        <div class="stats-grid">
-            <div class="stat-card blue">
-                <div class="stat-label">เป้าหมายเขต (ตัน)</div>
-                <div class="stat-value" id="cardTarget">-</div>
-            </div>
-            <div class="stat-card green">
-                <div class="stat-label">หีบสะสมจริง (ตัน)</div>
-                <div class="stat-value" id="cardAcc">-</div>
-            </div>
-            <div class="stat-card orange">
-                <div class="stat-label">% เทียบเป้าหมาย</div>
-                <div class="stat-value" id="cardPercent">-</div>
-            </div>
-            <div class="stat-card red">
-                <div class="stat-label">คงเหลือเป้า (ตัน)</div>
-                <div class="stat-value" id="cardRemain">-</div>
-            </div>
-        </div>
-
         <div class="chart-container">
             <canvas id="sugarChart"></canvas>
         </div>
-
+        <div class="stats-grid">
+            <div class="stat-card blue"><div class="stat-label">เป้าหมายเขต (ตัน)</div><div class="stat-value" id="cardTarget">-</div></div>
+            <div class="stat-card green"><div class="stat-label">หีบสะสม (ตัน)</div><div class="stat-value" id="cardAcc">-</div></div>
+            <div class="stat-card orange"><div class="stat-label">% เทียบเป้าหมาย</div><div class="stat-value" id="cardPercent">-</div></div>
+            <div class="stat-card red"><div class="stat-label">คงเหลือเป้า (ตัน)</div><div class="stat-value" id="cardRemain">-</div></div>
+        </div>
         <div class="footer-actions">
             <button class="btn-download" onclick="exportImage()">📸 บันทึกรายงานเป็นรูปภาพ</button>
         </div>
     </div>
-    
-    <div id="dataPreview"></div>
 </div>
 
 <script>
-    let rawTarget = [];
-    let rawActual = [];
-    let myChart = null;
+    Chart.register(ChartDataLabels);
+    let rawTarget = [], rawActual = [], myChart = null;
     const zones = ["1", "2", "3", "4", "5", "6", "7", "8", "10", "11", "12", "21", "C1", "C2", "C3", "C4"];
 
-    // 1-3. File Upload & Processing
     document.getElementById('targetUpload').addEventListener('change', (e) => handleFile(e, 'target'));
     document.getElementById('actualUpload').addEventListener('change', (e) => handleFile(e, 'actual'));
 
-    function handleFile(event, type) {
-        const file = event.target.files[0];
-        if (!file) return;
-        if (file.size > 100 * 1024 * 1024) { alert("ไฟล์ต้องไม่เกิน 100MB"); return; }
-        
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                if (type === 'target') {
-                    rawTarget = results.data;
-                    updateStatus('targetStatus', "✓ ไฟล์ Target พร้อม");
-                } else {
-                    rawActual = results.data;
-                    updateStatus('actualStatus', "✓ ไฟล์รายงานพร้อม");
-                }
-                checkReady();
+function handleFile(event, type) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // --- ส่วนที่เพิ่มเข้ามาเพื่อล้างค่าเดิม ---
+    if (type === 'target') {
+        rawTarget = []; 
+        document.getElementById('targetStatus').innerText = "กำลังประมวลผล...";
+        document.getElementById('targetStatus').classList.remove('status-ready');
+    } else {
+        rawActual = []; 
+        document.getElementById('actualStatus').innerText = "กำลังประมวลผล...";
+        document.getElementById('actualStatus').classList.remove('status-ready');
+    }
+
+    Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (h) => h.trim(),
+        complete: function(results) {
+            if (type === 'target') {
+                rawTarget = results.data;
+                document.getElementById('targetStatus').innerText = "✓ Target พร้อม";
+                document.getElementById('targetStatus').classList.add('status-ready');
+            } else {
+                rawActual = results.data;
+                document.getElementById('actualStatus').innerText = "✓ ข้อมูลจริงพร้อม";
+                document.getElementById('actualStatus').classList.add('status-ready');
             }
-        });
-    }
-
-    function updateStatus(id, text) {
-        const el = document.getElementById(id);
-        el.innerText = text;
-        el.classList.add('status-ready');
-    }
-
-    function checkReady() {
-        if (rawTarget.length > 0 && rawActual.length > 0) {
-            initFilterButtons();
-            document.getElementById('zoneFilter').style.display = 'flex';
-            document.getElementById('mainDashboard').style.display = 'block';
-            document.getElementById('uploadPanel').style.display = 'none';
-            updateDashboard('รวมทุกเขต');
+            if (rawTarget.length > 0 && rawActual.length > 0) showDashboard();
         }
+    });
+
+    // เพิ่มบรรทัดนี้: ล้างค่า input เพื่อให้เบราว์เซอร์ยอมให้อัพโหลดไฟล์เดิมซ้ำได้เพื่อรีเฟรช
+    event.target.value = '';
+}
+
+    function showDashboard() {
+        initFilterButtons();
+        document.getElementById('zoneFilter').style.display = 'flex';
+        document.getElementById('mainDashboard').style.display = 'block';
+        document.getElementById('uploadPanel').style.display = 'none';
+        updateDashboard('รวมทุกเขต');
     }
 
     function initFilterButtons() {
         const container = document.getElementById('zoneFilter');
         container.innerHTML = `<button class="btn-zone active" onclick="changeZone(this, 'รวมทุกเขต')">รวมทุกเขต</button>`;
-        zones.forEach(z => {
-            container.innerHTML += `<button class="btn-zone" onclick="changeZone(this, '${z}')">เขต ${z}</button>`;
-        });
+        zones.forEach(z => { container.innerHTML += `<button class="btn-zone" onclick="changeZone(this, '${z}')">เขต ${z}</button>`; });
     }
 
     function changeZone(btn, zone) {
@@ -161,181 +135,178 @@
         updateDashboard(zone);
     }
 
-    // --- Core Logic ---
     function parseNum(val) {
         if (!val) return 0;
-        return parseFloat(String(val).replace(/,/g, '')) || 0;
+        let cleanVal = String(val).replace(/[^0-9.-]/g, '');
+        return parseFloat(cleanVal) || 0;
     }
 
     function generateDateRange() {
-        let dates = [];
-        let start = new Date(1968, 11, 7); // Dec 7, 1968 (mapping CSV format)
-        let end = new Date(1969, 2, 31);   // Mar 31, 1969
-        let current = new Date(start);
-        while (current <= end) {
-            dates.push(new Date(current));
-            current.setDate(current.getDate() + 1);
-        }
+        let dates = [], start = new Date(1968, 11, 7), end = new Date(1969, 2, 31), current = new Date(start);
+        while (current <= end) { dates.push(new Date(current)); current.setDate(current.getDate() + 1); }
         return dates;
     }
 
     function updateDashboard(selectedZone) {
         const dates = generateDateRange();
-        
-        // 1. Process Target Data
         let targetMax = 0, std1 = 0, std2 = 0, std3 = 0;
+
         rawTarget.forEach(row => {
-            if (selectedZone === 'รวมทุกเขต' || String(row["เขต"]).trim() === selectedZone) {
+            if (isValidZone(row["เขต"], selectedZone)) {
                 targetMax += parseNum(row["เป้าหมาย MAX"]);
-                std1 += parseNum(row[" STD 14/12 "]);
-                std2 += parseNum(row[" STD 5/1 "]);
-                std3 += parseNum(row[" STD 21/1 "]);
+                std1 += parseNum(row["STD 14/12"]);
+                std2 += parseNum(row["STD 5/1"]);
+                std3 += parseNum(row["STD 21/1"]);
             }
         });
 
-        // 2. Prepare Target Background Series
         const targetSeries = dates.map(d => {
-            const m = d.getMonth() + 1;
-            const day = d.getDate();
-            // 07/12 - 27/12
+            const m = d.getMonth() + 1, day = d.getDate();
             if (m === 12 && day >= 7 && day <= 27) return std1;
-            // 05/01 - 20/01
             if (m === 1 && day >= 5 && day <= 20) return std2;
-            // 21/01 - 31/03
             if ((m === 1 && day >= 21) || m === 2 || m === 3) return std3;
-            return 0; // Holiday/No target
+            return 0;
         });
 
-        // 3. Process Actual Daily Data
         let lastDataIdx = -1;
         const actualDaily = dates.map((d, idx) => {
-            const colName = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
-            let sum = 0;
+            const day = d.getDate(), month = d.getMonth() + 1, year = d.getFullYear();
+            const k1 = `${day}/${month}/${year}`; 
+            const k2 = `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year}`;
+            const k3 = `${day}/${month}/${year + 543}`;
+            const k4 = `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year + 543}`;
+
+            let sum = 0, found = false;
             rawActual.forEach(row => {
-                if (selectedZone === 'รวมทุกเขต' || String(row["เขต"]).trim() === selectedZone) {
-                    sum += parseNum(row[colName]);
+                if (isValidZone(row["เขต"], selectedZone)) {
+                    const matchKey = Object.keys(row).find(key => {
+                        const ck = key.trim();
+                        return ck === k1 || ck === k2 || ck === k3 || ck === k4;
+                    });
+                    if (matchKey) {
+                        const val = parseNum(row[matchKey]);
+                        if (row[matchKey] !== "" && row[matchKey] !== null) { found = true; sum += val; }
+                    }
                 }
             });
-            if (sum > 0) lastDataIdx = idx;
+            if (found) lastDataIdx = idx;
             return sum;
         });
 
-        // 4. Accumulated and Projection
-        let accSum = 0;
-        const actualAcc = [];
-        for (let i = 0; i <= lastDataIdx; i++) {
-            accSum += actualDaily[i];
-            actualAcc.push(accSum);
+        let accSum = 0, actualAcc = [];
+        for (let i = 0; i <= lastDataIdx; i++) { accSum += actualDaily[i]; actualAcc.push(accSum); }
+        
+        const projectionLine = new Array(actualAcc.length > 0 ? actualAcc.length - 1 : 0).fill(null);
+        if (actualAcc.length > 0) projectionLine.push(accSum);
+        if (lastDataIdx < dates.length - 1 && lastDataIdx !== -1) {
+            let remTarget = Math.max(0, targetMax - accSum), remDays = dates.length - 1 - lastDataIdx, dailyProj = remTarget / remDays, tempAcc = accSum;
+            for (let i = lastDataIdx + 1; i < dates.length; i++) { tempAcc += dailyProj; projectionLine.push(tempAcc); }
         }
 
-        const projectionLine = new Array(actualAcc.length - 1).fill(null);
-        projectionLine.push(accSum);
-
-        if (lastDataIdx < dates.length - 1) {
-            const remainingTarget = targetMax - accSum;
-            const remainingDays = dates.length - 1 - lastDataIdx;
-            const dailyProj = remainingTarget / remainingDays;
-            
-            let tempAcc = accSum;
-            for (let i = lastDataIdx + 1; i < dates.length; i++) {
-                tempAcc += dailyProj;
-                projectionLine.push(tempAcc);
-            }
-        }
-
-        // Update Cards
-        document.getElementById('cardTarget').innerText = targetMax.toLocaleString();
-        document.getElementById('cardAcc').innerText = accSum.toLocaleString();
+        const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        const lastDateObj = dates[lastDataIdx !== -1 ? lastDataIdx : 0];
+        const displayYear = lastDateObj.getFullYear() + 600;
+        
+        document.getElementById('dashboardTitle').innerHTML = `รายงานอ้อยเข้าหีบ ปี 68/69<br>
+            <span style="font-size: 0.8em; color: var(--accent);">${selectedZone === 'รวมทุกเขต' ? 'รวมทุกเขต' : 'เขต ' + selectedZone}</span><br>
+            <span style="font-size: 0.6em; font-weight: normal;">ข้อมูล ณ วันที่ ${lastDateObj.getDate()} ${thaiMonths[lastDateObj.getMonth()]} ${displayYear}</span>`;
+        
+        document.getElementById('cardTarget').innerText = Math.round(targetMax).toLocaleString();
+        document.getElementById('cardAcc').innerText = Math.round(accSum).toLocaleString();
         document.getElementById('cardPercent').innerText = ((accSum / (targetMax || 1)) * 100).toFixed(2) + "%";
-        document.getElementById('cardRemain').innerText = Math.max(0, targetMax - accSum).toLocaleString();
+        document.getElementById('cardRemain').innerText = Math.max(0, Math.round(targetMax - accSum)).toLocaleString();
 
-        renderChart(dates, targetSeries, actualDaily, actualAcc, projectionLine);
+        renderChart(dates, targetSeries, actualDaily, actualAcc, projectionLine, lastDataIdx);
     }
 
-    function renderChart(dates, targets, daily, acc, proj) {
-        const labels = dates.map(d => d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
-        const ctx = document.getElementById('sugarChart').getContext('2d');
-        
-        if (myChart) myChart.destroy();
+    function isValidZone(rowZone, selectedZone) {
+        const cleanRowZone = String(rowZone || "").trim();
+        if (selectedZone === 'รวมทุกเขต') return zones.includes(cleanRowZone);
+        return cleanRowZone === selectedZone;
+    }
 
+    function renderChart(dates, targets, daily, acc, proj, lastIdx) {
+        const labels = dates.map(d => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}`);
+        const ctx = document.getElementById('sugarChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        
         myChart = new Chart(ctx, {
             data: {
                 labels: labels,
                 datasets: [
-                    {
-                        type: 'line',
-                        label: 'ตันสะสมจริง',
-                        data: acc,
-                        borderColor: '#27ae60',
-                        backgroundColor: '#27ae60',
-                        borderWidth: 3,
-                        yAxisID: 'yAcc',
-                        pointRadius: 0,
-                        order: 1
+                    { 
+                        type: 'line', 
+                        label: 'ตันสะสม', 
+                        data: acc, 
+                        borderColor: '#27ae60', 
+                        backgroundColor: '#27ae60', 
+                        borderWidth: 3, 
+                        yAxisID: 'yAcc', 
+                        // ปรับให้มีจุดแดงที่จุดสุดท้ายของข้อมูลจริง
+                        pointRadius: (ctx) => (ctx.dataIndex === lastIdx ? 5 : 0),
+                        pointBackgroundColor: '#FF0000',
+                        pointBorderColor: '#FF0000',
+                        order: 1, 
+                        datalabels: { display: (context) => context.dataIndex === lastIdx, anchor: 'end', align: 'right', backgroundColor: '#33CCCC', color: 'white', borderRadius: 4, padding: 4, formatter: (val) => Math.round(val).toLocaleString() } 
                     },
-                    {
-                        type: 'line',
-                        label: 'พยากรณ์สะสม',
-                        data: proj,
-                        borderColor: '#27ae60',
-                        borderDash: [5, 5],
-                        pointRadius: 0,
-                        yAxisID: 'yAcc',
-                        fill: false,
-                        order: 2
+                    { 
+                        type: 'line', 
+                        label: 'คาดการณ์สะสม', 
+                        data: proj, 
+                        borderColor: '#27ae60', 
+                        borderDash: [5, 5], // เส้นประ
+                        yAxisID: 'yAcc', 
+                        // ปรับให้มีจุดแดงที่จุดสิ้นสุดพยากรณ์
+                        pointRadius: (ctx) => (ctx.dataIndex === proj.length - 1 ? 5 : 0),
+                        pointBackgroundColor: '#FF0000',
+                        pointBorderColor: '#FF0000',
+                        order: 2, 
+                        datalabels: { display: (context) => context.dataIndex === proj.length - 1, anchor: 'end', align: 'right', backgroundColor: '#4682B4', color: 'white', borderRadius: 4, padding: 4, formatter: (val) => Math.round(val).toLocaleString() } 
                     },
-                    {
-                        type: 'bar',
-                        label: 'ยอดหีบรายวัน',
-                        data: daily,
-                        backgroundColor: '#3498db',
-                        yAxisID: 'yDaily',
-                        order: 3
+                    { 
+                        type: 'bar', 
+                        label: 'ตันรายวัน', 
+                        data: daily, 
+                        backgroundColor: '#3498db', 
+                        yAxisID: 'yDaily', 
+                        order: 3, 
+                        datalabels: { display: (context) => context.dataIndex === lastIdx, anchor: 'end', align: 'top', backgroundColor: '#00CCFF', color: 'white', borderRadius: 4, padding: 4, formatter: (val) => Math.round(val).toLocaleString() } 
                     },
-                    {
-                        type: 'bar',
-                        label: 'เป้าหมายรายวัน (STD)',
-                        data: targets,
-                        backgroundColor: 'rgba(200, 200, 200, 0.2)',
-                        barPercentage: 1,
-                        categoryPercentage: 1,
-                        yAxisID: 'yDaily',
-                        order: 4
+                    { 
+                        type: 'bar', 
+                        label: 'เป้าหมาย STD รายวัน (ตัน)', 
+                        data: targets, 
+                        backgroundColor: 'rgba(200, 200, 200, 0.2)', 
+                        barPercentage: 1, 
+                        categoryPercentage: 1, 
+                        yAxisID: 'yDaily', 
+                        order: 4, 
+                        datalabels: { display: false } 
                     }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    tooltip: { mode: 'index', intersect: false }
+                responsive: true, maintainAspectRatio: false,
+                plugins: { 
+                    tooltip: { mode: 'index', intersect: false }, 
+                    datalabels: { clip: false, clamp: true, font: { weight: 'bold', size: 10 } } 
                 },
                 scales: {
-                    yDaily: {
-                        type: 'linear',
-                        position: 'left',
-                        title: { display: true, text: 'ตันรายวัน' },
-                        beginAtZero: true
-                    },
-                    yAcc: {
-                        type: 'linear',
-                        position: 'right',
-                        title: { display: true, text: 'สะสมรวม' },
-                        grid: { drawOnChartArea: false },
-                        beginAtZero: true
-                    }
+                    x: { ticks: { autoSkip: false, maxRotation: 90, minRotation: 90, font: { size: 9 } } },
+                    yDaily: { type: 'linear', position: 'left', title: { display: true, text: 'ตันรายวัน' }, beginAtZero: true },
+                    yAcc: { type: 'linear', position: 'right', title: { display: true, text: 'สะสมรวม' }, grid: { drawOnChartArea: false }, beginAtZero: true }
                 }
             }
         });
     }
 
     function exportImage() {
-        const dashboard = document.getElementById('dashboardNode');
-        html2canvas(dashboard, { scale: 2 }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = 'Sugar_Cane_Report_6869.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+        const node = document.getElementById('dashboardNode');
+        const filter = document.getElementById('zoneFilter'), footer = document.querySelector('.footer-actions');
+        filter.style.display = 'none'; footer.style.display = 'none';
+        html2canvas(node, { scale: 2 }).then(canvas => {
+            const link = document.createElement('a'); link.download = 'Sugar_Report.png'; link.href = canvas.toURL(); link.click();
+            filter.style.display = 'flex'; footer.style.display = 'block';
         });
     }
 </script>
