@@ -238,3 +238,56 @@
         const slider = document.getElementById('chartSlider');
         const maxScroll = Math.max(0, labels.length - currentViewRange);
         slider.max = maxScroll;
+
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            data: {
+                labels: labels,
+                datasets: [
+                    { type: 'line', label: 'ตันสะสม', data: acc, borderColor: '#27ae60', borderWidth: 3, yAxisID: 'yAcc', pointRadius: (c) => c.dataIndex === lastIdx ? 5 : 0, pointBackgroundColor: 'red', datalabels: { display: (c) => c.dataIndex === lastIdx, align: 'top', backgroundColor: '#33CCCC', color: 'white', borderRadius: 4, padding: 6, font: { weight: 'bold' }, formatter: (v) => Math.round(v).toLocaleString() } },
+                    { type: 'line', label: 'คาดการณ์', data: proj, borderColor: '#27ae60', borderDash: [5, 5], yAxisID: 'yAcc', pointRadius: 0, datalabels: { display: (c) => c.dataIndex === proj.length - 1, align: 'right', backgroundColor: '#4682B4', color: 'white', borderRadius: 4, padding: 6, font: { weight: 'bold' }, formatter: (v) => Math.round(v).toLocaleString() } },
+                    { type: 'bar', label: 'รายวัน', data: daily.slice(0, lastIdx + 1), backgroundColor: '#3498db', yAxisID: 'yDaily', datalabels: { display: (c) => c.dataIndex === lastIdx, anchor: 'end', align: 'top', color: '#3498db', font: { weight: 'bold' }, formatter: (v) => Math.round(v).toLocaleString() } },
+                    { type: 'bar', label: 'เป้า STD', data: targets, backgroundColor: 'rgba(200, 200, 200, 0.3)', yAxisID: 'yDaily', datalabels: { display: false } }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { tooltip: { mode: 'index', intersect: false }, datalabels: { formatter: (v) => v ? Math.round(v).toLocaleString() : null } },
+                scales: {
+                    x: { min: parseInt(slider.value), max: parseInt(slider.value) + currentViewRange - 1, ticks: { font: { size: 9 } } },
+                    yDaily: { beginAtZero: true },
+                    yAcc: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } }
+                }
+            }
+        });
+        slider.oninput = function() { updateChartRange(parseInt(this.value)); };
+        updateChartRange(parseInt(slider.value));
+    }
+
+    function updateChartRange(val) {
+        myChart.options.scales.x.min = val;
+        myChart.options.scales.x.max = val + currentViewRange - 1;
+        document.getElementById('sliderValue').innerText = `ช่วงวันที่ ${val + 1}-${Math.min(val + currentViewRange, myChart.data.labels.length)}`;
+        myChart.update('none');
+    }
+
+    function applyZoom(mode, btn) {
+        currentViewRange = (mode === 'all') ? myChart.data.labels.length : mode;
+        document.querySelectorAll('.btn-zoom').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        updateChartRange(0);
+    }
+
+    function exportImage() {
+        const node = document.getElementById('dashboardNode');
+        const elementsToHide = ['#controlUI', '.footer-actions', '.filter-container'];
+        elementsToHide.forEach(s => { if(document.querySelector(s)) document.querySelector(s).style.display = 'none'; });
+        html2canvas(node, { scale: 2 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'Sugar_Report.png'; link.href = canvas.toDataURL(); link.click();
+            elementsToHide.forEach(s => { if(document.querySelector(s)) document.querySelector(s).style.display = (s==='.filter-container'?'flex':'block'); });
+        });
+    }
+</script>
+</body>
+</html>
