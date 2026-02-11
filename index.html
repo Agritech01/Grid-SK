@@ -44,11 +44,11 @@
 <div class="container" id="dashboardNode">
     <h2 id="dashboardTitle">รายงานอ้อยเข้าหีบ ปี 68/69</h2>
     
-    <div id="loadingOverlay">⏳ กำลังซิงค์ข้อมูลจาก Google Sheets...</div>
+    <div id="loadingOverlay">⏳ กำลังดึงข้อมูลจาก Google Sheets...</div>
 
     <div id="subTitleArea" class="dashboard-subtitle" style="display:none;">
         <span id="displayZone" style="font-size: 26px; font-weight: bold; color: #FF0000;">เขต รวมทุกเขต</span><br>
-        <span id="displayDate" style="font-size: 20px; color: #000000;">กำลังดึงข้อมูลวันที่...</span>
+        <span id="displayDate" style="font-size: 20px; color: #000000;">อัปเดตข้อมูลล่าสุด...</span>
     </div>
     
     <div class="filter-container" id="zoneFilter" style="display:none;"></div>
@@ -83,7 +83,7 @@
 </div>
 
 <script>
-    // --- 1. ใส่ลิงก์ CSV จาก Google Sheets ตรงนี้ ---
+    // --- 1. ใส่ลิงก์ CSV จาก Google Sheets ---
     const TARGET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBzyNUXjGTBy8z0Hv5jxHk6tKYlYQhBtwg9sPVqqNm8sqxVJ_JljWq2f9JodvZR41Rv65gcvgdNebi/pub?output=csv';
     const ACTUAL_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSyMB_Fxk8PoDzl11U1tbzse2ANnNhh4iROwMXB5LFHGksPLo7aX2I1LniuEd9s-5dkO0FG3focFDzA/pub?output=csv';
 
@@ -97,26 +97,27 @@
     window.onload = async function() {
         const status = document.getElementById('loadingOverlay');
         try {
-            const [targetRes, actualRes] = await Promise.all([
-                fetch(TARGET_CSV_URL),
-                fetch(ACTUAL_CSV_URL)
-            ]);
-
-            if (!targetRes.ok || !actualRes.ok) throw new Error("ดึงไฟล์ไม่สำเร็จ โปรดตรวจสอบการ Publish");
-
+            console.log("Fetching Target Data...");
+            const targetRes = await fetch(TARGET_CSV_URL);
             const targetText = await targetRes.text();
+
+            console.log("Fetching Actual Data...");
+            const actualRes = await fetch(ACTUAL_CSV_URL);
             const actualText = await actualRes.text();
 
-            if (targetText.includes("<!DOCTYPE html>")) throw new Error("ลิงก์ผิดรูปแบบ! (โปรดเลือกเป็น .csv ใน Google Sheets)");
+            if (targetText.includes("<!DOCTYPE html>")) throw new Error("Link Target ไม่ใช่รูปแบบ CSV");
 
             Papa.parse(targetText, {
                 header: true, skipEmptyLines: true, transformHeader: (h) => h.trim(),
                 complete: function(tResults) {
                     rawTarget = tResults.data;
+                    console.log("Target Data Loaded:", rawTarget.length, "rows");
+
                     Papa.parse(actualText, {
                         header: true, skipEmptyLines: true, transformHeader: (h) => h.trim(),
                         complete: function(aResults) {
                             rawActual = aResults.data;
+                            console.log("Actual Data Loaded:", rawActual.length, "rows");
                             status.style.display = 'none';
                             initDashboard();
                         }
@@ -124,8 +125,8 @@
                 }
             });
         } catch (error) {
-            status.innerHTML = `❌ เกิดข้อผิดพลาด: ${error.message}`;
-            console.error(error);
+            status.innerHTML = `❌ Error: ${error.message}<br><small>ตรวจสอบลิงก์ CSV หรือการ Publish</small>`;
+            console.error("Fetch Error:", error);
         }
     };
 
@@ -201,7 +202,7 @@
         if (lastDataIdx !== -1) {
             const lastDateObj = dates[lastDataIdx];
             const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-            document.getElementById('displayDate').innerText = `วันที่ ${lastDateObj.getDate()} ${thaiMonths[lastDateObj.getMonth()]} ${lastDateObj.getFullYear() + 543}`;
+            document.getElementById('displayDate').innerText = `ข้อมูล ณ วันที่ ${lastDateObj.getDate()} ${thaiMonths[lastDateObj.getMonth()]} ${lastDateObj.getFullYear() + 543}`;
         }
 
         let accSum = 0, actualAcc = [];
@@ -237,58 +238,3 @@
         const slider = document.getElementById('chartSlider');
         const maxScroll = Math.max(0, labels.length - currentViewRange);
         slider.max = maxScroll;
-
-        if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            data: {
-                labels: labels,
-                datasets: [
-                    { type: 'line', label: 'ตันสะสม', data: acc, borderColor: '#27ae60', borderWidth: 3, yAxisID: 'yAcc', pointRadius: (c) => c.dataIndex === lastIdx ? 5 : 0, pointBackgroundColor: 'red', datalabels: { display: (c) => c.dataIndex === lastIdx, align: 'top', backgroundColor: '#33CCCC', color: 'white', borderRadius: 4, padding: 6, font: { weight: 'bold' }, formatter: Math.round } },
-                    { type: 'line', label: 'คาดการณ์', data: proj, borderColor: '#27ae60', borderDash: [5, 5], yAxisID: 'yAcc', pointRadius: 0, datalabels: { display: (c) => c.dataIndex === proj.length - 1, align: 'right', backgroundColor: '#4682B4', color: 'white', borderRadius: 4, padding: 6, font: { weight: 'bold' }, formatter: Math.round } },
-                    { type: 'bar', label: 'รายวัน', data: daily.slice(0, lastIdx + 1), backgroundColor: '#3498db', yAxisID: 'yDaily', datalabels: { display: (c) => c.dataIndex === lastIdx, anchor: 'end', align: 'top', color: '#3498db', font: { weight: 'bold' } } },
-                    { type: 'bar', label: 'เป้า STD', data: targets, backgroundColor: 'rgba(200, 200, 200, 0.3)', yAxisID: 'yDaily', datalabels: { display: false } }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: { tooltip: { mode: 'index', intersect: false }, datalabels: { formatter: (v) => v ? Math.round(v).toLocaleString() : null } },
-                scales: {
-                    x: { min: parseInt(slider.value), max: parseInt(slider.value) + currentViewRange - 1, ticks: { font: { size: 9 } } },
-                    yDaily: { beginAtZero: true, title: { display: true, text: 'รายวัน (ตัน)' } },
-                    yAcc: { beginAtZero: true, position: 'right', title: { display: true, text: 'สะสม (ตัน)' }, grid: { drawOnChartArea: false } }
-                }
-            }
-        });
-        slider.oninput = function() { updateChartRange(parseInt(this.value)); };
-        updateChartRange(parseInt(slider.value));
-    }
-
-    function updateChartRange(val) {
-        myChart.options.scales.x.min = val;
-        myChart.options.scales.x.max = val + currentViewRange - 1;
-        document.getElementById('sliderValue').innerText = `ช่วงวันที่ ${val + 1}-${Math.min(val + currentViewRange, myChart.data.labels.length)}`;
-        myChart.update('none');
-    }
-
-    function applyZoom(mode, btn) {
-        currentViewRange = (mode === 'all') ? myChart.data.labels.length : mode;
-        document.querySelectorAll('.btn-zoom').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const maxScroll = Math.max(0, myChart.data.labels.length - currentViewRange);
-        document.getElementById('chartSlider').max = maxScroll;
-        updateChartRange(0);
-    }
-
-    function exportImage() {
-        const node = document.getElementById('dashboardNode');
-        const elementsToHide = ['#controlUI', '.footer-actions', '.filter-container'];
-        elementsToHide.forEach(s => { if(document.querySelector(s)) document.querySelector(s).style.display = 'none'; });
-        html2canvas(node, { scale: 2 }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = 'Sugar_Report.png'; link.href = canvas.toDataURL(); link.click();
-            elementsToHide.forEach(s => { if(document.querySelector(s)) document.querySelector(s).style.display = (s==='.filter-container'?'flex':'block'); });
-        });
-    }
-</script>
-</body>
-</html>
