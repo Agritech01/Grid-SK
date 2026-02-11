@@ -10,7 +10,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* คง CSS เดิมไว้ทั้งหมดเพื่อรักษาหน้าตา Dashboard */
         :root { --primary: #2c3e50; --secondary: #34495e; --accent: #27ae60; --light: #f4f7f6; }
         body { font-family: 'Sarabun', sans-serif; background-color: var(--light); margin: 0; padding: 20px; color: #333; }
         .container { max-width: 1400px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
@@ -84,7 +83,7 @@
 </div>
 
 <script>
-    // --- 1. ใส่ลิ้งก์ CSV ที่ก๊อปปี้มาจาก Google Sheets ที่นี่ ---
+    // --- 1. ใส่ลิงก์ CSV จาก Google Sheets ตรงนี้ ---
     const TARGET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRBzyNUXjGTBy8z0Hv5jxHk6tKYlYQhBtwg9sPVqqNm8sqxVJ_JljWq2f9JodvZR41Rv65gcvgdNebi/pub?output=csv';
     const ACTUAL_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSyMB_Fxk8PoDzl11U1tbzse2ANnNhh4iROwMXB5LFHGksPLo7aX2I1LniuEd9s-5dkO0FG3focFDzA/pub?output=csv';
 
@@ -93,9 +92,8 @@
     let rawActual = [];
     let myChart = null;
     let currentViewRange = 30;
-    const zones = ["1", "2", "3", "4", "5", "6", "7", "8", "10", "11", "12", "21", "C1", "C2", "C3", "C4"]; [cite: 147]
+    const zones = ["1", "2", "3", "4", "5", "6", "7", "8", "10", "11", "12", "21", "C1", "C2", "C3", "C4"];
 
-    // --- 2. ฟังก์ชันเริ่มดึงข้อมูลอัตโนมัติเมื่อโหลดหน้า ---
     window.onload = async function() {
         const status = document.getElementById('loadingOverlay');
         try {
@@ -104,32 +102,19 @@
                 fetch(ACTUAL_CSV_URL)
             ]);
 
-            // เช็คว่าดึงไฟล์ได้ไหม
-            if (!targetRes.ok || !actualRes.ok) throw new Error("ดึงไฟล์ไม่สำเร็จ ตรวจสอบลิงก์ Publish");
+            if (!targetRes.ok || !actualRes.ok) throw new Error("ดึงไฟล์ไม่สำเร็จ โปรดตรวจสอบการ Publish");
 
             const targetText = await targetRes.text();
             const actualText = await actualRes.text();
 
-            // เช็คว่าเป็นไฟล์ CSV จริงไหม (ถ้ามีคำว่า <html> แปลว่าได้หน้าเว็บมาแทนไฟล์)
-            if (targetText.includes("<!DOCTYPE html>")) throw new Error("ลิงก์ที่ใช้ไม่ใช่ CSV (โปรดเลือกรูปแบบ CSV ใน Google Sheets)");
+            if (targetText.includes("<!DOCTYPE html>")) throw new Error("ลิงก์ผิดรูปแบบ! (โปรดเลือกเป็น .csv ใน Google Sheets)");
 
             Papa.parse(targetText, {
-                header: true,
-                skipEmptyLines: true,
-                transformHeader: (h) => h.trim(),
+                header: true, skipEmptyLines: true, transformHeader: (h) => h.trim(),
                 complete: function(tResults) {
                     rawTarget = tResults.data;
-                    
-                    // เช็คว่าในไฟล์ Target มีหัวข้อที่ต้องการไหม
-                    if(!rawTarget[0]["เป้าหมาย MAX"]) {
-                        status.innerHTML = "❌ ไม่พบหัวข้อ 'เป้าหมาย MAX' ในไฟล์ Target";
-                        return;
-                    }
-
                     Papa.parse(actualText, {
-                        header: true,
-                        skipEmptyLines: true,
-                        transformHeader: (h) => h.trim(),
+                        header: true, skipEmptyLines: true, transformHeader: (h) => h.trim(),
                         complete: function(aResults) {
                             rawActual = aResults.data;
                             status.style.display = 'none';
@@ -139,172 +124,169 @@
                 }
             });
         } catch (error) {
-            status.innerHTML = `❌ ข้อผิดพลาด: ${error.message}`;
+            status.innerHTML = `❌ เกิดข้อผิดพลาด: ${error.message}`;
             console.error(error);
         }
     };
 
-    // ฟังก์ชันคำนวณและ Render คงเดิมไว้ทั้งหมด
     function initDashboard() {
-        initFilterButtons(); [cite: 153]
-        document.getElementById('zoneFilter').style.display = 'flex'; [cite: 154]
-        document.getElementById('mainDashboard').style.display = 'block'; [cite: 154]
-        document.getElementById('subTitleArea').style.display = 'block'; [cite: 154]
-        updateDashboard('รวมทุกเขต'); [cite: 154]
+        initFilterButtons();
+        document.getElementById('zoneFilter').style.display = 'flex';
+        document.getElementById('mainDashboard').style.display = 'block';
+        document.getElementById('subTitleArea').style.display = 'block';
+        updateDashboard('รวมทุกเขต');
     }
 
     function initFilterButtons() {
         const container = document.getElementById('zoneFilter');
         container.innerHTML = `<button class="btn-zone active" onclick="changeZone(this, 'รวมทุกเขต')">รวมทุกเขต</button>`;
-        zones.forEach(z => { container.innerHTML += `<button class="btn-zone" onclick="changeZone(this, '${z}')">เขต ${z}</button>`; }); [cite: 156]
+        zones.forEach(z => { container.innerHTML += `<button class="btn-zone" onclick="changeZone(this, '${z}')">เขต ${z}</button>`; });
     }
 
     function changeZone(btn, zone) {
         document.querySelectorAll('.btn-zone').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        updateDashboard(zone); [cite: 157]
+        updateDashboard(zone);
     }
 
     function generateDateRange() {
-        let dates = [], start = new Date(1968, 11, 7, 12, 0, 0), end = new Date(1969, 2, 31, 12, 0, 0), current = new Date(start); [cite: 158]
-        while (current <= end) { dates.push(new Date(current)); current.setDate(current.getDate() + 1); } [cite: 159]
+        let dates = [], start = new Date(1968, 11, 7, 12, 0, 0), end = new Date(1969, 2, 31, 12, 0, 0), current = new Date(start);
+        while (current <= end) { dates.push(new Date(current)); current.setDate(current.getDate() + 1); }
         return dates;
     }
 
-    // ฟังก์ชันอื่นๆ (applyZoom, updateChartRange, updateDashboard, renderChart) ให้ใช้โค้ดเดิมที่คุณมีได้เลยครับ
-    // (เพื่อความกระชับ ผมละส่วนคำนวณกราฟไว้ แต่ให้คุณใช้ Logic เดิมทั้งหมดได้เลย)
-    
-    /* ... คัดลอกฟังก์ชันที่เหลือจากโค้ดเดิมของคุณมาวางต่อที่นี่ ... */
-    
-    function applyZoom(mode, btn) {
-        const totalDays = myChart.data.labels.length; [cite: 160]
-        if (mode === 'all') { currentViewRange = totalDays; } else { currentViewRange = mode; } [cite: 161]
-        document.querySelectorAll('.btn-zoom').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const slider = document.getElementById('chartSlider');
-        const maxScroll = Math.max(0, totalDays - currentViewRange); [cite: 163]
-        slider.max = maxScroll;
-        slider.value = 0;
-        updateChartRange(0); [cite: 163]
-    }
-
-    function updateChartRange(val) {
-        const sliderValueDisplay = document.getElementById('sliderValue');
-        myChart.options.scales.x.min = val; [cite: 165]
-        myChart.options.scales.x.max = val + currentViewRange - 1; [cite: 165]
-        sliderValueDisplay.innerText = `วันที่ ${val + 1}-${Math.min(val + currentViewRange, myChart.data.labels.length)}`; [cite: 165]
-        myChart.update('none'); [cite: 165]
-    }
-
     function updateDashboard(selectedZone) {
-        const zoneText = selectedZone === 'รวมทุกเขต' ? selectedZone : `เขต ${selectedZone}`; [cite: 166, 167]
-        document.getElementById('displayZone').innerText = zoneText; [cite: 167]
-        const dates = generateDateRange(); [cite: 167]
-        let targetMax = 0, std1 = 0, std2 = 0, std3 = 0, std4 = 0; [cite: 168]
-        const parseNum = (v) => parseFloat(String(v || "").replace(/[^0-9.-]/g, '')) || 0; [cite: 169]
+        const zoneText = selectedZone === 'รวมทุกเขต' ? selectedZone : `เขต ${selectedZone}`;
+        document.getElementById('displayZone').innerText = zoneText;
+        const dates = generateDateRange();
+        let targetMax = 0, std1 = 0, std2 = 0, std3 = 0, std4 = 0;
+        const parseNum = (v) => parseFloat(String(v || "").replace(/[^0-9.-]/g, '')) || 0;
+
         rawTarget.forEach(row => {
             if (isValidZone(row["เขต"], selectedZone)) {
                 targetMax += parseNum(row["เป้าหมาย MAX"]);
                 std1 += parseNum(row["STD 14/12"]);
                 std2 += parseNum(row["STD 5/1"]);
                 std3 += parseNum(row["STD 21/1"]);
-                std4 += parseNum(row["STD 10/02"]); 
+                std4 += parseNum(row["STD 10/02"]);
             }
-        }); [cite: 170]
+        });
+
         const targetSeries = dates.map(d => {
-            const y = d.getFullYear(); const m = d.getMonth() + 1; const day = d.getDate();
-            if (y === 1968 && m === 12 && day >= 7 && day <= 27) return std1; [cite: 171]
-            if (y === 1969 && m === 1 && day >= 5 && day <= 20) return std2; [cite: 171, 172]
-            if (y === 1969 && ((m === 1 && day >= 21) || (m === 2 && day <= 9))) return std3; [cite: 172]
-            if (y === 1969 && ((m === 2 && day >= 10) || m === 3)) return std4; [cite: 172]
-            return 0; 
-        }); [cite: 172]
+            const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+            if (y === 1968 && m === 12 && day >= 7) return std1;
+            if (y === 1969 && m === 1 && day <= 20) return std2;
+            if (y === 1969 && ((m === 1 && day >= 21) || (m === 2 && day <= 9))) return std3;
+            if (y === 1969 && (m >= 2 && day >= 10)) return std4;
+            return 0;
+        });
+
         let lastDataIdx = -1;
         const actualDaily = dates.map((d, idx) => {
             const searchKey = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
             let daySum = 0, found = false;
             rawActual.forEach(row => {
                 if (isValidZone(row["เขต"], selectedZone)) {
-                    const val = row[searchKey]; [cite: 174]
-                    if (val !== undefined && val !== null && String(val).trim() !== "") { daySum += parseNum(val); found = true; } [cite: 174]
+                    const val = row[searchKey];
+                    if (val !== undefined && val !== null && String(val).trim() !== "") {
+                        daySum += parseNum(val);
+                        found = true;
+                    }
                 }
             });
-            if (found) lastDataIdx = idx; [cite: 174]
+            if (found) lastDataIdx = idx;
             return daySum;
-        }); [cite: 175]
+        });
 
         if (lastDataIdx !== -1) {
-            const lastDateObj = dates[lastDataIdx]; [cite: 175]
-            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"]; [cite: 176]
-            const thaiYear = lastDateObj.getFullYear() + 600; [cite: 177]
-            document.getElementById('displayDate').innerText = `วันที่ ${lastDateObj.getDate()} ${thaiMonths[lastDateObj.getMonth()]} ${thaiYear}`; [cite: 177]
+            const lastDateObj = dates[lastDataIdx];
+            const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+            document.getElementById('displayDate').innerText = `วันที่ ${lastDateObj.getDate()} ${thaiMonths[lastDateObj.getMonth()]} ${lastDateObj.getFullYear() + 543}`;
         }
 
-        let accSum = 0, actualAcc = []; [cite: 178]
-        for (let i = 0; i <= lastDataIdx; i++) { accSum += actualDaily[i]; actualAcc.push(accSum); } [cite: 179]
-        const projectionLine = new Array(actualAcc.length > 0 ? actualAcc.length - 1 : 0).fill(null); [cite: 180]
-        if (actualAcc.length > 0) projectionLine.push(accSum); [cite: 181]
+        let accSum = 0, actualAcc = [];
+        for (let i = 0; i <= lastDataIdx; i++) { accSum += actualDaily[i]; actualAcc.push(accSum); }
+        
+        const projectionLine = new Array(actualAcc.length > 0 ? actualAcc.length - 1 : 0).fill(null);
+        if (actualAcc.length > 0) projectionLine.push(accSum);
         if (lastDataIdx < dates.length - 1 && lastDataIdx !== -1) {
-            let remTarget = Math.max(0, targetMax - accSum), remDays = (dates.length - 1) - lastDataIdx, dailyProj = remTarget / remDays, tempAcc = accSum; [cite: 181]
-            for (let i = lastDataIdx + 1; i < dates.length; i++) { tempAcc += dailyProj; projectionLine.push(tempAcc); } [cite: 182]
+            let remTarget = Math.max(0, targetMax - accSum), remDays = (dates.length - 1) - lastDataIdx, dailyProj = remTarget / remDays, tempAcc = accSum;
+            for (let i = lastDataIdx + 1; i < dates.length; i++) { tempAcc += dailyProj; projectionLine.push(tempAcc); }
         }
 
-        document.getElementById('cardTarget').innerText = Math.round(targetMax).toLocaleString(); [cite: 183]
-        document.getElementById('cardAcc').innerText = Math.round(accSum).toLocaleString(); [cite: 184]
-        const percentRaw = (accSum / (targetMax || 1)) * 100; [cite: 184]
-        document.getElementById('cardPercent').innerText = Number(percentRaw.toFixed(2)) + "%"; [cite: 185]
-        document.getElementById('cardRemain').innerText = Math.max(0, Math.round(targetMax - accSum)).toLocaleString(); [cite: 185]
+        document.getElementById('cardTarget').innerText = Math.round(targetMax).toLocaleString();
+        document.getElementById('cardAcc').innerText = Math.round(accSum).toLocaleString();
+        document.getElementById('cardPercent').innerText = ((accSum / (targetMax || 1)) * 100).toFixed(2) + "%";
+        document.getElementById('cardRemain').innerText = Math.max(0, Math.round(targetMax - accSum)).toLocaleString();
+        
         let sum5D = 0, count5D = 0;
-        for(let i=lastDataIdx; i > lastDataIdx-5 && i >= 0; i--) { sum5D += actualDaily[i]; count5D++; } [cite: 186, 187]
-        document.getElementById('cardAvg5D').innerText = count5D > 0 ? Math.round(sum5D/count5D).toLocaleString() : "0"; [cite: 187]
-        renderChart(dates, targetSeries, actualDaily, actualAcc, projectionLine, lastDataIdx); [cite: 188]
+        for(let i=lastDataIdx; i > lastDataIdx-5 && i >= 0; i--) { sum5D += actualDaily[i]; count5D++; }
+        document.getElementById('cardAvg5D').innerText = count5D > 0 ? Math.round(sum5D/count5D).toLocaleString() : "0";
+
+        renderChart(dates, targetSeries, actualDaily, actualAcc, projectionLine, lastDataIdx);
     }
 
     function isValidZone(rowZone, selectedZone) {
-        const cleanRowZone = String(rowZone || "").trim(); [cite: 188]
-        return selectedZone === 'รวมทุกเขต' ? zones.includes(cleanRowZone) : cleanRowZone === selectedZone; [cite: 189]
+        const cleanRowZone = String(rowZone || "").trim();
+        return selectedZone === 'รวมทุกเขต' ? zones.includes(cleanRowZone) : cleanRowZone === selectedZone;
     }
 
     function renderChart(dates, targets, daily, acc, proj, lastIdx) {
-        const labels = dates.map(d => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}`); [cite: 190]
-        const ctx = document.getElementById('sugarChart').getContext('2d'); [cite: 191]
+        const labels = dates.map(d => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}`);
+        const ctx = document.getElementById('sugarChart').getContext('2d');
         const slider = document.getElementById('chartSlider');
-        const maxScroll = Math.max(0, labels.length - currentViewRange); [cite: 191]
+        const maxScroll = Math.max(0, labels.length - currentViewRange);
         slider.max = maxScroll;
-        slider.value = Math.min(maxScroll, Math.max(0, lastIdx - (currentViewRange / 2))); [cite: 192]
 
-        if (myChart) myChart.destroy(); [cite: 192]
+        if (myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             data: {
                 labels: labels,
                 datasets: [
-                    { type: 'line', label: 'ตันสะสม', data: acc, borderColor: '#27ae60', borderWidth: 3, yAxisID: 'yAcc', pointRadius: (c) => c.dataIndex === lastIdx ? 4 : 0, pointBackgroundColor: '#FF0000', pointBorderColor: '#FF0000', datalabels: { display: (c) => c.dataIndex === lastIdx, align:315, backgroundColor: '#33CCCC', color: 'white', borderRadius: 4, padding: 6, font: { size: 14, weight: 'bold' }, formatter: (v) => Math.round(v).toLocaleString() } }, [cite: 193, 194]
-                    { type: 'line', label: 'คาดการณ์สะสม', data: proj, borderColor: '#27ae60', borderDash: [5, 5], yAxisID: 'yAcc', pointRadius: (c) => c.dataIndex === proj.length - 1 ? 4 : 0, pointBackgroundColor: '#FF0000', pointBorderColor: '#FF0000', datalabels: { display: (c) => c.dataIndex === proj.length - 1, align: 'right', backgroundColor: '#4682B4', color: 'white', borderRadius: 4, padding: 6, font: { size: 14, weight: 'bold' }, formatter: (v) => Math.round(v).toLocaleString() } }, [cite: 194, 195]
-                    { type: 'bar', label: 'ตันรายวัน', data: daily.slice(0, lastIdx + 1), backgroundColor: '#3498db', yAxisID: 'yDaily', datalabels: { display: (c) => c.dataIndex === lastIdx, anchor: 'end', align: 'top', backgroundColor: '#00CCFF', color: 'white', borderRadius: 4, padding: 4, font: { size: 14, weight: 'bold' }, formatter: (v) => Math.round(v).toLocaleString() } }, [cite: 195]
-                    { type: 'bar', label: 'เป้าหมาย STD', data: targets, backgroundColor: 'rgba(200, 200, 200, 0.6)', yAxisID: 'yDaily', datalabels: { display: false } } [cite: 196]
+                    { type: 'line', label: 'ตันสะสม', data: acc, borderColor: '#27ae60', borderWidth: 3, yAxisID: 'yAcc', pointRadius: (c) => c.dataIndex === lastIdx ? 5 : 0, pointBackgroundColor: 'red', datalabels: { display: (c) => c.dataIndex === lastIdx, align: 'top', backgroundColor: '#33CCCC', color: 'white', borderRadius: 4, padding: 6, font: { weight: 'bold' }, formatter: Math.round } },
+                    { type: 'line', label: 'คาดการณ์', data: proj, borderColor: '#27ae60', borderDash: [5, 5], yAxisID: 'yAcc', pointRadius: 0, datalabels: { display: (c) => c.dataIndex === proj.length - 1, align: 'right', backgroundColor: '#4682B4', color: 'white', borderRadius: 4, padding: 6, font: { weight: 'bold' }, formatter: Math.round } },
+                    { type: 'bar', label: 'รายวัน', data: daily.slice(0, lastIdx + 1), backgroundColor: '#3498db', yAxisID: 'yDaily', datalabels: { display: (c) => c.dataIndex === lastIdx, anchor: 'end', align: 'top', color: '#3498db', font: { weight: 'bold' } } },
+                    { type: 'bar', label: 'เป้า STD', data: targets, backgroundColor: 'rgba(200, 200, 200, 0.3)', yAxisID: 'yDaily', datalabels: { display: false } }
                 ]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { tooltip: { mode: 'index', intersect: false }, datalabels: { font: { weight: 'bold', size: 10 } } },
+                plugins: { tooltip: { mode: 'index', intersect: false }, datalabels: { formatter: (v) => v ? Math.round(v).toLocaleString() : null } },
                 scales: {
-                    x: { min: parseInt(slider.value), max: parseInt(slider.value) + currentViewRange - 1, ticks: { autoSkip: false, maxRotation: 90, font: { size: 9 } }, grid: { display: false } }, [cite: 197]
-                    yDaily: { type: 'linear', position: 'left', beginAtZero: true }, [cite: 198]
-                    yAcc: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false } } [cite: 198]
+                    x: { min: parseInt(slider.value), max: parseInt(slider.value) + currentViewRange - 1, ticks: { font: { size: 9 } } },
+                    yDaily: { beginAtZero: true, title: { display: true, text: 'รายวัน (ตัน)' } },
+                    yAcc: { beginAtZero: true, position: 'right', title: { display: true, text: 'สะสม (ตัน)' }, grid: { drawOnChartArea: false } }
                 }
             }
         });
-        slider.oninput = function() { updateChartRange(parseInt(this.value)); }; [cite: 199]
-        updateChartRange(parseInt(slider.value)); [cite: 199]
+        slider.oninput = function() { updateChartRange(parseInt(this.value)); };
+        updateChartRange(parseInt(slider.value));
+    }
+
+    function updateChartRange(val) {
+        myChart.options.scales.x.min = val;
+        myChart.options.scales.x.max = val + currentViewRange - 1;
+        document.getElementById('sliderValue').innerText = `ช่วงวันที่ ${val + 1}-${Math.min(val + currentViewRange, myChart.data.labels.length)}`;
+        myChart.update('none');
+    }
+
+    function applyZoom(mode, btn) {
+        currentViewRange = (mode === 'all') ? myChart.data.labels.length : mode;
+        document.querySelectorAll('.btn-zoom').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const maxScroll = Math.max(0, myChart.data.labels.length - currentViewRange);
+        document.getElementById('chartSlider').max = maxScroll;
+        updateChartRange(0);
     }
 
     function exportImage() {
-        const node = document.getElementById('dashboardNode'); [cite: 200]
-        const elementsToHide = ['#controlUI', '.footer-actions', '.filter-container']; [cite: 201]
-        elementsToHide.forEach(s => { const el = document.querySelector(s); if(el) el.style.display = 'none'; }); [cite: 201]
-        html2canvas(node, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
-            const link = document.createElement('a'); link.download = 'Sugar_Report_Final.png'; link.href = canvas.toDataURL('image/png'); link.click(); [cite: 202]
-            elementsToHide.forEach(s => { const el = document.querySelector(s); if(el) el.style.display = (s === '.filter-container' ? 'flex' : (s === '#controlUI' ? 'flex' : 'block')); }); [cite: 203]
+        const node = document.getElementById('dashboardNode');
+        const elementsToHide = ['#controlUI', '.footer-actions', '.filter-container'];
+        elementsToHide.forEach(s => { if(document.querySelector(s)) document.querySelector(s).style.display = 'none'; });
+        html2canvas(node, { scale: 2 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'Sugar_Report.png'; link.href = canvas.toDataURL(); link.click();
+            elementsToHide.forEach(s => { if(document.querySelector(s)) document.querySelector(s).style.display = (s==='.filter-container'?'flex':'block'); });
         });
     }
 </script>
